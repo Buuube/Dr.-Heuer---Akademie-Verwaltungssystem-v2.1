@@ -6,6 +6,7 @@ const app = express(); // creates the express app
 
 // imports the students router we created
 const studentsRouter = require('./routes/students');
+const participantsRouter = require('./routes/participant');
 
 app.use(cors()); // allows frontend to talk to backend
 app.use(express.json()); // lets the app read JSON from incoming requests
@@ -14,6 +15,7 @@ app.use(express.json()); // lets the app read JSON from incoming requests
 // any route defined in students.js gets prefixed with /api/students
 // so router.get('/') in students.js becomes GET /api/students
 app.use('/api/students', studentsRouter);
+app.use('/api/participants', participantsRouter);
 
 // a test route to confirm the backend is running
 app.get('/api/health', (req, res) => {
