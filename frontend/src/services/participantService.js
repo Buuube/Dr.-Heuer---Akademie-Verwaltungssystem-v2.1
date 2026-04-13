@@ -1,22 +1,20 @@
+// this file handles all communication between the frontend and the backend for participants
+// the components never talk to the backend directly - they always go through this file
+// when a component needs data it calls a function from here
+
+// the address of the backend API - all participant requests go to this URL
 const API = 'http://localhost:3000/api/participants';
 
-// MOCK falls Backend noch nicht fertig
-let mock = [];
-let id = 1;
+// define API functions here
 
+// fetch all participants from the backend and return them as a JS array
+// called automatically when the participant list component loads
 export async function getParticipants() {
-  return mock;
+  const response = await fetch(API); // send a GET request to the backend
+  return response.json(); // convert the response from JSON to a JS array
 }
 
-export async function createParticipant(p) {
-  mock.push({ ...p, id: id++ });
-}
-
-export async function updateParticipant(p) {
-  const index = mock.findIndex((x) => x.id === p.id);
-  if (index !== -1) mock[index] = p;
-}
-
-export async function deleteParticipant(id) {
-  mock = mock.filter((p) => p.id !== id);
-}
+// add more functions here when the backend supports POST, PUT, DELETE
+// export async function createParticipant(p) {}
+// export async function updateParticipant(p) {}
+// export async function deleteParticipant(id) {}
