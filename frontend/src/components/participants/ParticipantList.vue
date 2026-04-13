@@ -1,8 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import {
-  getParticipants,
-  deleteParticipant,
+  getParticipants
 } from '../../services/participantService';
 
 const props = defineProps({
@@ -20,8 +19,8 @@ const load = async () => {
 onMounted(load);
 
 const remove = async (id) => {
-  await deleteParticipant(id);
-  await load();
+  // await deleteParticipant(id);
+  // await load();
 };
 
 const filteredParticipants = computed(() => {

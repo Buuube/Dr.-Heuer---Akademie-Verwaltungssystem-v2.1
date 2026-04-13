@@ -1,28 +1,28 @@
-const express = require('express'); // loads express
-const cors = require('cors'); // loads cors
-require('dotenv').config(); // loads .env file into process.env
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
 
-const app = express(); // creates the express app
+const app = express();
 
-// imports the students router we created
-const studentsRouter = require('./routes/students');
+// load the participants route file so the app knows how to handle participant requests
 const participantsRouter = require('./routes/participant');
 
-app.use(cors()); // allows frontend to talk to backend
-app.use(express.json()); // lets the app read JSON from incoming requests
+// without this, the browser blocks requests from the frontend (port 5173) to the backend (port 3000)
+app.use(cors());
 
-// mounts the students router at /api/students
-// any route defined in students.js gets prefixed with /api/students
-// so router.get('/') in students.js becomes GET /api/students
-app.use('/api/students', studentsRouter);
+// without this, the backend cannot read the JSON data that the frontend sends
+app.use(express.json());
+
+// everything that arrives at /api/participants gets handled by the participants route file
 app.use('/api/participants', participantsRouter);
 
-// a test route to confirm the backend is running
+// test route - open http://localhost:3000/api/health in the browser to confirm the backend is running
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// starts the server on port 3000
+// start listening for incoming requests from the frontend on port 3000
+// port 3000 is the address the frontend uses to reach the backend (http://localhost:3000)
 app.listen(3000, () => {
   console.log('Backend running on port 3000');
 });
