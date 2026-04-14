@@ -4,25 +4,23 @@ require('dotenv').config();
 
 const app = express();
 
-// load the participants route file so the app knows how to handle participant requests
+// load route files here — one line per feature
 const participantsRouter = require('./routes/participant');
 
-// without this, the browser blocks requests from the frontend (port 5173) to the backend (port 3000)
-app.use(cors());
+// middleware — runs on every request before routes, do not change order
+app.use(cors());        // allows frontend to talk to backend
+app.use(express.json()); // allows backend to read JSON from incoming requests
 
-// without this, the backend cannot read the JSON data that the frontend sends
-app.use(express.json());
-
-// everything that arrives at /api/participants gets handled by the participants route file
+// mount routes here — one line per feature
+// format: app.use('/api/yourfeature', yourRouter)
 app.use('/api/participants', participantsRouter);
 
-// test route - open http://localhost:3000/api/health in the browser to confirm the backend is running
+// test route — open http://localhost:3000/api/health to confirm backend is running
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// start listening for incoming requests from the frontend on port 3000
-// port 3000 is the address the frontend uses to reach the backend (http://localhost:3000)
+// starts the server
 app.listen(3000, () => {
   console.log('Backend running on port 3000');
 });
