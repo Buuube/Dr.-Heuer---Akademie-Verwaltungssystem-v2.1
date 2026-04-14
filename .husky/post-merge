@@ -1,4 +1,0 @@
-npm run install:all
-del package-lock.json 2>nul
-del frontend\package-lock.json 2>nul
-del backend\package-lock.json 2>nul
