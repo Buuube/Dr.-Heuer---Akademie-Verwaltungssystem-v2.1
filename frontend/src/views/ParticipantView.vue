@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, toRaw } from 'vue';
 
 import ParticipantList from '../components/participants/ParticipantList.vue';
 import ParticipantForm from '../components/participants/ParticipantForm.vue';
@@ -8,58 +8,80 @@ import ParticipantDetail from '../components/participants/ParticipantDetail.vue'
 import { saveParticipant } from '../services/participantService';
 
 const selected = ref(null);
-const mode = ref('list');
-// list | detail | edit
+const formMode = ref(null); // null | 'new' | 'edit'
+const rightMode = ref('list'); // 'list' | 'detail'
 
 const select = (p) => {
-  selected.value = structuredClone(p);
-  mode.value = 'detail';
+  selected.value = structuredClone(toRaw(p));
+  rightMode.value = 'detail';
+  formMode.value = null;
 };
 
 const edit = (p) => {
-  selected.value = structuredClone(p);
-  mode.value = 'list'; // optional oder 'edit' – aber Form ist ja immer da
+  selected.value = structuredClone(toRaw(p));
+  formMode.value = 'edit';
+  rightMode.value = rightMode.value;
 };
 
 const createNew = () => {
-  selected.value = null; // wichtig!
+  selected.value = null;
+  formMode.value = 'new';
+  rightMode.value = 'list';
 };
-// 👉 speichern
+
 const save = async (p) => {
   await saveParticipant(p);
   selected.value = null;
-  mode.value = 'list';
+  formMode.value = null;
+  rightMode.value = 'list';
 };
 
-// 👉 schließen / zurück
-const close = () => {
+const closeForm = () => {
+  formMode.value = null;
+  // selected wird NICHT geleert → Detail bleibt sichtbar
+};
+
+const closeDetail = () => {
   selected.value = null;
-  mode.value = 'list';
+  rightMode.value = 'list';
+  formMode.value = null;
 };
 </script>
 
 <template>
   <div class="participant-layout">
-    <!-- LINKS: FORM (IMMER SICHTBAR) -->
-    <div class="form">
-      <ParticipantForm :participant="selected" @save="save" @cancel="close" />
+    <!-- LINKS: Button oder Form -->
+    <div class="form-panel">
+      <div v-if="formMode === null">
+        <button class="btn-new_part" @click="createNew">
+          Neuen Teilnehmer anlegen
+        </button>
+      </div>
+
+      <ParticipantForm
+        v-if="formMode !== null"
+        :Participant="selected"
+        :title="
+          formMode === 'edit' ? 'Teilnehmer bearbeiten' : 'Teilnehmer anlegen'
+        "
+        @save="save"
+        @cancel="closeForm"
+      />
     </div>
 
-    <!-- RECHTS -->
+    <!-- RECHTS: List oder Detail -->
     <div class="list-panel">
-      <!-- LIST -->
       <ParticipantList
-        v-if="mode === 'list'"
-        :OnEdit="edit"
-        :OnSelect="select"
+        v-if="rightMode === 'list'"
+        :onEdit="edit"
+        :onSelect="select"
       />
 
-      <!-- DETAIL -->
       <ParticipantDetail
-        v-if="mode === 'detail'"
+        v-if="rightMode === 'detail'"
         :Participant="selected"
         @edit="edit"
-        @close="close"
+        @close="closeDetail"
       />
     </div>
   </div>

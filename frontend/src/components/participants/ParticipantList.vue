@@ -3,8 +3,8 @@ import { ref, computed, onMounted } from 'vue';
 import { getParticipants } from '../../services/participantService';
 
 const props = defineProps({
-  OnEdit: Function,
-  OnSelect: Function,
+  onEdit: Function,
+  onSelect: Function,
 });
 
 const Participants = ref([]);
@@ -66,7 +66,7 @@ const FilteredParticipants = computed(() => {
 
       <tbody>
         <tr v-for="P in FilteredParticipants" :key="P.Id">
-          <td>{{ P.Salutation === 0 ? 'Herr' : 'Frau' }}</td>
+          <td>{{ P.Salutation === false ? 'Herr' : 'Frau' }}</td>
           <td>{{ P.FirstName }}</td>
           <td>{{ P.LastName }}</td>
           <td>{{ P.Email }}</td>
@@ -82,13 +82,13 @@ const FilteredParticipants = computed(() => {
           </td>
 
           <td>
-            <button class="btn-edit" @click="props.OnEdit(P)">
+            <button class="btn-edit" @click="props.onEdit?.(P)">
               Bearbeiten
             </button>
-
+            <button class="btn-detail" @click="props.onSelect?.(P)">
+              Details
+            </button>
             <button class="btn-delete" @click="Remove(P.Id)">Löschen</button>
-
-            <button class="btn-edit" @click="props.OnSelect(P)">Details</button>
           </td>
         </tr>
       </tbody>

@@ -4,9 +4,13 @@ import { getLocations, getPostalCode } from '../../services/participantService';
 
 const props = defineProps({
   Participant: Object,
+  title: {
+    type: String,
+    default: 'Teilnehmer anlegen',
+  },
 });
 
-const emit = defineEmits(['Save', 'Cancel']);
+const emit = defineEmits(['save', 'cancel']);
 
 const createEmptyForm = () => ({
   Salutation: 0,
@@ -60,7 +64,6 @@ watch(
   { immediate: true }
 );
 
-// 🔥 PLZ → Ort automatisch
 watch(
   () => form.value.PostalCode,
   async (val) => {
@@ -92,39 +95,23 @@ watch(
 );
 
 const submit = () => {
-  emit('Save', form.value);
+  emit('save', form.value);
 };
 
 const cancel = () => {
-  emit('Cancel');
+  emit('cancel');
 };
 </script>
 
 <template>
   <div class="form">
-    <h3>Teilnehmer</h3>
+    <h3>{{ props.title }}</h3>
     <div>
       <label>Kundennummer</label>
       <input v-model="form.AgencyCustomerNumber" />
 
       <label>Berater</label>
       <input v-model="form.EmploymentAgentId" />
-
-      <label class="checkbox">
-        <input type="checkbox" v-model="form.IsSelfPayer" />
-        <span>Selbstzahler</span>
-      </label>
-
-      <label>Umschulungsort</label>
-      <select v-model="form.LocationID">
-        <option disabled value="">Bitte wählen</option>
-        <option v-for="L in Locations" :key="L.Id" :value="L.Id">
-          {{ L.Name }}
-        </option>
-      </select>
-
-      <label>Umschulungsstart</label>
-      <input v-model="form.EmploymentStartDate" type="date" />
     </div>
 
     <hr />
@@ -132,8 +119,8 @@ const cancel = () => {
     <div>
       <label>Anrede</label>
       <select v-model="form.Salutation">
-        <option :value="0">Herr</option>
-        <option :value="1">Frau</option>
+        <option :value="false">Herr</option>
+        <option :value="true">Frau</option>
       </select>
 
       <label>Vorname</label>
