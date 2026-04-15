@@ -8,10 +8,11 @@ async function getParticipantsFromDB() {
   // TODO: replace mock data with real DB query when database is ready
 
   await connectDB(); // open the connection to SQL Server
-  const result = await sql.query`SELECT * FROM Participants`; // run the query
+  const result = await sql.query`SELECT * FROM Participant`; // run the query
+  console.log(result.recordset);
+  console.log('testest');
   return result.recordset; // return the rows as an array
 }
-
 
 async function createParticipantInDB(participantData) {
   // TODO: replace with real DB insert
@@ -63,7 +64,6 @@ async function deleteParticipantFromDB(id) {
 
   return true;
 }
-
 
 // export functions here so the controller can use them
 module.exports = {
