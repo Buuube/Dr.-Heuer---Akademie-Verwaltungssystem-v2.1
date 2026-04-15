@@ -10,9 +10,11 @@ const {
   updateBooking,
   addBookingItems,
   deleteBooking,
+  getBookings,
 } = require('../controllers/bookingsController');
 
 router.post('/', createBooking);
+router.get('/', getBookings);
 router.put('/:id', updateBooking);
 router.post('/:id/items', addBookingItems); // add modules (single or package) to a booking
 router.delete('/:id', deleteBooking);
