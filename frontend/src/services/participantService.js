@@ -14,6 +14,39 @@ export async function getParticipants() {
   return response.json(); // convert the response from JSON to a JS array
 }
 
+export const getLocations = async () => {
+  const res = await fetch('http://localhost:3000/locations'); // URL anpassen!
+  return await res.json();
+};
+
+export const getPostalCode = async (postalCode) => {
+  const res = await fetch(`http://localhost:3000/postalcodes/${postalCode}`);
+  return await res.json();
+};
+
+export const saveParticipant = async (participant) => {
+  const isUpdate = !!participant.Id;
+
+  const url = isUpdate
+    ? `http://localhost:5000/participants/${participant.Id}`
+    : 'http://localhost:5000/participants';
+
+  const method = isUpdate ? 'PUT' : 'POST';
+
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(participant),
+  });
+
+  if (!res.ok) {
+    throw new Error('Fehler beim Speichern des Teilnehmers');
+  }
+
+  return await res.json();
+};
 // add more functions here when the backend supports POST, PUT, DELETE
 // export async function createParticipant(p) {}
 // export async function updateParticipant(p) {}
