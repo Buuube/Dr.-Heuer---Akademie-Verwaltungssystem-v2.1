@@ -1,6 +1,9 @@
+require('dotenv').config({
+  path: require('path').resolve(__dirname, '../.env'),
+});
+
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
 
 const app = express();
 
@@ -8,7 +11,7 @@ const app = express();
 const participantsRouter = require('./routes/participant');
 
 // middleware — runs on every request before routes, do not change order
-app.use(cors());        // allows frontend to talk to backend
+app.use(cors()); // allows frontend to talk to backend
 app.use(express.json()); // allows backend to read JSON from incoming requests
 
 // mount routes here — one line per feature
