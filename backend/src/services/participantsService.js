@@ -8,7 +8,13 @@ async function getParticipantsFromDB() {
   // TODO: replace mock data with real DB query when database is ready
 
   await connectDB(); // open the connection to SQL Server
-  const result = await sql.query`SELECT * FROM Participant`; // run the query
+  const result = await sql.query`SELECT 
+      p.*,
+      pc.Code AS PostalCode,
+      pc.City
+      FROM Participant p
+      JOIN PostalCode pc ON p.PostalCodeId = pc.PostalCodeId
+      WHERE p.IsDeleted = 0 OR p.IsDeleted IS NULL`; // run the query
   console.log(result.recordset);
   console.log('testest');
   return result.recordset; // return the rows as an array
