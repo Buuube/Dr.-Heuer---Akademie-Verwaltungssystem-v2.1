@@ -36,7 +36,6 @@ body {
     grid-template-columns: 380px 1fr;
     gap: 24px;
     padding: 24px;
-    max-width: 1400px;
     margin: 0 auto;
 }
 
@@ -217,4 +216,25 @@ tbody tr:hover {
     border: 1px solid rgba(124,247,255,0.15);
     background: rgba(0,0,0,0.25);
     color: var(--text);
+}
+
+.form .checkbox {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    margin: 6px 0 12px;
+    padding: 10px 12px;
+
+    gap: 4px; /* kleiner Abstand */
+}
+
+.form .checkbox input {
+    margin: 0;
+    margin-left: -2px; /* leicht nach links ziehen */
+    accent-color: var(--cyan);
+}
+
+.form .checkbox span {
+    margin-left: 2px; /* kontrollierter Textabstand */
 }

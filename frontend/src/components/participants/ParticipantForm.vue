@@ -1,155 +1,210 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { getLocations, getPostalCode } from '../../services/participantService';
 
 const props = defineProps({
-  participant: Object,
+  Participant: Object,
 });
 
-const emit = defineEmits(['save', 'cancel']);
+const emit = defineEmits(['Save', 'Cancel']);
 
-const form = ref({
-  salutation: 0,
-  firstName: '',
-  lastName: '',
-  street: '',
-  houseNumber: '',
-  postalCodeId: '',
-  dateOfBirth: '',
-  email: '',
-  phone: '',
-  mobile: '',
-  isEmployed: false,
+const createEmptyForm = () => ({
+  Salutation: 0,
+  FirstName: '',
+  LastName: '',
+  Street: '',
+  HouseNumber: '',
+  PostalCode: '',
+  PostalCodeId: '',
+  City: '',
+  LocationID: '',
+  DateOfBirth: '',
+  PlaceOfBirth: '',
+  Email: '',
+  Phone: '',
+  Mobile: '',
+  Fax: '',
+  IsSelfPayer: false,
+  AgencyCustomerNumber: '',
+  EmploymentAgentId: '',
+  FirstContactDate: '',
+  ContactSource: '',
+  IsEmployed: false,
+  EmploymentStartDate: '',
+  Employer: '',
+});
+
+const form = ref(createEmptyForm());
+const Locations = ref([]);
+
+const loadLocations = async () => {
+  Locations.value = await getLocations();
+};
+
+onMounted(() => {
+  loadLocations();
 });
 
 watch(
-  () => props.participant,
+  () => props.Participant,
   (val) => {
     if (val) {
-      form.value = { ...val };
-    } else {
       form.value = {
-        salutation: 0,
-        firstName: '',
-        lastName: '',
-        street: '',
-        houseNumber: '',
-        postalCodeId: '',
-        dateOfBirth: '',
-        email: '',
-        phone: '',
-        mobile: '',
-        isEmployed: false,
+        ...createEmptyForm(),
+        ...val,
       };
+    } else {
+      form.value = createEmptyForm();
+    }
+  },
+  { immediate: true }
+);
+
+// 🔥 PLZ → Ort automatisch
+watch(
+  () => form.value.PostalCode,
+  async (val) => {
+    if (!val || val.length !== 5) return;
+
+    try {
+      const result = await getPostalCode(val);
+
+      if (result) {
+        form.value.PostalCodeId = result.Id;
+        form.value.City = result.City;
+      } else {
+        form.value.City = 'Nicht gefunden';
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+);
+
+watch(
+  () => form.value.IsEmployed,
+  (val) => {
+    if (!val) {
+      form.value.Employer = '';
+      form.value.EmploymentStartDate = '';
     }
   }
 );
 
 const submit = () => {
-  emit('save', form.value);
+  emit('Save', form.value);
 };
 
 const cancel = () => {
-  emit('cancel');
+  emit('Cancel');
 };
 </script>
 
 <template>
   <div class="form">
     <h3>Teilnehmer</h3>
-
-    <!-- Administrative Daten -->
     <div>
       <label>Kundennummer</label>
-      <input v-model="form.agencyCustomerNumber" placeholder="12345678" />
+      <input v-model="form.AgencyCustomerNumber" />
 
-      <label>Berater (ID oder Name)</label>
-      <input v-model="form.employmentAgentId" placeholder="Agent ID" />
+      <label>Berater</label>
+      <input v-model="form.EmploymentAgentId" />
 
-      <label>
-        <input type="checkbox" v-model="form.isSelfPayer" />
-        Selbstzahler
+      <label class="checkbox">
+        <input type="checkbox" v-model="form.IsSelfPayer" />
+        <span>Selbstzahler</span>
       </label>
+
+      <label>Umschulungsort</label>
+      <select v-model="form.LocationID">
+        <option disabled value="">Bitte wählen</option>
+        <option v-for="L in Locations" :key="L.Id" :value="L.Id">
+          {{ L.Name }}
+        </option>
+      </select>
+
+      <label>Umschulungsstart</label>
+      <input v-model="form.EmploymentStartDate" type="date" />
     </div>
 
     <hr />
 
-    <!-- Persönliche Daten -->
     <div>
       <label>Anrede</label>
-      <select v-model="form.salutation">
+      <select v-model="form.Salutation">
         <option :value="0">Herr</option>
         <option :value="1">Frau</option>
       </select>
 
       <label>Vorname</label>
-      <input v-model="form.firstName" placeholder="Max" />
+      <input v-model="form.FirstName" />
 
       <label>Nachname</label>
-      <input v-model="form.lastName" placeholder="Mustermann" />
+      <input v-model="form.LastName" />
 
       <label>Geburtsdatum</label>
-      <input v-model="form.dateOfBirth" type="date" />
+      <input v-model="form.DateOfBirth" type="date" />
 
       <label>Geburtsort</label>
-      <input v-model="form.placeOfBirth" placeholder="Köln" />
+      <input v-model="form.PlaceOfBirth" />
     </div>
 
     <hr />
 
-    <!-- Adresse -->
     <div>
       <label>Straße</label>
-      <input v-model="form.street" placeholder="Straße" />
+      <input v-model="form.Street" />
 
       <label>Hausnummer</label>
-      <input v-model="form.houseNumber" placeholder="Nr." />
+      <input v-model="form.HouseNumber" />
 
       <label>PLZ</label>
-      <input v-model="form.postalCodeId" placeholder="PLZ ID" />
+      <input v-model="form.PostalCode" placeholder="44135" />
+
+      <label>Wohnort</label>
+      <input :value="form.City" disabled />
     </div>
 
     <hr />
 
-    <!-- Kontakt -->
     <div>
       <label>E-Mail</label>
-      <input v-model="form.email" placeholder="E-Mail" />
+      <input v-model="form.Email" />
 
       <label>Telefon</label>
-      <input v-model="form.phone" placeholder="Telefon" />
+      <input v-model="form.Phone" />
 
       <label>Mobil</label>
-      <input v-model="form.mobile" placeholder="Mobil" />
+      <input v-model="form.Mobile" />
 
       <label>Fax</label>
-      <input v-model="form.fax" placeholder="Fax" />
+      <input v-model="form.Fax" />
     </div>
 
     <hr />
 
-    <!-- Beschäftigung -->
     <div>
-      <label>
-        <input type="checkbox" v-model="form.isEmployed" />
-        Beschäftigt
+      <label class="checkbox">
+        <input type="checkbox" v-model="form.IsEmployed" />
+        <span>Beschäftigt</span>
       </label>
 
       <label>Arbeitgeber</label>
-      <input v-model="form.employer" placeholder="Firma" />
-
-      <label>Beschäftigungsstart</label>
-      <input v-model="form.employmentStartDate" type="date" />
+      <input
+        v-model="form.Employer"
+        :disabled="!form.IsEmployed"
+        :class="{ disabled: !form.IsEmployed }"
+      />
     </div>
 
     <hr />
 
-    <!-- Meta -->
     <div>
       <label>Erster Kontakt</label>
-      <input v-model="form.firstContactDate" type="date" />
+      <input v-model="form.FirstContactDate" type="date" />
 
       <label>Kontaktquelle</label>
-      <input v-model="form.contactSource" placeholder="z.B. Website" />
+      <input v-model="form.ContactSource" />
     </div>
 
     <button @click="submit">Speichern</button>

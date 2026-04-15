@@ -1,40 +1,35 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import {
-  getParticipants,
-  deleteParticipant,
-} from '../../services/participantService';
+import { getParticipants } from '../../services/participantService';
 
 const props = defineProps({
-  onEdit: Function,
+  OnEdit: Function,
+  OnSelect: Function,
 });
 
-const participants = ref([]);
-const search = ref('');
-const filterEmployed = ref('all'); // all | true | false
+const Participants = ref([]);
+const Search = ref('');
+const FilterEmployed = ref('all');
 
-const load = async () => {
-  participants.value = await getParticipants();
+const Load = async () => {
+  Participants.value = await getParticipants();
 };
 
-onMounted(load);
+onMounted(Load);
 
-const remove = async (id) => {
-  await deleteParticipant(id);
-  await load();
-};
+const Remove = async (Id) => {};
 
-const filteredParticipants = computed(() => {
-  return participants.value.filter((p) => {
-    const fullText = `${p.firstName} ${p.lastName} ${p.email}`.toLowerCase();
+const FilteredParticipants = computed(() => {
+  return Participants.value.filter((P) => {
+    const FullText = `${P.FirstName} ${P.LastName} ${P.Email}`.toLowerCase();
 
-    const matchesSearch = fullText.includes(search.value.toLowerCase());
+    const MatchesSearch = FullText.includes(Search.value.toLowerCase());
 
-    const matchesFilter =
-      filterEmployed.value === 'all' ||
-      String(p.isEmployed) === filterEmployed.value;
+    const MatchesFilter =
+      FilterEmployed.value === 'all' ||
+      String(P.IsEmployed) === FilterEmployed.value;
 
-    return matchesSearch && matchesFilter;
+    return MatchesSearch && MatchesFilter;
   });
 });
 </script>
@@ -43,19 +38,17 @@ const filteredParticipants = computed(() => {
   <div>
     <h3>Teilnehmer Liste</h3>
 
-    <!-- SEARCH + FILTER -->
     <div class="toolbar">
-      <input v-model="search" placeholder="Suche..." />
+      <input v-model="Search" placeholder="Suche..." />
 
-      <select v-model="filterEmployed">
+      <select v-model="FilterEmployed">
         <option value="all">Alle</option>
         <option value="true">Beschäftigt</option>
         <option value="false">Nicht beschäftigt</option>
       </select>
     </div>
 
-    <!-- TABLE -->
-    <table border="1" cellpadding="8">
+    <table>
       <thead>
         <tr>
           <th>Anrede</th>
@@ -65,30 +58,37 @@ const filteredParticipants = computed(() => {
           <th>Telefon</th>
           <th>Mobil</th>
           <th>PLZ</th>
+          <th>Ort</th>
           <th>Beschäftigt</th>
           <th>Aktionen</th>
         </tr>
       </thead>
 
       <tbody>
-        <tr v-for="p in filteredParticipants" :key="p.id">
-          <td>{{ p.salutation === 0 ? 'Herr' : 'Frau' }}</td>
-          <td>{{ p.firstName }}</td>
-          <td>{{ p.lastName }}</td>
-          <td>{{ p.email }}</td>
-          <td>{{ p.phone }}</td>
-          <td>{{ p.mobile }}</td>
-          <td>{{ p.postalCodeId }}</td>
+        <tr v-for="P in FilteredParticipants" :key="P.Id">
+          <td>{{ P.Salutation === 0 ? 'Herr' : 'Frau' }}</td>
+          <td>{{ P.FirstName }}</td>
+          <td>{{ P.LastName }}</td>
+          <td>{{ P.Email }}</td>
+          <td>{{ P.Phone }}</td>
+          <td>{{ P.Mobile }}</td>
+
+          <td>{{ P.PostalCode?.Code }}</td>
+          <td>{{ P.PostalCode?.City }}</td>
+
           <td>
-            <span v-if="p.isEmployed">✔</span>
+            <span v-if="P.IsEmployed">✔</span>
             <span v-else>✖</span>
           </td>
 
           <td>
-            <button class="btn-edit" @click="props.onEdit(p)">
+            <button class="btn-edit" @click="props.OnEdit(P)">
               Bearbeiten
             </button>
-            <button class="btn-delete" @click="remove(p.id)">Löschen</button>
+
+            <button class="btn-delete" @click="Remove(P.Id)">Löschen</button>
+
+            <button class="btn-edit" @click="props.OnSelect(P)">Details</button>
           </td>
         </tr>
       </tbody>
