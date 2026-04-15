@@ -7,6 +7,7 @@ const {
   updateBookingInDB,
   addBookingItemsInDB,
   deleteBookingFromDB,
+  getBookingsFromDB,
 } = require('../services/bookingsService');
 
 async function createBooking(req, res) {
@@ -30,6 +31,16 @@ async function updateBooking(req, res) {
     res.json(updatedBooking);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update booking' });
+  }
+}
+
+async function getBookings(req, res) {
+  try {
+    const bookings = await getBookingsFromDB();
+    res.json(bookings);
+  } catch (err) {
+    console.error('getBookings error:', err);
+    res.status(500).json({ error: 'Failed to fetch bookings' });
   }
 }
 
@@ -65,6 +76,7 @@ async function deleteBooking(req, res) {
 }
 
 module.exports = {
+  getBookings,
   createBooking,
   updateBooking,
   addBookingItems,

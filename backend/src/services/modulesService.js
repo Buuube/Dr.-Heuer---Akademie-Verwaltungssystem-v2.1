@@ -4,48 +4,6 @@
 
 const { sql, connectDB } = require('../db/db');
 
-async function getModulesFromDB(courseId) {
-  // TODO: replace mock data with real DB query when database is ready
-  // await connectDB();
-  // let query = 'SELECT * FROM Modules';
-  // if (courseId) query += ` WHERE CourseId = ${Number(courseId)}`;
-  // const result = await sql.query(query);
-  // return result.recordset;
-
-  const modules = [
-    {
-      id: 1,
-      courseId: 1,
-      moduleCode: 'MOD-001',
-      title: 'Einführung',
-      durationHours: 8,
-      costPerUnit: 40.0,
-    },
-    {
-      id: 2,
-      courseId: 1,
-      moduleCode: 'MOD-002',
-      title: 'Vertiefung',
-      durationHours: 16,
-      costPerUnit: 40.0,
-    },
-    {
-      id: 3,
-      courseId: 2,
-      moduleCode: 'MOD-003',
-      title: 'Excel Basics',
-      durationHours: 4,
-      costPerUnit: 30.0,
-    },
-  ];
-
-  // filter by courseId if provided
-  if (courseId) {
-    return modules.filter((m) => m.courseId === Number(courseId));
-  }
-  return modules;
-}
-
 async function createModuleInDB(moduleData) {
   // TODO: replace with real DB insert
   // await connectDB();
@@ -89,10 +47,33 @@ async function deleteModuleFromDB(id) {
 
   return true;
 }
+async function getModulesFromDB() {
+  const pool = await connectDB();
+  const result = await pool.request().query('SELECT * FROM Module');
+  return result.recordset;
+}
+
+async function updateExamInDB(moduleCode, examId, examData) {
+  const pool = await connectDB();
+  const result = await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, moduleCode)
+    .input('ModuleExamId', sql.Int, examId)
+    .input('ExamName', sql.VarChar, examData.examName)
+    .input('ExamType', sql.VarChar, examData.examType).query(`
+      UPDATE ModuleExam SET
+        ExamName = @ExamName,
+        ExamType = @ExamType
+      OUTPUT INSERTED.*
+      WHERE ModuleExamId = @ModuleExamId AND ModuleCodeId = @ModuleCodeId
+    `);
+  return result.recordset[0];
+}
 
 module.exports = {
   getModulesFromDB,
   createModuleInDB,
   updateModuleInDB,
   deleteModuleFromDB,
+  updateExamInDB,
 };
