@@ -14,6 +14,7 @@ async function getParticipants(req, res) {
     const participants = await getParticipantsFromDB();
     res.json(participants);
   } catch (err) {
+    console.error('getParticipants error:', err); // ← add this
     res.status(500).json({ error: 'Failed to fetch participants' });
   }
 }
@@ -50,11 +51,9 @@ async function deleteParticipant(req, res) {
   } catch (err) {
     // 409 = Conflict — participant still has bookings or absence days
     if (err.code === 'HAS_BOOKINGS') {
-      return res
-        .status(409)
-        .json({
-          error: 'Löschen nicht möglich: Teilnehmer hat aktive Buchungen',
-        });
+      return res.status(409).json({
+        error: 'Löschen nicht möglich: Teilnehmer hat aktive Buchungen',
+      });
     }
     res.status(500).json({ error: 'Failed to delete participant' });
   }
