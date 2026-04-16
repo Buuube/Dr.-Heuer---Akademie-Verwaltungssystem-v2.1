@@ -90,13 +90,22 @@ const Submit = async () => {
     <label>Teilnehmer</label>
     <select v-model="Form.ParticipantId">
       <option disabled value="">Bitte wählen</option>
-      <option v-for="P in Participants" :key="P.Id" :value="P.Id">
+      <option
+        v-for="P in Participants"
+        :key="P.ParticipantId"
+        :value="P.ParticipantId"
+      >
         {{ P.FirstName }} {{ P.LastName }}
       </option>
     </select>
 
     <label>Buchungstyp</label>
-    <input v-model="Form.BookingType" placeholder="z.B. Umschulung" />
+    <select v-model="Form.BookingType">
+      <option disabled value="">Bitte wählen</option>
+      <option value="U">Umschulung</option>
+      <option value="W">Weiterbildung</option>
+      <option value="E">Einzelmodul</option>
+    </select>
 
     <label>Start (geplant)</label>
     <input v-model="Form.PlannedStartDate" type="date" />
