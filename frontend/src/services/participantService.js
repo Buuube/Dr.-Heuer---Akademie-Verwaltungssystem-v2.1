@@ -20,7 +20,9 @@ export const getLocations = async () => {
 };
 
 export const getPostalCode = async (postalCode) => {
-  const res = await fetch(`http://localhost:3000/postalcodes/${postalCode}`);
+  const res = await fetch(
+    `http://localhost:3000/api/postalcodes/${postalCode}`
+  );
   return await res.json();
 };
 
@@ -46,12 +48,12 @@ export const saveParticipant = async (participant) => {
   return await res.json();
 };
 
-export const deleteParticipant = async (id) => {
-  const res = await fetch(`http://localhost:3000/api/participants/${id}`, {
+export async function deleteParticipant(id) {
+  const res = await fetch(`${API}/${id}`, {
     method: 'DELETE',
   });
-  if (!res.ok) throw new Error('Fehler beim Löschen');
-};
+  if (!res.ok) throw new Error('Failed to delete participant');
+}
 // add more functions here when the backend supports POST, PUT, DELETE
 // export async function createParticipant(p) {}
 // export async function updateParticipant(p) {}
