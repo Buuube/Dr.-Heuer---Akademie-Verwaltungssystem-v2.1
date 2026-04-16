@@ -42,7 +42,6 @@ const FilteredParticipants = computed(() => {
 
     <div class="toolbar">
       <input v-model="Search" placeholder="Suche..." />
-
       <select v-model="FilterEmployed">
         <option value="all">Alle</option>
         <option value="true">Beschäftigt</option>
@@ -65,10 +64,11 @@ const FilteredParticipants = computed(() => {
           <th>Aktionen</th>
         </tr>
       </thead>
-
       <tbody>
-        <tr v-for="P in FilteredParticipants" :key="P.Id">
-          <td>{{ P.Salutation === 0 ? 'Herr' : 'Frau' }}</td>
+        <tr v-for="P in FilteredParticipants" :key="P.ParticipantId || P.Id">
+          <td>
+            {{ P.Salutation === false || P.Salutation === 0 ? 'Herr' : 'Frau' }}
+          </td>
           <td>{{ P.FirstName }}</td>
           <td>{{ P.LastName }}</td>
           <td>{{ P.Email }}</td>
@@ -81,13 +81,14 @@ const FilteredParticipants = computed(() => {
             <span v-else>✖</span>
           </td>
           <td>
+            <!-- Ganzes Objekt P übergeben, nicht nur ID -->
             <button class="btn-edit" @click="props.onEdit?.(P)">
               Bearbeiten
             </button>
             <button class="btn-detail" @click="props.onSelect?.(P)">
               Details
             </button>
-            <button class="btn-delete" @click="props.onDelete?.(P.Id)">
+            <button class="btn-delete" @click="props.onDelete?.(P)">
               Löschen
             </button>
           </td>

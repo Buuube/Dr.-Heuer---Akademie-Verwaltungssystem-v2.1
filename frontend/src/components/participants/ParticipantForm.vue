@@ -15,7 +15,11 @@ const emit = defineEmits(['save', 'cancel']);
 
 const formatDate = (val) => {
   if (!val) return '';
-  return new Date(val).toISOString().split('T')[0];
+  try {
+    return new Date(val).toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
 };
 
 const createEmptyForm = () => ({
@@ -65,6 +69,7 @@ onMounted(() => {
 watch(
   () => props.Participant,
   (val) => {
+    errors.value = {};
     if (val) {
       form.value = {
         ...createEmptyForm(),
@@ -83,7 +88,7 @@ watch(
 watch(
   () => form.value.PostalCode,
   async (val) => {
-    if (!val || val.length !== 5) return;
+    if (!val || String(val).length !== 5) return;
     try {
       const result = await getPostalCode(val);
       if (result) {
@@ -108,16 +113,11 @@ watch(
   }
 );
 
-const validateForm = () => {
+// Formular-Daten nach oben emittieren — Parent macht den API-Call
+const submit = () => {
   const result = validateParticipant(form.value);
   errors.value = result.errors;
-  return result.valid;
-};
-
-const submit = () => {
-  const ok = validateForm();
-  if (!ok) return;
-
+  if (!result.valid) return;
   emit('save', form.value);
 };
 
@@ -130,7 +130,7 @@ const cancel = () => {
   <div class="form">
     <h3>{{ props.title }}</h3>
 
-    <div v-if="!Object.keys(errors).length === false" class="error-box">
+    <div v-if="Object.keys(errors).length > 0" class="error-box">
       Bitte korrigiere die markierten Felder
     </div>
 
@@ -151,40 +151,61 @@ const cancel = () => {
       </select>
 
       <label>Vorname</label>
-      <input v-model="form.FirstName" />
+      <input
+        v-model="form.FirstName"
+        :class="{ 'input-error': errors.FirstName }"
+      />
       <div v-if="errors.FirstName" class="error">{{ errors.FirstName }}</div>
 
       <label>Nachname</label>
-      <input v-model="form.LastName" />
+      <input
+        v-model="form.LastName"
+        :class="{ 'input-error': errors.LastName }"
+      />
       <div v-if="errors.LastName" class="error">{{ errors.LastName }}</div>
 
       <label>Geburtsdatum</label>
-      <input v-model="form.DateOfBirth" type="date" />
+      <input
+        v-model="form.DateOfBirth"
+        type="date"
+        :class="{ 'input-error': errors.DateOfBirth }"
+      />
       <div v-if="errors.DateOfBirth" class="error">
         {{ errors.DateOfBirth }}
       </div>
 
       <label>Geburtsort</label>
-      <input v-model="form.PlaceOfBirth" />
+      <input
+        v-model="form.PlaceOfBirth"
+        :class="{ 'input-error': errors.PlaceOfBirth }"
+      />
       <div v-if="errors.PlaceOfBirth" class="error">
         {{ errors.PlaceOfBirth }}
       </div>
     </div>
+
     <hr />
 
     <div>
       <label>Straße</label>
-      <input v-model="form.Street" />
+      <input v-model="form.Street" :class="{ 'input-error': errors.Street }" />
       <div v-if="errors.Street" class="error">{{ errors.Street }}</div>
 
       <label>Hausnummer</label>
-      <input v-model="form.HouseNumber" />
+      <input
+        v-model="form.HouseNumber"
+        :class="{ 'input-error': errors.HouseNumber }"
+      />
       <div v-if="errors.HouseNumber" class="error">
         {{ errors.HouseNumber }}
       </div>
 
       <label>PLZ</label>
-      <input v-model="form.PostalCode" placeholder="44135" />
+      <input
+        v-model="form.PostalCode"
+        placeholder="44135"
+        :class="{ 'input-error': errors.PostalCode }"
+      />
       <div v-if="errors.PostalCode" class="error">{{ errors.PostalCode }}</div>
 
       <label>Wohnort</label>
@@ -195,7 +216,7 @@ const cancel = () => {
 
     <div>
       <label>E-Mail</label>
-      <input v-model="form.Email" />
+      <input v-model="form.Email" :class="{ 'input-error': errors.Email }" />
       <div v-if="errors.Email" class="error">{{ errors.Email }}</div>
 
       <label>Telefon</label>
@@ -203,13 +224,12 @@ const cancel = () => {
 
       <label>Mobil</label>
       <input v-model="form.Mobile" />
-
       <div v-if="errors.PhoneMobile" class="error">
         {{ errors.PhoneMobile }}
       </div>
 
       <label>Fax</label>
-      <input v-model="form.Fax" />
+      <input v-model="form.Fax" :class="{ 'input-error': errors.Fax }" />
       <div v-if="errors.Fax" class="error">{{ errors.Fax }}</div>
     </div>
 
@@ -222,11 +242,12 @@ const cancel = () => {
       </label>
 
       <label>Arbeitgeber</label>
-      <input v-model="form.Employer" :disabled="!form.IsEmployed" />
-
-      <div v-if="errors.Employer" class="error">
-        {{ errors.Employer }}
-      </div>
+      <input
+        v-model="form.Employer"
+        :disabled="!form.IsEmployed"
+        :class="{ disabled: !form.IsEmployed, 'input-error': errors.Employer }"
+      />
+      <div v-if="errors.Employer" class="error">{{ errors.Employer }}</div>
     </div>
 
     <hr />
