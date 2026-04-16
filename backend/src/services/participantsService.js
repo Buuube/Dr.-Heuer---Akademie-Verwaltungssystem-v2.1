@@ -16,40 +16,70 @@ async function getParticipantsFromDB() {
 }
 
 async function createParticipantInDB(participantData) {
-  const pool = await connectDB(); // open the connection
+  const pool = await connectDB();
 
   const result = await pool
     .request()
-    .input('Salutation', sql.Bit, participantData.salutation) // 0 = Herr, 1 = Frau
-    .input('LastName', sql.VarChar, participantData.lastName) // required field
-    .input('FirstName', sql.VarChar, participantData.firstName) // optional in DB but usually provided
-    .input('Street', sql.VarChar, participantData.street) // required field
-    .input('HouseNumber', sql.VarChar, participantData.houseNumber) // required field
-    .input('PostalCodeId', sql.Int, participantData.postalCodeId) // FK to PostalCode table
-    .input('DateOfBirth', sql.Date, participantData.dateOfBirth) // required field
-    .input('PlaceOfBirth', sql.VarChar, participantData.placeOfBirth) // optional
-    .input('Email', sql.VarChar, participantData.email) // optional
-    .input('Phone', sql.VarChar, participantData.phone) // optional
-    .input('Mobile', sql.VarChar, participantData.mobile) // optional
-    .input('IsEmployed', sql.Bit, participantData.isEmployed) // optional, 0 or 1
-    .query(`
+    .input('Salutation', sql.Bit, participantData.Salutation)
+    .input('LastName', sql.VarChar, participantData.LastName)
+    .input('FirstName', sql.VarChar, participantData.FirstName)
+    .input('Street', sql.VarChar, participantData.Street)
+    .input('HouseNumber', sql.VarChar, participantData.HouseNumber)
+    .input('PostalCodeId', sql.Int, participantData.PostalCodeId || 3)
+    .input('DateOfBirth', sql.Date, participantData.DateOfBirth)
+    .input('PlaceOfBirth', sql.VarChar, participantData.PlaceOfBirth)
+    .input('Email', sql.VarChar, participantData.Email)
+    .input('Phone', sql.VarChar, participantData.Phone)
+    .input('Mobile', sql.VarChar, participantData.Mobile)
+    .input('Fax', sql.VarChar, participantData.Fax)
+    .input('IsSelfPayer', sql.Bit, participantData.IsSelfPayer)
+    .input(
+      'AgencyCustomerNumber',
+      sql.VarChar,
+      participantData.AgencyCustomerNumber
+    )
+    .input(
+      'EmploymentAgentId',
+      sql.Int,
+      participantData.EmploymentAgentId
+        ? Number(participantData.EmploymentAgentId)
+        : null
+    )
+    .input(
+      'FirstContactDate',
+      sql.Date,
+      participantData.FirstContactDate || null
+    )
+    .input('ContactSource', sql.VarChar, participantData.ContactSource)
+    .input('IsEmployed', sql.Bit, participantData.IsEmployed)
+    .input(
+      'EmploymentStartDate',
+      sql.Date,
+      participantData.EmploymentStartDate || null
+    )
+    .input('Employer', sql.VarChar, participantData.Employer).query(`
       INSERT INTO Participant (
         Salutation, LastName, FirstName,
         Street, HouseNumber, PostalCodeId,
         DateOfBirth, PlaceOfBirth,
-        Email, Phone, Mobile, IsEmployed
+        Email, Phone, Mobile, Fax,
+        IsSelfPayer, AgencyCustomerNumber, EmploymentAgentId,
+        FirstContactDate, ContactSource,
+        IsEmployed, EmploymentStartDate, Employer
       )
       OUTPUT INSERTED.*
       VALUES (
         @Salutation, @LastName, @FirstName,
         @Street, @HouseNumber, @PostalCodeId,
         @DateOfBirth, @PlaceOfBirth,
-        @Email, @Phone, @Mobile, @IsEmployed
+        @Email, @Phone, @Mobile, @Fax,
+        @IsSelfPayer, @AgencyCustomerNumber, @EmploymentAgentId,
+        @FirstContactDate, @ContactSource,
+        @IsEmployed, @EmploymentStartDate, @Employer
       )
     `);
-  // OUTPUT INSERTED.* returns the full created row including the auto-generated ParticipantId
 
-  return result.recordset[0]; // return the newly created participant row
+  return result.recordset[0];
 }
 
 async function updateParticipantInDB(id, participantData) {
