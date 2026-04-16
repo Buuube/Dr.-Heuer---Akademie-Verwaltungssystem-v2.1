@@ -1,31 +1,31 @@
-const API = 'http://localhost:3000/api/courses';
+const API = 'http://localhost:3000/api/modules';
 
-export async function getCourses() {
+export async function getModule() {
   const response = await fetch(API);
   return response.json();
 }
 
-export async function createCourse(courseData) {
+export async function createModule(moduleData) {
   const response = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(courseData),
+    body: JSON.stringify(moduleData),
   });
 
   return response.json();
 }
 
-export async function updateCourse(id, course) {
+export async function updateModule(id, module) {
   const response = await fetch(`${API}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(course),
+    body: JSON.stringify(module),
   });
 
   return response.json();
 }
 
-export async function deleteCourse(id) {
+export async function deleteModule(id) {
   await fetch(`${API}/${id}`, {
     method: 'DELETE',
   });

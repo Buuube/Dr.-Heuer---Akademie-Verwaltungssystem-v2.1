@@ -1,6 +1,7 @@
 <script setup>
 const props = defineProps({
   Participant: Object,
+  PostalCode: Object,
 });
 
 const emit = defineEmits(['edit', 'close']);
@@ -36,9 +37,21 @@ const emit = defineEmits(['edit', 'close']);
       <b>Adresse:</b> {{ Participant.Street }} <b>Hausnummer:</b>
       {{ Participant.HouseNumber }}
     </p>
+
     <p>
-      <b>PLZ:</b> {{ Participant.PostalCode?.Code }} <b>Ort:</b>
-      {{ Participant.PostalCode?.City }}
+      <b>PLZ:</b>
+      {{
+        typeof Participant.PostalCode === 'string'
+          ? Participant.PostalCode
+          : Participant.PostalCode?.Code
+      }}
+
+      <b>Ort:</b>
+      {{
+        typeof Participant.PostalCode === 'string'
+          ? Participant.City
+          : Participant.PostalCode?.City
+      }}
     </p>
 
     <p><b>Umschulungsort:</b> {{ Participant.Location?.Name }}</p>

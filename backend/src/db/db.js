@@ -8,17 +8,19 @@ const config = {
   database: process.env.DB_NAME,
   options: {
     encrypt: false, // set to true if using Azure
-    trustServerCertificate: true // allows local SQL Server connections
-  }
+    trustServerCertificate: true, // allows local SQL Server connections
+  },
 };
 
 // opens the connection to SQL Server
 async function connectDB() {
   try {
-    await sql.connect(config);
+    const pool = await sql.connect(config);
     console.log('SQL Server connected');
+    return pool; // ← this is the only change
   } catch (err) {
     console.error('DB connection error:', err);
+    throw err; // ← rethrow so the caller knows it failed
   }
 }
 

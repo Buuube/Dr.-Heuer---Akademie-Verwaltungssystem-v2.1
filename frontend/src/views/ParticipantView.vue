@@ -1,32 +1,38 @@
 <script setup>
-import { ref, toRaw } from 'vue';
+import { ref } from 'vue';
 
 import ParticipantList from '../components/participants/ParticipantList.vue';
 import ParticipantForm from '../components/participants/ParticipantForm.vue';
 import ParticipantDetail from '../components/participants/ParticipantDetail.vue';
 
-import { saveParticipant } from '../services/participantService';
+import {
+  saveParticipant,
+  deleteParticipant,
+} from '../services/participantService';
 
 const selected = ref(null);
 const formMode = ref(null); // null | 'new' | 'edit'
 const rightMode = ref('list'); // 'list' | 'detail'
 
+// Sicheres Klonen — funktioniert auch bei verschachtelten Objekten
+const clone = (p) => JSON.parse(JSON.stringify(p));
+
 const select = (p) => {
-  selected.value = structuredClone(toRaw(p));
+  selected.value = clone(p);
   rightMode.value = 'detail';
   formMode.value = null;
 };
 
 const edit = (p) => {
-  selected.value = structuredClone(toRaw(p));
+  selected.value = clone(p);
   formMode.value = 'edit';
-  rightMode.value = rightMode.value;
+  // rightMode wird NICHT angefasst → List oder Detail bleibt sichtbar
 };
 
 const createNew = () => {
   selected.value = null;
   formMode.value = 'new';
-  rightMode.value = 'list';
+  // rightMode wird NICHT angefasst → List oder Detail bleibt sichtbar
 };
 
 const save = async (p) => {
@@ -38,13 +44,21 @@ const save = async (p) => {
 
 const closeForm = () => {
   formMode.value = null;
-  // selected wird NICHT geleert → Detail bleibt sichtbar
+  // selected wird NICHT geleert → Detail bleibt sichtbar falls offen
 };
 
 const closeDetail = () => {
   selected.value = null;
   rightMode.value = 'list';
   formMode.value = null;
+};
+
+const remove = async (id) => {
+  if (!confirm('Teilnehmer wirklich löschen?')) return;
+  await deleteParticipant(id);
+  selected.value = null;
+  formMode.value = null;
+  rightMode.value = 'list';
 };
 </script>
 
@@ -60,6 +74,7 @@ const closeDetail = () => {
 
       <ParticipantForm
         v-if="formMode !== null"
+        :key="selected?.Id || formMode"
         :Participant="selected"
         :title="
           formMode === 'edit' ? 'Teilnehmer bearbeiten' : 'Teilnehmer anlegen'
@@ -75,6 +90,7 @@ const closeDetail = () => {
         v-if="rightMode === 'list'"
         :onEdit="edit"
         :onSelect="select"
+        :onDelete="remove"
       />
 
       <ParticipantDetail
