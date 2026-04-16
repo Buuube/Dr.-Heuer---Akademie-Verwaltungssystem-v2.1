@@ -3,14 +3,9 @@ const { sql, connectDB } = require('../db/db');
 async function getParticipantsFromDB() {
   const pool = await connectDB();
   const result = await pool.request().query(`
-    SELECT 
-      p.*,
-      pc.Code AS PostalCode,
-      pc.City,
-      l.Name AS LocationName
+    SELECT p.*, pc.Code AS PostalCode, pc.City
     FROM Participant p
-    LEFT JOIN PostalCode pc ON p.PostalCodeId = pc.PostalCodeId
-    LEFT JOIN Location l ON p.LocationId = l.LocationId
+    JOIN PostalCode pc ON p.PostalCodeId = pc.PostalCodeId
     WHERE p.IsDeleted = 0 OR p.IsDeleted IS NULL
   `);
   return result.recordset;
@@ -18,48 +13,68 @@ async function getParticipantsFromDB() {
 
 async function createParticipantInDB(participantData) {
   const pool = await connectDB();
+
   const result = await pool
     .request()
-    .input('Salutation', sql.Bit, participantData.salutation ?? null)
-    .input('LastName', sql.VarChar, participantData.lastName)
-    .input('FirstName', sql.VarChar, participantData.firstName ?? null)
-    .input('Street', sql.VarChar, participantData.street)
-    .input('HouseNumber', sql.VarChar, participantData.houseNumber)
-    .input('PostalCodeId', sql.Int, participantData.postalCodeId)
-    .input('DateOfBirth', sql.Date, participantData.dateOfBirth)
-    .input('PlaceOfBirth', sql.VarChar, participantData.placeOfBirth ?? null)
-    .input('Email', sql.VarChar, participantData.email ?? null)
-    .input('Phone', sql.VarChar, participantData.phone ?? null)
-    .input('Mobile', sql.VarChar, participantData.mobile ?? null)
-    .input('Fax', sql.VarChar, participantData.fax ?? null)
-    .input('IsSelfPayer', sql.Bit, participantData.isSelfPayer ?? false)
+    .input('Salutation', sql.Bit, participantData.Salutation)
+    .input('LastName', sql.VarChar, participantData.LastName)
+    .input('FirstName', sql.VarChar, participantData.FirstName)
+    .input('Street', sql.VarChar, participantData.Street)
+    .input('HouseNumber', sql.VarChar, participantData.HouseNumber)
+    .input('PostalCodeId', sql.Int, participantData.PostalCodeId || 3)
+    .input('DateOfBirth', sql.Date, participantData.DateOfBirth)
+    .input('PlaceOfBirth', sql.VarChar, participantData.PlaceOfBirth)
+    .input('Email', sql.VarChar, participantData.Email)
+    .input('Phone', sql.VarChar, participantData.Phone)
+    .input('Mobile', sql.VarChar, participantData.Mobile)
+    .input('Fax', sql.VarChar, participantData.Fax)
+    .input('IsSelfPayer', sql.Bit, participantData.IsSelfPayer)
     .input(
       'AgencyCustomerNumber',
       sql.VarChar,
-      participantData.agencyCustomerNumber ?? null
+      participantData.AgencyCustomerNumber
     )
     .input(
       'EmploymentAgentId',
       sql.Int,
-      participantData.employmentAgentId ?? null
+      participantData.EmploymentAgentId
+        ? Number(participantData.EmploymentAgentId)
+        : null
     )
-    .input('IsEmployed', sql.Bit, participantData.isEmployed ?? false)
-    .input('Employer', sql.VarChar, participantData.employer ?? null)
-    .input('LocationId', sql.Int, participantData.locationId ?? null).query(`
+    .input(
+      'FirstContactDate',
+      sql.Date,
+      participantData.FirstContactDate || null
+    )
+    .input('ContactSource', sql.VarChar, participantData.ContactSource)
+    .input('IsEmployed', sql.Bit, participantData.IsEmployed)
+    .input(
+      'EmploymentStartDate',
+      sql.Date,
+      participantData.EmploymentStartDate || null
+    )
+    .input('Employer', sql.VarChar, participantData.Employer).query(`
       INSERT INTO Participant (
-        Salutation, LastName, FirstName, Street, HouseNumber, PostalCodeId,
-        DateOfBirth, PlaceOfBirth, Email, Phone, Mobile, Fax,
+        Salutation, LastName, FirstName,
+        Street, HouseNumber, PostalCodeId,
+        DateOfBirth, PlaceOfBirth,
+        Email, Phone, Mobile, Fax,
         IsSelfPayer, AgencyCustomerNumber, EmploymentAgentId,
-        IsEmployed, Employer, LocationId
+        FirstContactDate, ContactSource,
+        IsEmployed, EmploymentStartDate, Employer
       )
       OUTPUT INSERTED.*
       VALUES (
-        @Salutation, @LastName, @FirstName, @Street, @HouseNumber, @PostalCodeId,
-        @DateOfBirth, @PlaceOfBirth, @Email, @Phone, @Mobile, @Fax,
+        @Salutation, @LastName, @FirstName,
+        @Street, @HouseNumber, @PostalCodeId,
+        @DateOfBirth, @PlaceOfBirth,
+        @Email, @Phone, @Mobile, @Fax,
         @IsSelfPayer, @AgencyCustomerNumber, @EmploymentAgentId,
-        @IsEmployed, @Employer, @LocationId
+        @FirstContactDate, @ContactSource,
+        @IsEmployed, @EmploymentStartDate, @Employer
       )
     `);
+
   return result.recordset[0];
 }
 
