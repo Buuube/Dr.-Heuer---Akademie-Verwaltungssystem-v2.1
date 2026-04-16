@@ -108,9 +108,7 @@ async function deleteBookingFromDB(id, cancellationReasonId) {
 
 async function getBookingsFromDB() {
   const pool = await connectDB();
-  const result = await pool
-    .request()
-    .query('SELECT * FROM Booking WHERE IsDeleted = 0 OR IsDeleted IS NULL');
+  const result = await pool.request().query('SELECT * FROM Booking');
   return result.recordset;
 }
 
