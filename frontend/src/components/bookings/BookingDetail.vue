@@ -10,19 +10,22 @@ const emit = defineEmits(['edit', 'close']);
   <div v-if="Booking">
     <h3>Buchung Details</h3>
 
-    <p><b>Teilnehmer:</b> {{ Booking.ParticipantName }}</p>
+    <p><b>Buchungs-ID:</b> {{ Booking.BookingId }}</p>
+    <p><b>Teilnehmer ID:</b> {{ Booking.ParticipantId }}</p>
+    <p><b>Typ:</b> {{ Booking.BookingType }}</p>
 
     <hr />
 
-    <p><b>Startdatum:</b> {{ Booking.StartDate }}</p>
-    <p><b>Enddatum:</b> {{ Booking.EndDate }}</p>
+    <p><b>Start (geplant):</b> {{ Booking.PlannedStartDate }}</p>
+    <p><b>Ende (geplant):</b> {{ Booking.PlannedEndDate }}</p>
+    <p><b>Start (tatsächlich):</b> {{ Booking.ActualStartDate || '-' }}</p>
+    <p><b>Ende (tatsächlich):</b> {{ Booking.ActualEndDate || '-' }}</p>
 
     <hr />
 
-    <p><b>Storniert:</b> {{ Booking.IsCancelled ? 'Ja' : 'Nein' }}</p>
-    <p v-if="Booking.IsCancelled">
-      <b>Stornierungsgrund:</b> {{ Booking.CancellationReasonId || '-' }}
-    </p>
+    <p><b>Monatliche Rate:</b> {{ Booking.MonthlyRate || '-' }}</p>
+    <p><b>Bemerkungen:</b> {{ Booking.Remarks || '-' }}</p>
+    <p><b>Unterschrieben:</b> {{ Booking.IsSigned ? 'Ja' : 'Nein' }}</p>
 
     <hr />
 
