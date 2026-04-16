@@ -10,25 +10,23 @@ const cors = require('cors');
 
 const app = express();
 
-// load route files here — one line per feature
 const participantsRouter = require('./routes/participant');
 const moduleRouter = require('./routes/modules');
 const bookingRouter = require('./routes/booking');
-// middleware — runs on every request before routes, do not change order
-app.use(cors()); // allows frontend to talk to backend
-app.use(express.json()); // allows backend to read JSON from incoming requests
+const coursesRouter = require('./routes/courses'); // NEU
 
-// mount routes here — one line per feature
-// format: app.use('/api/yourfeature', yourRouter)
+app.use(cors());
+app.use(express.json());
+
 app.use('/api/participants', participantsRouter);
 app.use('/api/modules', moduleRouter);
 app.use('/api/bookings', bookingRouter);
-// test route — open http://localhost:3000/api/health to confirm backend is running
+app.use('/api/courses', coursesRouter); // NEU
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// starts the server
 app.listen(3000, () => {
   console.log('Backend running on port 3000');
 });

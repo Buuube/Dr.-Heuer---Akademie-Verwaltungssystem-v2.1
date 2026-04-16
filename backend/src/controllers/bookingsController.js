@@ -16,6 +16,7 @@ async function createBooking(req, res) {
     const newBooking = await createBookingInDB(bookingData);
     res.status(201).json(newBooking);
   } catch (err) {
+    console.error('createBooking error:', err); // ← hinzufügen
     res.status(500).json({ error: 'Failed to create booking' });
   }
 }

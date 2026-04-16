@@ -27,9 +27,7 @@ export const getPostalCode = async (postalCode) => {
 export const saveParticipant = async (participant) => {
   const isUpdate = !!participant.Id;
 
-  const url = isUpdate
-    ? `http://localhost:3000/participants/${participant.Id}`
-    : 'http://localhost:3000/participants';
+  const url = isUpdate ? `${API}/${participant.Id}` : API;
 
   const method = isUpdate ? 'PUT' : 'POST';
 

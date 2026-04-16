@@ -1,39 +1,14 @@
 <template>
   <nav class="navbar">
-    <div class="navbar-inner">
-      <div class="brand">
-        <div class="logo-wrapper">
-          <img src="@/assets/logo.png" class="Logo" style="height: 75px" ; />
-        </div>
-        <div class="brand-text">
-          <span class="brand-name">Verwaltungssystem</span>
-        </div>
-      </div>
-
-      <ul class="nav-links">
-        <li v-for="link in links" :key="link.to">
-          <router-link :to="link.to" class="nav-item">
-            <span class="nav-icon">{{ link.icon }}</span>
-            <span class="nav-label">{{ link.label }}</span>
-            <span class="nav-underline"></span>
-          </router-link>
-        </li>
-      </ul>
-      <div class="nav-actions">
-        <button
-          class="theme-toggle"
-          @click="emit('toggle')"
-          :aria-label="isDark ? 'Lightmode' : 'Darkmode'"
-        >
-          {{ isDark ? '☀️' : '🌙' }}
-        </button>
-      </div>
-      <!-- <div class="nav-actions">
-        <button class="avatar-btn" aria-label="Profil">
-          <span>AD</span>
-        </button>
-      </div> -->
-    </div>
+    <h2>MyApp</h2>
+    <ul>
+      <li><router-link to="/">Home</router-link></li>
+      <li><router-link to="/participants">Participants</router-link></li>
+      <li><router-link to="/courses">Courses</router-link></li>
+      <li><router-link to="/modules">Module</router-link></li>
+      <li><router-link to="/bookings">Bookings</router-link></li>
+      <li><router-link to="/about">About</router-link></li>
+    </ul>
   </nav>
 </template>
 

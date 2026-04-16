@@ -21,11 +21,14 @@ async function getParticipants(req, res) {
 
 async function createParticipant(req, res) {
   try {
-    const participantData = req.body;
-    const newParticipant = await createParticipantInDB(participantData);
-    res.status(201).json(newParticipant);
+    const participantData = req.body; // grab the data the frontend sent in the request body
+
+    const newParticipant = await createParticipantInDB(participantData); // pass it to the service which talks to the DB
+
+    res.status(201).json(newParticipant); // 201 = "created" — send the new participant back to the frontend
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create participant' });
+    console.error('createParticipant error:', err); // log the real error in the terminal
+    res.status(500).json({ error: `${err}` }); // tell the frontend something went wrong
   }
 }
 
