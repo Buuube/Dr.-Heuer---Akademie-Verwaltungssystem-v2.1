@@ -14,6 +14,7 @@ const app = express();
 const participantsRouter = require('./routes/participant');
 const moduleRouter = require('./routes/modules');
 const bookingRouter = require('./routes/booking');
+const coursesRouter = require('./routes/courses');
 // middleware — runs on every request before routes, do not change order
 app.use(cors()); // allows frontend to talk to backend
 app.use(express.json()); // allows backend to read JSON from incoming requests
@@ -23,6 +24,7 @@ app.use(express.json()); // allows backend to read JSON from incoming requests
 app.use('/api/participants', participantsRouter);
 app.use('/api/modules', moduleRouter);
 app.use('/api/bookings', bookingRouter);
+app.use('/api/courses', coursesRouter);
 // test route — open http://localhost:3000/api/health to confirm backend is running
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

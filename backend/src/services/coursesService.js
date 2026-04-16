@@ -12,20 +12,26 @@ async function getCoursesFromDB() {
 
   return [
     {
-      id: 1,
-      certificationNumber: 'ZERT-2024-001',
-      title: 'Grundkurs Buchhaltung',
-      costPerUnit: 45.0,
-      approvalStartDate: '2024-01-01',
-      approvalEndDate: '2026-12-31',
+      CourseId: 1,
+      ApprovalNumber: 'ZERT-2024-001',
+      Name: 'Grundkurs Buchhaltung',
+      Advisor: 'Max Mustermann',
+      ApprovalStartDate: '2024-01-01',
+      ApprovalEndDate: '2026-12-31',
+      DailyTeachingHours: 8,
+      CostPerTeachingUnit: 45.0,
+      TeachingUnitDuration: 45,
     },
     {
-      id: 2,
-      certificationNumber: 'ZERT-2024-002',
-      title: 'Excel für Einsteiger',
-      costPerUnit: 35.0,
-      approvalStartDate: '2024-03-01',
-      approvalEndDate: '2026-03-01',
+      CourseId: 2,
+      ApprovalNumber: 'ZERT-2024-002',
+      Name: 'Excel für Einsteiger',
+      Advisor: 'Erika Musterfrau',
+      ApprovalStartDate: '2024-03-01',
+      ApprovalEndDate: '2026-03-01',
+      DailyTeachingHours: 6,
+      CostPerTeachingUnit: 35.0,
+      TeachingUnitDuration: 45,
     },
   ];
 }
