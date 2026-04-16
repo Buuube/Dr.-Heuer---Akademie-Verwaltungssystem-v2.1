@@ -28,8 +28,8 @@ export const saveParticipant = async (participant) => {
   const isUpdate = !!participant.Id;
 
   const url = isUpdate
-    ? `http://localhost:5000/participants/${participant.Id}`
-    : 'http://localhost:5000/participants';
+    ? `http://localhost:3000/participants/${participant.Id}`
+    : 'http://localhost:3000/participants';
 
   const method = isUpdate ? 'PUT' : 'POST';
 
@@ -46,6 +46,13 @@ export const saveParticipant = async (participant) => {
   }
 
   return await res.json();
+};
+
+export const deleteParticipant = async (id) => {
+  const res = await fetch(`http://localhost:3000/api/participants/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Fehler beim Löschen');
 };
 // add more functions here when the backend supports POST, PUT, DELETE
 // export async function createParticipant(p) {}

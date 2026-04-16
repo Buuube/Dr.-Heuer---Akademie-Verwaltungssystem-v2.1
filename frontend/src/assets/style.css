@@ -194,6 +194,16 @@ tbody tr:hover {
     cursor: pointer;
 }
 
+.btn-detail {
+    background: rgba(0, 100, 230, 0.1);
+    color: var(--blue);
+    border: 1px solid rgba(77, 148, 255, 0.25);
+    padding: 6px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-detail:hover,
 .btn-edit:hover,
 .btn-delete:hover {
     box-shadow: 0 0 12px rgba(124,247,255,0.2);
@@ -237,4 +247,69 @@ tbody tr:hover {
 
 .form .checkbox span {
     margin-left: 2px; /* kontrollierter Textabstand */
+}
+
+/* =========================
+   NEW PARTICIPANT BUTTON - PRIMARY CTA
+========================= */
+.btn-new_part {
+    width: 100%;
+    padding: 12px 14px;
+
+    border-radius: 14px;
+    border: 1px solid rgba(176,124,255,0.35);
+
+    background: linear-gradient(
+        135deg,
+        rgba(176,124,255,0.18),
+        rgba(74,163,255,0.12)
+    );
+
+    color: var(--violet);
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    box-shadow: 0 0 18px rgba(176,124,255,0.15);
+
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.error {
+    color: var(--danger);
+    font-size: 12px;
+    margin: 6px 0 10px;
+    letter-spacing: 0.5px;
+
+    text-shadow: 0 0 8px rgba(255, 77, 109, 0.4);
+}
+
+.error-box {
+    background: rgba(255, 77, 109, 0.08);
+    border: 1px solid rgba(255, 77, 109, 0.35);
+
+    padding: 12px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+
+    color: var(--danger);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+
+    box-shadow: 0 0 18px rgba(255, 77, 109, 0.12);
+}
+
+.form input.input-error,
+.form select.input-error {
+    border: 1px solid var(--danger);
+    box-shadow: 0 0 12px rgba(255, 77, 109, 0.25);
+    background: rgba(255, 77, 109, 0.06);
+}
+
+.form input.input-error:focus {
+    box-shadow: 0 0 18px rgba(255, 77, 109, 0.35);
 }

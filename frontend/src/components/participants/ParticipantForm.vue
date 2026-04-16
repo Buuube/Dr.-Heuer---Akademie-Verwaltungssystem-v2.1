@@ -1,15 +1,25 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
 import { getLocations, getPostalCode } from '../../services/participantService';
+import { validateParticipant } from '../../utils/participantValidation';
 
 const props = defineProps({
   Participant: Object,
+  title: {
+    type: String,
+    default: 'Teilnehmer anlegen',
+  },
 });
 
-const emit = defineEmits(['Save', 'Cancel']);
+const emit = defineEmits(['save', 'cancel']);
+
+const formatDate = (val) => {
+  if (!val) return '';
+  return new Date(val).toISOString().split('T')[0];
+};
 
 const createEmptyForm = () => ({
-  Salutation: 0,
+  Salutation: false,
   FirstName: '',
   LastName: '',
   Street: '',
@@ -36,9 +46,16 @@ const createEmptyForm = () => ({
 
 const form = ref(createEmptyForm());
 const Locations = ref([]);
+const errors = ref({});
 
 const loadLocations = async () => {
-  Locations.value = await getLocations();
+  try {
+    const result = await getLocations();
+    Locations.value = Array.isArray(result) ? result : [];
+  } catch (e) {
+    console.error('Fehler beim Laden der Standorte:', e);
+    Locations.value = [];
+  }
 };
 
 onMounted(() => {
@@ -52,6 +69,9 @@ watch(
       form.value = {
         ...createEmptyForm(),
         ...val,
+        DateOfBirth: formatDate(val.DateOfBirth),
+        FirstContactDate: formatDate(val.FirstContactDate),
+        EmploymentStartDate: formatDate(val.EmploymentStartDate),
       };
     } else {
       form.value = createEmptyForm();
@@ -60,15 +80,12 @@ watch(
   { immediate: true }
 );
 
-// 🔥 PLZ → Ort automatisch
 watch(
   () => form.value.PostalCode,
   async (val) => {
     if (!val || val.length !== 5) return;
-
     try {
       const result = await getPostalCode(val);
-
       if (result) {
         form.value.PostalCodeId = result.Id;
         form.value.City = result.City;
@@ -91,40 +108,37 @@ watch(
   }
 );
 
+const validateForm = () => {
+  const result = validateParticipant(form.value);
+  errors.value = result.errors;
+  return result.valid;
+};
+
 const submit = () => {
-  emit('Save', form.value);
+  const ok = validateForm();
+  if (!ok) return;
+
+  emit('save', form.value);
 };
 
 const cancel = () => {
-  emit('Cancel');
+  emit('cancel');
 };
 </script>
 
 <template>
   <div class="form">
-    <h3>Teilnehmer</h3>
+    <h3>{{ props.title }}</h3>
+
+    <div v-if="!Object.keys(errors).length === false" class="error-box">
+      Bitte korrigiere die markierten Felder
+    </div>
+
     <div>
       <label>Kundennummer</label>
       <input v-model="form.AgencyCustomerNumber" />
-
       <label>Berater</label>
       <input v-model="form.EmploymentAgentId" />
-
-      <label class="checkbox">
-        <input type="checkbox" v-model="form.IsSelfPayer" />
-        <span>Selbstzahler</span>
-      </label>
-
-      <label>Umschulungsort</label>
-      <select v-model="form.LocationID">
-        <option disabled value="">Bitte wählen</option>
-        <option v-for="L in Locations" :key="L.Id" :value="L.Id">
-          {{ L.Name }}
-        </option>
-      </select>
-
-      <label>Umschulungsstart</label>
-      <input v-model="form.EmploymentStartDate" type="date" />
     </div>
 
     <hr />
@@ -132,34 +146,46 @@ const cancel = () => {
     <div>
       <label>Anrede</label>
       <select v-model="form.Salutation">
-        <option :value="0">Herr</option>
-        <option :value="1">Frau</option>
+        <option :value="false">Herr</option>
+        <option :value="true">Frau</option>
       </select>
 
       <label>Vorname</label>
       <input v-model="form.FirstName" />
+      <div v-if="errors.FirstName" class="error">{{ errors.FirstName }}</div>
 
       <label>Nachname</label>
       <input v-model="form.LastName" />
+      <div v-if="errors.LastName" class="error">{{ errors.LastName }}</div>
 
       <label>Geburtsdatum</label>
       <input v-model="form.DateOfBirth" type="date" />
+      <div v-if="errors.DateOfBirth" class="error">
+        {{ errors.DateOfBirth }}
+      </div>
 
       <label>Geburtsort</label>
       <input v-model="form.PlaceOfBirth" />
+      <div v-if="errors.PlaceOfBirth" class="error">
+        {{ errors.PlaceOfBirth }}
+      </div>
     </div>
-
     <hr />
 
     <div>
       <label>Straße</label>
       <input v-model="form.Street" />
+      <div v-if="errors.Street" class="error">{{ errors.Street }}</div>
 
       <label>Hausnummer</label>
       <input v-model="form.HouseNumber" />
+      <div v-if="errors.HouseNumber" class="error">
+        {{ errors.HouseNumber }}
+      </div>
 
       <label>PLZ</label>
       <input v-model="form.PostalCode" placeholder="44135" />
+      <div v-if="errors.PostalCode" class="error">{{ errors.PostalCode }}</div>
 
       <label>Wohnort</label>
       <input :value="form.City" disabled />
@@ -170,6 +196,7 @@ const cancel = () => {
     <div>
       <label>E-Mail</label>
       <input v-model="form.Email" />
+      <div v-if="errors.Email" class="error">{{ errors.Email }}</div>
 
       <label>Telefon</label>
       <input v-model="form.Phone" />
@@ -177,8 +204,13 @@ const cancel = () => {
       <label>Mobil</label>
       <input v-model="form.Mobile" />
 
+      <div v-if="errors.PhoneMobile" class="error">
+        {{ errors.PhoneMobile }}
+      </div>
+
       <label>Fax</label>
       <input v-model="form.Fax" />
+      <div v-if="errors.Fax" class="error">{{ errors.Fax }}</div>
     </div>
 
     <hr />
@@ -190,11 +222,11 @@ const cancel = () => {
       </label>
 
       <label>Arbeitgeber</label>
-      <input
-        v-model="form.Employer"
-        :disabled="!form.IsEmployed"
-        :class="{ disabled: !form.IsEmployed }"
-      />
+      <input v-model="form.Employer" :disabled="!form.IsEmployed" />
+
+      <div v-if="errors.Employer" class="error">
+        {{ errors.Employer }}
+      </div>
     </div>
 
     <hr />

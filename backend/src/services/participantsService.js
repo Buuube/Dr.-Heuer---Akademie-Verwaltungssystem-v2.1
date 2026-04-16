@@ -5,28 +5,51 @@
 const { sql, connectDB } = require('../db/db');
 
 async function getParticipantsFromDB() {
-  // TODO: replace mock data with real DB query when database is ready
-
-  await connectDB(); // open the connection to SQL Server
-  const result = await sql.query`SELECT * FROM Participant`; // run the query
-  console.log(result.recordset);
-  console.log('testest');
-  return result.recordset; // return the rows as an array
+  const pool = await connectDB();
+  const result = await pool.request().query(`
+    SELECT p.*, pc.Code AS PostalCode, pc.City
+    FROM Participant p
+    JOIN PostalCode pc ON p.PostalCodeId = pc.PostalCodeId
+    WHERE p.IsDeleted = 0 OR p.IsDeleted IS NULL
+  `);
+  return result.recordset;
 }
 
 async function createParticipantInDB(participantData) {
-  // TODO: replace with real DB insert
-  // await connectDB();
-  // const result = await sql.query`
-  //   INSERT INTO Participants (Salutation, FirstName, LastName, Email, Phone, Mobile, PostalCodeId, IsEmployed)
-  //   OUTPUT INSERTED.*
-  //   VALUES (${participantData.salutation}, ${participantData.firstName}, ${participantData.lastName},
-  //           ${participantData.email}, ${participantData.phone}, ${participantData.mobile},
-  //           ${participantData.postalCodeId}, ${participantData.isEmployed})
-  // `;
-  // return result.recordset[0];
+  const pool = await connectDB(); // open the connection
 
-  return { id: Date.now(), ...participantData };
+  const result = await pool
+    .request()
+    .input('Salutation', sql.Bit, participantData.salutation) // 0 = Herr, 1 = Frau
+    .input('LastName', sql.VarChar, participantData.lastName) // required field
+    .input('FirstName', sql.VarChar, participantData.firstName) // optional in DB but usually provided
+    .input('Street', sql.VarChar, participantData.street) // required field
+    .input('HouseNumber', sql.VarChar, participantData.houseNumber) // required field
+    .input('PostalCodeId', sql.Int, participantData.postalCodeId) // FK to PostalCode table
+    .input('DateOfBirth', sql.Date, participantData.dateOfBirth) // required field
+    .input('PlaceOfBirth', sql.VarChar, participantData.placeOfBirth) // optional
+    .input('Email', sql.VarChar, participantData.email) // optional
+    .input('Phone', sql.VarChar, participantData.phone) // optional
+    .input('Mobile', sql.VarChar, participantData.mobile) // optional
+    .input('IsEmployed', sql.Bit, participantData.isEmployed) // optional, 0 or 1
+    .query(`
+      INSERT INTO Participant (
+        Salutation, LastName, FirstName,
+        Street, HouseNumber, PostalCodeId,
+        DateOfBirth, PlaceOfBirth,
+        Email, Phone, Mobile, IsEmployed
+      )
+      OUTPUT INSERTED.*
+      VALUES (
+        @Salutation, @LastName, @FirstName,
+        @Street, @HouseNumber, @PostalCodeId,
+        @DateOfBirth, @PlaceOfBirth,
+        @Email, @Phone, @Mobile, @IsEmployed
+      )
+    `);
+  // OUTPUT INSERTED.* returns the full created row including the auto-generated ParticipantId
+
+  return result.recordset[0]; // return the newly created participant row
 }
 
 async function updateParticipantInDB(id, participantData) {

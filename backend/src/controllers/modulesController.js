@@ -7,13 +7,14 @@ const {
   createModuleInDB,
   updateModuleInDB,
   deleteModuleFromDB,
+  updateExamInDB,
 } = require('../services/modulesService');
 
 async function getModules(req, res) {
   try {
     // optional filter: /api/modules?courseId=5
     const { courseId } = req.query;
-    const modules = await getModulesFromDB(courseId);
+    const modules = await getModulesFromDB();
     res.json(modules);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch modules' });
@@ -60,4 +61,20 @@ async function deleteModule(req, res) {
   }
 }
 
-module.exports = { getModules, createModule, updateModule, deleteModule };
+async function updateExam(req, res) {
+  try {
+    const { moduleCode, examId } = req.params;
+    const result = await updateExamInDB(moduleCode, examId, req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update exam' });
+  }
+}
+
+module.exports = {
+  getModules,
+  createModule,
+  updateModule,
+  deleteModule,
+  updateExam,
+};

@@ -1,0 +1,212 @@
+@font-face {
+    font-family: 'Playfair Display';
+    src: url('/fonts/PlayfairDisplay-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: 'DM Sans';
+    src: url('/fonts/DMSans-Regular.ttf') format('truetype');
+    font-weight: 400;
+}
+
+/* =========================
+   COLORS (clean enterprise)
+========================= */
+:root {
+    --navy: #0f2541;
+    --blue: #1a3f6f;
+    --light: #f4f6f9;
+    --text: #2c3e50;
+
+    --border: #d9e1ea;
+    --row-alt: #fafbfd;
+    --row-hover: #f2f5fa;
+}
+
+/* =========================
+   BASE
+========================= */
+body {
+    margin: 0;
+    background: #fff;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.participant-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    padding: 24px;
+}
+
+/* =========================
+   PANELS
+========================= */
+.form,
+.list-panel {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15,37,65,0.08);
+    overflow: hidden;
+}
+
+/* =========================
+   FORM
+========================= */
+.form {
+    padding: 18px;
+}
+
+.form h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--navy);
+    margin-bottom: 16px;
+    font-size: 1.3rem;
+}
+
+/* inputs */
+.form input,
+.form select {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 6px 0 12px;
+
+    border-radius: 8px;
+    border: 1px solid var(--border);
+
+    background: #fff;
+    color: var(--text);
+
+    outline: none;
+    transition: 0.2s;
+}
+
+.form input:focus,
+.form select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(26,63,111,0.15);
+}
+
+/* =========================
+   CHECKBOX FIX (WICHTIG)
+========================= */
+.form .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;              /* kleiner Abstand */
+    margin: 6px 0 12px;
+}
+
+.form .checkbox input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--navy);
+}
+
+.form .checkbox span {
+    margin-left: 2px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.form button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: var(--navy);
+    color: #fff;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 8px;
+}
+
+.form button:hover {
+    background: var(--blue);
+}
+
+/* =========================
+   TABLE
+========================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: var(--navy);
+    color: #fff;
+}
+
+th {
+    padding: 12px 14px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+tbody tr:nth-child(even) {
+    background: var(--row-alt);
+}
+
+tbody tr:hover {
+    background: var(--row-hover);
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+.toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.toolbar input,
+.toolbar select {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+.btn-edit {
+    background: #e8f0fb;
+    color: var(--blue);
+    border: 1px solid #cfe0f5;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-delete {
+    background: #fdecec;
+    color: #b42318;
+    border: 1px solid #f5c2c7;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-edit:hover,
+.btn-delete:hover {
+    opacity: 0.85;
+}
