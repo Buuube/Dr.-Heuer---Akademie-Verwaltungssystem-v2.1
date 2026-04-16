@@ -12,11 +12,11 @@ const {
 
 async function getModules(req, res) {
   try {
-    // optional filter: /api/modules?courseId=5
     const { courseId } = req.query;
     const modules = await getModulesFromDB();
     res.json(modules);
   } catch (err) {
+    console.error('getModules error:', err); // ← diese Zeile hinzufügen
     res.status(500).json({ error: 'Failed to fetch modules' });
   }
 }

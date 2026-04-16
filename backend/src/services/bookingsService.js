@@ -1,5 +1,18 @@
 const { sql, connectDB } = require('../db/db');
 
+async function getBookingsFromDB() {
+  const pool = await connectDB();
+  const result = await pool.request().query(`
+    SELECT 
+      b.*,
+      p.FirstName + ' ' + p.LastName AS ParticipantName
+    FROM Booking b
+    LEFT JOIN Participant p ON b.ParticipantId = p.ParticipantId
+    WHERE b.IsDeleted = 0 OR b.IsDeleted IS NULL
+  `);
+  return result.recordset;
+}
+
 async function createBookingInDB(bookingData) {
   const pool = await connectDB();
   const result = await pool
@@ -7,12 +20,34 @@ async function createBookingInDB(bookingData) {
     .input('ParticipantId', sql.Int, bookingData.participantId)
     .input('IsSigned', sql.Bit, bookingData.isSigned ?? false)
     .input('PlannedStartDate', sql.Date, bookingData.plannedStartDate)
+    .input(
+      'ActualStartDate',
+      sql.Date,
+      bookingData.actualStartDate ?? bookingData.plannedStartDate
+    )
     .input('PlannedEndDate', sql.Date, bookingData.plannedEndDate)
-    .input('BookingType', sql.VarChar, bookingData.bookingType)
-    .input('EndReason', sql.VarChar, bookingData.endReason ?? '').query(`
-      INSERT INTO Booking (ParticipantId, IsSigned, PlannedStartDate, PlannedEndDate, BookingType, EndReason)
+    .input(
+      'ActualEndDate',
+      sql.Date,
+      bookingData.actualEndDate ?? bookingData.plannedEndDate
+    )
+    .input('BookingType', sql.VarChar, bookingData.bookingType ?? '')
+    .input('EndReason', sql.VarChar, bookingData.endReason ?? '')
+    .input('EducationalGoal', sql.VarChar, bookingData.educationalGoal ?? null)
+    .input('MonthlyRate', sql.Decimal, bookingData.monthlyRate ?? null)
+    .input('Remarks', sql.NVarChar, bookingData.remarks ?? null)
+    .input('LocationId', sql.Int, bookingData.locationId ?? null).query(`
+      INSERT INTO Booking (
+        ParticipantId, IsSigned, PlannedStartDate, ActualStartDate,
+        PlannedEndDate, ActualEndDate, BookingType, EndReason,
+        EducationalGoal, MonthlyRate, Remarks, LocationId
+      )
       OUTPUT INSERTED.*
-      VALUES (@ParticipantId, @IsSigned, @PlannedStartDate, @PlannedEndDate, @BookingType, @EndReason)
+      VALUES (
+        @ParticipantId, @IsSigned, @PlannedStartDate, @ActualStartDate,
+        @PlannedEndDate, @ActualEndDate, @BookingType, @EndReason,
+        @EducationalGoal, @MonthlyRate, @Remarks, @LocationId
+      )
     `);
   return result.recordset[0];
 }
@@ -26,17 +61,20 @@ async function updateBookingInDB(id, bookingData) {
     .input('ActualStartDate', sql.Date, bookingData.actualStartDate)
     .input('PlannedEndDate', sql.Date, bookingData.plannedEndDate)
     .input('ActualEndDate', sql.Date, bookingData.actualEndDate)
-    .input('Remarks', sql.NVarChar, bookingData.remarks)
-    .input('MonthlyRate', sql.Decimal, bookingData.monthlyRate)
-    .input('LocationId', sql.Int, bookingData.locationId).query(`
+    .input('Remarks', sql.NVarChar, bookingData.remarks ?? null)
+    .input('MonthlyRate', sql.Decimal, bookingData.monthlyRate ?? null)
+    .input('LocationId', sql.Int, bookingData.locationId ?? null)
+    .input('EducationalGoal', sql.VarChar, bookingData.educationalGoal ?? null)
+    .query(`
       UPDATE Booking SET
         PlannedStartDate = @PlannedStartDate,
-        ActualStartDate = @ActualStartDate,
-        PlannedEndDate = @PlannedEndDate,
-        ActualEndDate = @ActualEndDate,
-        Remarks = @Remarks,
-        MonthlyRate = @MonthlyRate,
-        LocationId = @LocationId
+        ActualStartDate  = @ActualStartDate,
+        PlannedEndDate   = @PlannedEndDate,
+        ActualEndDate    = @ActualEndDate,
+        Remarks          = @Remarks,
+        MonthlyRate      = @MonthlyRate,
+        LocationId       = @LocationId,
+        EducationalGoal  = @EducationalGoal
       OUTPUT INSERTED.*
       WHERE BookingId = @BookingId
     `);
@@ -46,8 +84,6 @@ async function updateBookingInDB(id, bookingData) {
 
 async function addBookingItemsInDB(bookingId, { moduleIds, macroPackageId }) {
   const pool = await connectDB();
-
-  // verify booking exists first
   const check = await pool
     .request()
     .input('BookingId', sql.Int, bookingId)
@@ -57,20 +93,17 @@ async function addBookingItemsInDB(bookingId, { moduleIds, macroPackageId }) {
     err.code = 'BOOKING_NOT_FOUND';
     throw err;
   }
-
-  // insert one BookingModule row per moduleId
   const resolvedModuleIds = moduleIds ?? [];
   for (const moduleCodeId of resolvedModuleIds) {
     await pool
       .request()
       .input('BookingId', sql.Int, bookingId)
       .input('ModuleCodeId', sql.VarChar, moduleCodeId)
-      .input('AttemptNumber', sql.Int, 1).query(`
+      .input('AttemptNumber', sql.Int, 0).query(`
         INSERT INTO BookingModule (BookingId, ModuleCodeId, AttemptNumber)
         VALUES (@BookingId, @ModuleCodeId, @AttemptNumber)
       `);
   }
-
   return {
     bookingId: Number(bookingId),
     addedModuleIds: resolvedModuleIds,
@@ -80,7 +113,6 @@ async function addBookingItemsInDB(bookingId, { moduleIds, macroPackageId }) {
 
 async function deleteBookingFromDB(id, cancellationReasonId) {
   const pool = await connectDB();
-
   if (cancellationReasonId) {
     await pool
       .request()
@@ -90,27 +122,21 @@ async function deleteBookingFromDB(id, cancellationReasonId) {
         WHERE BookingId = @BookingId
       `);
   }
-
-  // soft delete — sets IsDeleted flag instead of removing the row
-  const result = await pool.request().input('BookingId', sql.Int, id).query(`
-      UPDATE Booking SET IsDeleted = 1
-      WHERE BookingId = @BookingId
-    `);
-
+  const result = await pool
+    .request()
+    .input('BookingId', sql.Int, id)
+    .query(`UPDATE Booking SET IsDeleted = 1 WHERE BookingId = @BookingId`);
   if (result.rowsAffected[0] === 0) {
     const err = new Error('Booking not found');
     err.code = 'BOOKING_NOT_FOUND';
     throw err;
   }
-
   return true;
 }
 
 async function getBookingsFromDB() {
   const pool = await connectDB();
-  const result = await pool
-    .request()
-    .query('SELECT * FROM Booking WHERE IsDeleted = 0 OR IsDeleted IS NULL');
+  const result = await pool.request().query('SELECT * FROM Booking');
   return result.recordset;
 }
 
