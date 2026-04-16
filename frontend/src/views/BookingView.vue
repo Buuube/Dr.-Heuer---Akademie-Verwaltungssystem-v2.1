@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import BookingList from '../components/bookings/BookingList.vue';
 import BookingForm from '../components/bookings/BookingForm.vue';
 import BookingDetail from '../components/bookings/BookingDetail.vue';
-import { saveBooking } from '../services/bookingService';
+import { createBooking, updateBooking } from '../services/bookingService';
 
 const Selected = ref(null);
 const Mode = ref('list');
@@ -24,7 +24,11 @@ const CreateNew = () => {
 };
 
 const Save = async (B) => {
-  await saveBooking(B);
+  if (B.BookingId) {
+    await updateBooking(B);
+  } else {
+    await createBooking(B);
+  }
   Selected.value = null;
   Mode.value = 'list';
 };
