@@ -9,12 +9,12 @@ async function getParticipantsFromDB() {
 
   await connectDB(); // open the connection to SQL Server
   const result = await sql.query`SELECT 
-      p.*,
-      pc.Code AS PostalCode,
-      pc.City
-      FROM Participant p
-      JOIN PostalCode pc ON p.PostalCodeId = pc.PostalCodeId
-      WHERE p.IsDeleted = 0 OR p.IsDeleted IS NULL`; // run the query
+    p.*,
+    pc.Code AS PostalCode,
+    pc.City
+  FROM Participant p
+  JOIN PostalCode pc ON p.PostalCodeId = pc.PostalCodeId
+  WHERE p.IsDeleted = 0 OR p.IsDeleted IS NULL`; // run the query
   console.log(result.recordset);
   console.log('testest');
   return result.recordset; // return the rows as an array
@@ -22,17 +22,15 @@ async function getParticipantsFromDB() {
 
 async function createParticipantInDB(participantData) {
   // TODO: replace with real DB insert
-  // await connectDB();
-  // const result = await sql.query`
-  //   INSERT INTO Participants (Salutation, FirstName, LastName, Email, Phone, Mobile, PostalCodeId, IsEmployed)
-  //   OUTPUT INSERTED.*
-  //   VALUES (${participantData.salutation}, ${participantData.firstName}, ${participantData.lastName},
-  //           ${participantData.email}, ${participantData.phone}, ${participantData.mobile},
-  //           ${participantData.postalCodeId}, ${participantData.isEmployed})
-  // `;
-  // return result.recordset[0];
-
-  return { id: Date.now(), ...participantData };
+  await connectDB();
+  const result = await sql.query`
+    INSERT INTO Participant (Salutation, FirstName, LastName, Email, Phone, Mobile, PostalCodeId, IsEmployed)
+    OUTPUT INSERTED.*
+    VALUES (${participantData.salutation}, ${participantData.firstName}, ${participantData.lastName},
+             ${participantData.email}, ${participantData.phone}, ${participantData.mobile},
+            ${participantData.postalCodeId}, ${participantData.isEmployed})
+  `;
+  return result.recordset[0];
 }
 
 async function updateParticipantInDB(id, participantData) {
