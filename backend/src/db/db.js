@@ -1,27 +1,23 @@
-const sql = require('mssql'); // loads mssql
+const sql = require('mssql');
 
-// reads credentials from .env file
 const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   server: process.env.DB_SERVER,
   database: process.env.DB_NAME,
   options: {
-    encrypt: false, // set to true if using Azure
-    trustServerCertificate: true, // allows local SQL Server connections
+    encrypt: false,
+    trustServerCertificate: true,
   },
 };
 
-// opens the connection to SQL Server
+let pool = null; // shared pool — created once, reused forever
+
 async function connectDB() {
-  try {
-    const pool = await sql.connect(config);
-    console.log('SQL Server connected');
-    return pool; // ← this is the only change
-  } catch (err) {
-    console.error('DB connection error:', err);
-    throw err; // ← rethrow so the caller knows it failed
-  }
+  if (pool) return pool; // already connected — reuse it
+  pool = await sql.connect(config);
+  console.log('SQL Server connected');
+  return pool;
 }
 
-module.exports = { sql, connectDB }; // makes sql and connectDB available to other files
+module.exports = { sql, connectDB };

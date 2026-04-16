@@ -99,21 +99,29 @@ async function updateParticipantInDB(id, participantData) {
 }
 
 async function deleteParticipantFromDB(id) {
-  // TODO: replace with real DB delete
-  // await connectDB();
-  // check for bookings or absence days — throw a typed error if found
-  // const check = await sql.query`
-  //   SELECT
-  //     (SELECT COUNT(*) FROM Bookings WHERE ParticipantId = ${id}) AS bookings,
-  //     (SELECT COUNT(*) FROM AbsenceDay WHERE ParticipantId = ${id}) AS absences
-  // `;
-  // const { bookings, absences } = check.recordset[0];
-  // if (bookings > 0 || absences > 0) {
-  //   const err = new Error('Participant has bookings');
-  //   err.code = 'HAS_BOOKINGS';
-  //   throw err;
-  // }
-  // await sql.query`DELETE FROM Participants WHERE Id = ${id}`;
+  const pool = await connectDB();
+
+  // check if participant has bookings or absence days
+  const check = await pool.request().input('ParticipantId', sql.Int, id).query(`
+      SELECT
+        (SELECT COUNT(*) FROM Booking WHERE ParticipantId = @ParticipantId) AS bookings,
+        (SELECT COUNT(*) FROM AbsenceDay WHERE ParticipantId = @ParticipantId) AS absences
+    `);
+
+  const { bookings, absences } = check.recordset[0];
+  if (bookings > 0 || absences > 0) {
+    const err = new Error('Participant has bookings');
+    err.code = 'HAS_BOOKINGS';
+    throw err; // controller catches this and returns 409
+  }
+
+  // soft delete — never actually remove the row
+  await pool
+    .request()
+    .input('ParticipantId', sql.Int, id)
+    .query(
+      `UPDATE Participant SET IsDeleted = 1 WHERE ParticipantId = @ParticipantId`
+    );
 
   return true;
 }
