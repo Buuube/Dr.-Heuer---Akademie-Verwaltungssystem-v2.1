@@ -1,7 +1,8 @@
 const API = 'http://localhost:3000/api/modules';
 
-export async function getModule() {
-  const response = await fetch(API);
+export async function getModules(courseId) {
+  const url = courseId ? `${API}?courseId=${courseId}` : API;
+  const response = await fetch(url);
   return response.json();
 }
 
