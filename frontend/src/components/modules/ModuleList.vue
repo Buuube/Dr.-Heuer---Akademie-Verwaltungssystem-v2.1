@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { getModules } from '@/services/moduleService';
+import { getModule } from '@/services/moduleService';
 import { getExams } from '@/services/moduleExamService';
 
 const props = defineProps({
