@@ -259,3 +259,71 @@ const links = [
   }
 }
 </style>
+
+<!-- <template>
+  <label class="theme-switch">
+    <input
+      type="checkbox"
+      :checked="isDark"
+      @change="emit('toggle')"
+      :aria-label="isDark ? 'Lightmode' : 'Darkmode'"
+    />
+    <span class="slider"></span>
+  </label>
+</template>
+
+<script setup>
+defineProps({
+  isDark: Boolean
+})
+
+const emit = defineEmits(['toggle'])
+</script>
+
+<style scoped>
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+/* Verstecke das echte Checkbox */
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Hintergrund */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  border-radius: 999px;
+  transition: background-color 0.3s;
+}
+
+/* Kreis */
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  top: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+/* Aktiv (Dark Mode) */
+input:checked + .slider {
+  background-color: #34c759; /* Apple green */
+}
+
+input:checked + .slider::before {
+  transform: translateX(22px);
+}
+</style> -->

@@ -1,5 +1,2 @@
-#!/bin/bash
-. "$(dirname "$0")/_/husky.sh"
-
 npx lint-staged
 git config core.autocrlf false
