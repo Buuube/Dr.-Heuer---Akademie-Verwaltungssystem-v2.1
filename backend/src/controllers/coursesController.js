@@ -14,18 +14,20 @@ async function getCourses(req, res) {
     const courses = await getCoursesFromDB();
     res.json(courses);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch courses' });
+    console.error('getCourses error:', err);
+    res.status(500).json({ error: err.message });
   }
 }
 
 async function createCourse(req, res) {
   try {
     const courseData = req.body;
+    console.log('createCourse body:', courseData);
     const newCourse = await createCourseInDB(courseData);
-    // 201 = Created
     res.status(201).json(newCourse);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create course' });
+    console.error('createCourse error:', err);
+    res.status(500).json({ error: err.message });
   }
 }
 
@@ -33,30 +35,34 @@ async function updateCourse(req, res) {
   try {
     const { id } = req.params;
     const courseData = req.body;
+    console.log('updateCourse id:', id, 'body:', courseData);
     const updatedCourse = await updateCourseInDB(id, courseData);
     if (!updatedCourse) {
       return res.status(404).json({ error: 'Course not found' });
     }
     res.json(updatedCourse);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update course' });
+    console.error('updateCourse error:', err);
+    res.status(500).json({ error: err.message });
   }
 }
 
 async function deleteCourse(req, res) {
   try {
     const { id } = req.params;
+    console.log('deleteCourse id:', id);
     await deleteCourseFromDB(id);
     // 204 = No Content — success, nothing to return
     res.status(204).send();
   } catch (err) {
+    console.error('deleteCourse error:', err);
     // 409 = Conflict — course still has modules assigned
     if (err.code === 'HAS_MODULES') {
       return res
         .status(409)
         .json({ error: 'Löschen nicht möglich: Kurs hat zugeordnete Module' });
     }
-    res.status(500).json({ error: 'Failed to delete course' });
+    res.status(500).json({ error: err.message });
   }
 }
 

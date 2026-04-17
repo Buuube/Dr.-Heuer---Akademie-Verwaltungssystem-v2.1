@@ -20,7 +20,7 @@ const formatCurrency = (value) =>
   }) + ' €';
 
 onMounted(async () => {
-  modules.value = await getModules(props.CourseId);
+  modules.value = await getModule(props.CourseId);
 
   for (const mod of modules.value) {
     try {
