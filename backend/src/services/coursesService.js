@@ -1,81 +1,124 @@
 // this file contains the functions that talk to the database
 // the controller calls these functions and waits for the data
-// when the database is ready, uncomment the real queries and delete the mock data
 
 const { sql, connectDB } = require('../db/db');
 
 async function getCoursesFromDB() {
-  // TODO: replace mock data with real DB query when database is ready
-  // await connectDB();
-  // const result = await sql.query`SELECT * FROM Courses`;
-  // return result.recordset;
-
-  return [
-    {
-      CourseId: 1,
-      ApprovalNumber: 'ZERT-2024-001',
-      Name: 'Grundkurs Buchhaltung',
-      Advisor: 'Max Mustermann',
-      ApprovalStartDate: '2024-01-01',
-      ApprovalEndDate: '2026-12-31',
-      DailyTeachingHours: 8,
-      CostPerTeachingUnit: 45.0,
-      TeachingUnitDuration: 45,
-    },
-    {
-      CourseId: 2,
-      ApprovalNumber: 'ZERT-2024-002',
-      Name: 'Excel für Einsteiger',
-      Advisor: 'Erika Musterfrau',
-      ApprovalStartDate: '2024-03-01',
-      ApprovalEndDate: '2026-03-01',
-      DailyTeachingHours: 6,
-      CostPerTeachingUnit: 35.0,
-      TeachingUnitDuration: 45,
-    },
-  ];
+  const pool = await connectDB();
+  const result = await pool.request().query(`
+    SELECT *
+    FROM Course
+  `);
+  return result.recordset;
 }
 
 async function createCourseInDB(courseData) {
-  // TODO: replace with real DB insert
-  // await connectDB();
-  // const result = await sql.query`
-  //   INSERT INTO Courses (CertificationNumber, Title, CostPerUnit, ApprovalStartDate, ApprovalEndDate)
-  //   OUTPUT INSERTED.*
-  //   VALUES (${courseData.certificationNumber}, ${courseData.title}, ${courseData.costPerUnit},
-  //           ${courseData.approvalStartDate}, ${courseData.approvalEndDate})
-  // `;
-  // return result.recordset[0];
+  const pool = await connectDB();
 
-  return { id: Date.now(), ...courseData };
+  const result = await pool
+    .request()
+    .input('ApprovalNumber', sql.VarChar, courseData.ApprovalNumber)
+    .input('Name', sql.VarChar, courseData.Name)
+    .input('Advisor', sql.VarChar, courseData.Advisor || null)
+    .input('ApprovalStartDate', sql.Date, courseData.ApprovalStartDate || null)
+    .input('ApprovalEndDate', sql.Date, courseData.ApprovalEndDate || null)
+    .input(
+      'CostPerTeachingUnit',
+      sql.Decimal(10, 2),
+      courseData.CostPerTeachingUnit
+        ? parseFloat(courseData.CostPerTeachingUnit)
+        : null
+    )
+    .input(
+      'TeachingUnitDuration',
+      sql.Int,
+      courseData.TeachingUnitDuration
+        ? parseInt(courseData.TeachingUnitDuration)
+        : null
+    )
+    .input(
+      'DailyTeachingHours',
+      sql.Decimal(5, 2),
+      courseData.DailyTeachingHours
+        ? parseFloat(courseData.DailyTeachingHours)
+        : null
+    ).query(`
+      INSERT INTO Course (
+        ApprovalNumber, Name, Advisor,
+        ApprovalStartDate, ApprovalEndDate,
+        CostPerTeachingUnit, TeachingUnitDuration, DailyTeachingHours
+      )
+      OUTPUT INSERTED.*
+      VALUES (
+        @ApprovalNumber, @Name, @Advisor,
+        @ApprovalStartDate, @ApprovalEndDate,
+        @CostPerTeachingUnit, @TeachingUnitDuration, @DailyTeachingHours
+      )
+    `);
+
+  return result.recordset[0];
 }
 
 async function updateCourseInDB(id, courseData) {
-  // TODO: replace with real DB update
-  // await connectDB();
-  // const result = await sql.query`
-  //   UPDATE Courses SET Title = ${courseData.title}, CostPerUnit = ${courseData.costPerUnit},
-  //   ApprovalStartDate = ${courseData.approvalStartDate}, ApprovalEndDate = ${courseData.approvalEndDate}
-  //   OUTPUT INSERTED.*
-  //   WHERE Id = ${id}
-  // `;
-  // if (result.recordset.length === 0) return null;
-  // return result.recordset[0];
+  const pool = await connectDB();
 
-  return { id: Number(id), ...courseData };
+  const result = await pool
+    .request()
+    .input('CourseId', sql.Int, id)
+    .input('ApprovalNumber', sql.VarChar, courseData.ApprovalNumber)
+    .input('Name', sql.VarChar, courseData.Name)
+    .input('Advisor', sql.VarChar, courseData.Advisor)
+    .input('ApprovalStartDate', sql.Date, courseData.ApprovalStartDate)
+    .input('ApprovalEndDate', sql.Date, courseData.ApprovalEndDate)
+    .input(
+      'CostPerTeachingUnit',
+      sql.Decimal(10, 2),
+      courseData.CostPerTeachingUnit
+    )
+    .input('TeachingUnitDuration', sql.Int, courseData.TeachingUnitDuration)
+    .input(
+      'DailyTeachingHours',
+      sql.Decimal(5, 2),
+      courseData.DailyTeachingHours
+    ).query(`
+      UPDATE Course SET
+        ApprovalNumber = @ApprovalNumber,
+        Name = @Name,
+        Advisor = @Advisor,
+        ApprovalStartDate = @ApprovalStartDate,
+        ApprovalEndDate = @ApprovalEndDate,
+        CostPerTeachingUnit = @CostPerTeachingUnit,
+ 
+        TeachingUnitDuration = @TeachingUnitDuration,
+        DailyTeachingHours = @DailyTeachingHours
+      OUTPUT INSERTED.*
+      WHERE CourseId = @CourseId
+    `);
+
+  if (result.recordset.length === 0) return null;
+  return result.recordset[0];
 }
 
 async function deleteCourseFromDB(id) {
-  // TODO: replace with real DB delete
-  // await connectDB();
+  const pool = await connectDB();
+
   // check for assigned modules first — throw a typed error if found
-  // const check = await sql.query`SELECT COUNT(*) AS cnt FROM Modules WHERE CourseId = ${id}`;
-  // if (check.recordset[0].cnt > 0) {
-  //   const err = new Error('Course has modules');
-  //   err.code = 'HAS_MODULES';
-  //   throw err;
-  // }
-  // await sql.query`DELETE FROM Courses WHERE Id = ${id}`;
+  const check = await pool
+    .request()
+    .input('CourseId', sql.Int, id)
+    .query(`SELECT COUNT(*) AS cnt FROM Module WHERE CourseId = @CourseId`);
+
+  if (check.recordset[0].cnt > 0) {
+    const err = new Error('Course has modules');
+    err.code = 'HAS_MODULES';
+    throw err;
+  }
+
+  // soft delete — set IsDeleted = 1 instead of removing the row
+  await pool
+    .request()
+    .input('CourseId', sql.Int, id)
+    .query(`UPDATE Course SET IsDeleted = 1 WHERE CourseId = @CourseId`);
 
   return true;
 }
