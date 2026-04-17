@@ -13,6 +13,13 @@ async function getParticipantsFromDB() {
 
 async function createParticipantInDB(participantData) {
   const pool = await connectDB();
+  // First query — get something from DB
+  const first = await pool
+    .request()
+    .input('CodeId', sql.Int, participantData.PostalCode)
+    .query(`SELECT PostalCodeId FROM PostalCode WHERE Code = @CodeId`);
+
+  const postalCodeId = first.recordset[0].PostalCodeId;
   const result = await pool
     .request()
     .input('Salutation', sql.Bit, participantData.Salutation ?? false)
@@ -20,11 +27,8 @@ async function createParticipantInDB(participantData) {
     .input('FirstName', sql.VarChar, participantData.FirstName || null)
     .input('Street', sql.VarChar, participantData.Street || null)
     .input('HouseNumber', sql.VarChar, participantData.HouseNumber || null)
-    .input(
-      'PostalCodeId',
-      sql.Int,
-      Number(participantData.PostalCodeId) || null
-    )
+    .input('PostalCodeId', sql.Int, postalCodeId || null) // wird oben geholt
+
     .input('DateOfBirth', sql.Date, participantData.DateOfBirth || null)
     .input('PlaceOfBirth', sql.VarChar, participantData.PlaceOfBirth || null)
     .input('Email', sql.VarChar, participantData.Email || null)
@@ -82,6 +86,14 @@ async function createParticipantInDB(participantData) {
 
 async function updateParticipantInDB(id, participantData) {
   const pool = await connectDB();
+
+  const first = await pool
+    .request()
+    .input('CodeId', sql.Int, participantData.PostalCode)
+    .query(`SELECT PostalCodeId FROM PostalCode WHERE Code = @CodeId`);
+
+  const postalCodeId = first.recordset[0].PostalCodeId;
+
   const result = await pool
     .request()
     .input('ParticipantId', sql.Int, id)
@@ -90,11 +102,8 @@ async function updateParticipantInDB(id, participantData) {
     .input('FirstName', sql.VarChar, participantData.FirstName || null)
     .input('Street', sql.VarChar, participantData.Street || null)
     .input('HouseNumber', sql.VarChar, participantData.HouseNumber || null)
-    .input(
-      'PostalCodeId',
-      sql.Int,
-      Number(participantData.PostalCodeId) || null
-    )
+    .input('PostalCodeId', sql.Int, postalCodeId || null)
+
     .input('DateOfBirth', sql.Date, participantData.DateOfBirth || null)
     .input('PlaceOfBirth', sql.VarChar, participantData.PlaceOfBirth || null)
     .input('Email', sql.VarChar, participantData.Email || null)
