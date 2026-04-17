@@ -4,3 +4,6 @@ dist/
 frontend/dist/
 .vscode/
 .vs
+package-lock.json
+frontend/package-lock.json
+backend/package-lock.json
