@@ -171,17 +171,49 @@ async function updateParticipantInDB(id, participantData) {
 
 async function deleteParticipantFromDB(id) {
   const pool = await connectDB();
+
+  const activeBookings = await pool
+    .request()
+    .input('ParticipantId', sql.Int, id).query(`
+      SELECT COUNT(*) AS Count FROM Booking
+      WHERE ParticipantId = @ParticipantId
+      AND ActualEndDate >= GETDATE()
+      AND IsDeleted = 0
+    `);
+
+  if (activeBookings.recordset[0].Count > 0) {
+    const err = new Error('Teilnehmer hat noch aktive Buchungen');
+    err.code = 'HAS_ACTIVE_BOOKINGS';
+    throw err;
+  }
+
+  const unfilledAbsences = await pool
+    .request()
+    .input('ParticipantId', sql.Int, id).query(`
+      SELECT COUNT(*) AS Count FROM AbsenceDay
+      WHERE ParticipantId = @ParticipantId
+      AND Reason IS NULL
+    `);
+
+  if (unfilledAbsences.recordset[0].Count > 0) {
+    const err = new Error('Teilnehmer hat Fehltage ohne Begründung');
+    err.code = 'HAS_UNFILLED_ABSENCES';
+    throw err;
+  }
+
   const result = await pool
     .request()
     .input('ParticipantId', sql.Int, id)
     .query(
       `UPDATE Participant SET IsDeleted = 1 WHERE ParticipantId = @ParticipantId`
     );
+
   if (result.rowsAffected[0] === 0) {
     const err = new Error('Participant not found');
     err.code = 'NOT_FOUND';
     throw err;
   }
+
   return true;
 }
 
