@@ -6,7 +6,9 @@ export async function getParticipants() {
 }
 
 export const getPostalCode = async (postalCode) => {
-  const res = await fetch(`http://localhost:3000/postalcodes/${postalCode}`);
+  const res = await fetch(
+    `http://localhost:3000/api/postalcodes/${postalCode}`
+  );
   return await res.json();
 };
 
