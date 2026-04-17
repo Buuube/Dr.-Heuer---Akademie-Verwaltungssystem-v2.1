@@ -3,7 +3,7 @@ import { ref, watch, computed, onMounted } from 'vue';
 import { createBooking, updateBooking } from '../../services/bookingService';
 import { getParticipants } from '../../services/participantService';
 import { getCourses } from '../../services/courseService';
-import { getModule } from '../../services/moduleService';
+import { getModule } from '@/services/moduleService';
 
 const props = defineProps({
   Booking: Object,
@@ -90,13 +90,22 @@ const Submit = async () => {
     <label>Teilnehmer</label>
     <select v-model="Form.ParticipantId">
       <option disabled value="">Bitte wählen</option>
-      <option v-for="P in Participants" :key="P.Id" :value="P.Id">
+      <option
+        v-for="P in Participants"
+        :key="P.ParticipantId"
+        :value="P.ParticipantId"
+      >
         {{ P.FirstName }} {{ P.LastName }}
       </option>
     </select>
 
     <label>Buchungstyp</label>
-    <input v-model="Form.BookingType" placeholder="z.B. Umschulung" />
+    <select v-model="Form.BookingType">
+      <option disabled value="">Bitte wählen</option>
+      <option value="U">Umschulung</option>
+      <option value="W">Weiterbildung</option>
+      <option value="E">Einzelmodul</option>
+    </select>
 
     <label>Start (geplant)</label>
     <input v-model="Form.PlannedStartDate" type="date" />
