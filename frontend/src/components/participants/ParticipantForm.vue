@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
-import { getLocations, getPostalCode } from '../../services/participantService';
+import { ref, watch } from 'vue';
+import { getPostalCode } from '../../services/participantService';
 import { validateParticipant } from '../../utils/participantValidation';
 
 const props = defineProps({
@@ -49,22 +49,7 @@ const createEmptyForm = () => ({
 });
 
 const form = ref(createEmptyForm());
-const Locations = ref([]);
 const errors = ref({});
-
-const loadLocations = async () => {
-  try {
-    const result = await getLocations();
-    Locations.value = Array.isArray(result) ? result : [];
-  } catch (e) {
-    console.error('Fehler beim Laden der Standorte:', e);
-    Locations.value = [];
-  }
-};
-
-onMounted(() => {
-  loadLocations();
-});
 
 watch(
   () => props.Participant,

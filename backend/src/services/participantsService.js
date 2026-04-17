@@ -1,7 +1,3 @@
-// this file contains the functions that talk to the database
-// the controller calls these functions and waits for the data
-// when the database is ready, uncomment the real queries and delete the mock data
-
 const { sql, connectDB } = require('../db/db');
 
 async function getParticipantsFromDB() {
@@ -17,47 +13,50 @@ async function getParticipantsFromDB() {
 
 async function createParticipantInDB(participantData) {
   const pool = await connectDB();
-
   const result = await pool
     .request()
-    .input('Salutation', sql.Bit, participantData.Salutation)
-    .input('LastName', sql.VarChar, participantData.LastName)
-    .input('FirstName', sql.VarChar, participantData.FirstName)
-    .input('Street', sql.VarChar, participantData.Street)
-    .input('HouseNumber', sql.VarChar, participantData.HouseNumber)
-    .input('PostalCodeId', sql.Int, participantData.PostalCodeId || 3)
-    .input('DateOfBirth', sql.Date, participantData.DateOfBirth)
-    .input('PlaceOfBirth', sql.VarChar, participantData.PlaceOfBirth)
-    .input('Email', sql.VarChar, participantData.Email)
-    .input('Phone', sql.VarChar, participantData.Phone)
-    .input('Mobile', sql.VarChar, participantData.Mobile)
-    .input('Fax', sql.VarChar, participantData.Fax)
-    .input('IsSelfPayer', sql.Bit, participantData.IsSelfPayer)
+    .input('Salutation', sql.Bit, participantData.Salutation ?? false)
+    .input('LastName', sql.VarChar, participantData.LastName || null)
+    .input('FirstName', sql.VarChar, participantData.FirstName || null)
+    .input('Street', sql.VarChar, participantData.Street || null)
+    .input('HouseNumber', sql.VarChar, participantData.HouseNumber || null)
+    .input(
+      'PostalCodeId',
+      sql.Int,
+      Number(participantData.PostalCodeId) || null
+    )
+    .input('DateOfBirth', sql.Date, participantData.DateOfBirth || null)
+    .input('PlaceOfBirth', sql.VarChar, participantData.PlaceOfBirth || null)
+    .input('Email', sql.VarChar, participantData.Email || null)
+    .input('Phone', sql.VarChar, participantData.Phone || null)
+    .input('Mobile', sql.VarChar, participantData.Mobile || null)
+    .input('Fax', sql.VarChar, participantData.Fax || null)
+    .input('IsSelfPayer', sql.Bit, participantData.IsSelfPayer ?? false)
     .input(
       'AgencyCustomerNumber',
       sql.VarChar,
-      participantData.AgencyCustomerNumber
+      participantData.AgencyCustomerNumber || null
     )
     .input(
       'EmploymentAgentId',
       sql.Int,
-      participantData.EmploymentAgentId
-        ? Number(participantData.EmploymentAgentId)
-        : null
+      Number(participantData.EmploymentAgentId) || null
     )
     .input(
       'FirstContactDate',
       sql.Date,
       participantData.FirstContactDate || null
     )
-    .input('ContactSource', sql.VarChar, participantData.ContactSource)
-    .input('IsEmployed', sql.Bit, participantData.IsEmployed)
+    .input('ContactSource', sql.VarChar, participantData.ContactSource || null)
+    .input('IsEmployed', sql.Bit, participantData.IsEmployed ?? false)
     .input(
       'EmploymentStartDate',
       sql.Date,
       participantData.EmploymentStartDate || null
     )
-    .input('Employer', sql.VarChar, participantData.Employer).query(`
+    .input('Employer', sql.VarChar, participantData.Employer || null)
+    .input('LocationId', sql.Int, Number(participantData.LocationID) || null)
+    .query(`
       INSERT INTO Participant (
         Salutation, LastName, FirstName,
         Street, HouseNumber, PostalCodeId,
@@ -65,7 +64,7 @@ async function createParticipantInDB(participantData) {
         Email, Phone, Mobile, Fax,
         IsSelfPayer, AgencyCustomerNumber, EmploymentAgentId,
         FirstContactDate, ContactSource,
-        IsEmployed, EmploymentStartDate, Employer
+        IsEmployed, EmploymentStartDate, Employer, LocationId
       )
       OUTPUT INSERTED.*
       VALUES (
@@ -75,50 +74,149 @@ async function createParticipantInDB(participantData) {
         @Email, @Phone, @Mobile, @Fax,
         @IsSelfPayer, @AgencyCustomerNumber, @EmploymentAgentId,
         @FirstContactDate, @ContactSource,
-        @IsEmployed, @EmploymentStartDate, @Employer
+        @IsEmployed, @EmploymentStartDate, @Employer, @LocationId
       )
     `);
-
   return result.recordset[0];
 }
 
 async function updateParticipantInDB(id, participantData) {
-  // TODO: replace with real DB update
-  // await connectDB();
-  // const result = await sql.query`
-  //   UPDATE Participants SET FirstName = ${participantData.firstName}, LastName = ${participantData.lastName},
-  //   Email = ${participantData.email}, Phone = ${participantData.phone}, Mobile = ${participantData.mobile},
-  //   PostalCodeId = ${participantData.postalCodeId}, IsEmployed = ${participantData.isEmployed}
-  //   OUTPUT INSERTED.*
-  //   WHERE Id = ${id}
-  // `;
-  // if (result.recordset.length === 0) return null;
-  // return result.recordset[0];
+  const pool = await connectDB();
+  const result = await pool
+    .request()
+    .input('ParticipantId', sql.Int, id)
+    .input('Salutation', sql.Bit, participantData.Salutation ?? false)
+    .input('LastName', sql.VarChar, participantData.LastName || null)
+    .input('FirstName', sql.VarChar, participantData.FirstName || null)
+    .input('Street', sql.VarChar, participantData.Street || null)
+    .input('HouseNumber', sql.VarChar, participantData.HouseNumber || null)
+    .input(
+      'PostalCodeId',
+      sql.Int,
+      Number(participantData.PostalCodeId) || null
+    )
+    .input('DateOfBirth', sql.Date, participantData.DateOfBirth || null)
+    .input('PlaceOfBirth', sql.VarChar, participantData.PlaceOfBirth || null)
+    .input('Email', sql.VarChar, participantData.Email || null)
+    .input('Phone', sql.VarChar, participantData.Phone || null)
+    .input('Mobile', sql.VarChar, participantData.Mobile || null)
+    .input('Fax', sql.VarChar, participantData.Fax || null)
+    .input('IsSelfPayer', sql.Bit, participantData.IsSelfPayer ?? false)
+    .input(
+      'AgencyCustomerNumber',
+      sql.VarChar,
+      participantData.AgencyCustomerNumber || null
+    )
+    .input(
+      'EmploymentAgentId',
+      sql.Int,
+      Number(participantData.EmploymentAgentId) || null
+    )
+    .input(
+      'FirstContactDate',
+      sql.Date,
+      participantData.FirstContactDate || null
+    )
+    .input('ContactSource', sql.VarChar, participantData.ContactSource || null)
+    .input('IsEmployed', sql.Bit, participantData.IsEmployed ?? false)
+    .input(
+      'EmploymentStartDate',
+      sql.Date,
+      participantData.EmploymentStartDate || null
+    )
+    .input('Employer', sql.VarChar, participantData.Employer || null)
+    .input('LocationId', sql.Int, Number(participantData.LocationID) || null)
+    .query(`
+      DECLARE @Output TABLE (
+        ParticipantId INT, Salutation BIT, LastName VARCHAR(255), FirstName VARCHAR(255),
+        Street VARCHAR(255), HouseNumber VARCHAR(50), PostalCodeId INT,
+        DateOfBirth DATE, PlaceOfBirth VARCHAR(255), Email VARCHAR(255),
+        Phone VARCHAR(50), Mobile VARCHAR(50), Fax VARCHAR(50),
+        IsSelfPayer BIT, AgencyCustomerNumber VARCHAR(255), EmploymentAgentId INT,
+        FirstContactDate DATE, ContactSource VARCHAR(255),
+        IsEmployed BIT, EmploymentStartDate DATE, Employer VARCHAR(255),
+        LocationId INT, IsDeleted BIT
+      );
 
-  return { id: Number(id), ...participantData };
+      UPDATE Participant SET
+        Salutation           = @Salutation,
+        LastName             = @LastName,
+        FirstName            = @FirstName,
+        Street               = @Street,
+        HouseNumber          = @HouseNumber,
+        PostalCodeId         = @PostalCodeId,
+        DateOfBirth          = @DateOfBirth,
+        PlaceOfBirth         = @PlaceOfBirth,
+        Email                = @Email,
+        Phone                = @Phone,
+        Mobile               = @Mobile,
+        Fax                  = @Fax,
+        IsSelfPayer          = @IsSelfPayer,
+        AgencyCustomerNumber = @AgencyCustomerNumber,
+        EmploymentAgentId    = @EmploymentAgentId,
+        FirstContactDate     = @FirstContactDate,
+        ContactSource        = @ContactSource,
+        IsEmployed           = @IsEmployed,
+        EmploymentStartDate  = @EmploymentStartDate,
+        Employer             = @Employer,
+        LocationId           = @LocationId
+      OUTPUT INSERTED.* INTO @Output
+      WHERE ParticipantId = @ParticipantId;
+
+      SELECT * FROM @Output;
+    `);
+  if (result.recordset.length === 0) return null;
+  return result.recordset[0];
 }
 
 async function deleteParticipantFromDB(id) {
-  // TODO: replace with real DB delete
-  // await connectDB();
-  // check for bookings or absence days — throw a typed error if found
-  // const check = await sql.query`
-  //   SELECT
-  //     (SELECT COUNT(*) FROM Bookings WHERE ParticipantId = ${id}) AS bookings,
-  //     (SELECT COUNT(*) FROM AbsenceDay WHERE ParticipantId = ${id}) AS absences
-  // `;
-  // const { bookings, absences } = check.recordset[0];
-  // if (bookings > 0 || absences > 0) {
-  //   const err = new Error('Participant has bookings');
-  //   err.code = 'HAS_BOOKINGS';
-  //   throw err;
-  // }
-  // await sql.query`DELETE FROM Participants WHERE Id = ${id}`;
+  const pool = await connectDB();
+
+  const activeBookings = await pool
+    .request()
+    .input('ParticipantId', sql.Int, id).query(`
+      SELECT COUNT(*) AS Count FROM Booking
+      WHERE ParticipantId = @ParticipantId
+      AND ActualEndDate >= GETDATE()
+      AND IsDeleted = 0
+    `);
+
+  if (activeBookings.recordset[0].Count > 0) {
+    const err = new Error('Teilnehmer hat noch aktive Buchungen');
+    err.code = 'HAS_ACTIVE_BOOKINGS';
+    throw err;
+  }
+
+  const unfilledAbsences = await pool
+    .request()
+    .input('ParticipantId', sql.Int, id).query(`
+      SELECT COUNT(*) AS Count FROM AbsenceDay
+      WHERE ParticipantId = @ParticipantId
+      AND Reason IS NULL
+    `);
+
+  if (unfilledAbsences.recordset[0].Count > 0) {
+    const err = new Error('Teilnehmer hat Fehltage ohne Begründung');
+    err.code = 'HAS_UNFILLED_ABSENCES';
+    throw err;
+  }
+
+  const result = await pool
+    .request()
+    .input('ParticipantId', sql.Int, id)
+    .query(
+      `UPDATE Participant SET IsDeleted = 1 WHERE ParticipantId = @ParticipantId`
+    );
+
+  if (result.rowsAffected[0] === 0) {
+    const err = new Error('Participant not found');
+    err.code = 'NOT_FOUND';
+    throw err;
+  }
 
   return true;
 }
 
-// export functions here so the controller can use them
 module.exports = {
   getParticipantsFromDB,
   createParticipantInDB,

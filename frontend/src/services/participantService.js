@@ -5,11 +5,6 @@ export async function getParticipants() {
   return response.json();
 }
 
-export const getLocations = async () => {
-  const res = await fetch('http://localhost:3000/locations');
-  return await res.json();
-};
-
 export const getPostalCode = async (postalCode) => {
   const res = await fetch(`http://localhost:3000/postalcodes/${postalCode}`);
   return await res.json();
