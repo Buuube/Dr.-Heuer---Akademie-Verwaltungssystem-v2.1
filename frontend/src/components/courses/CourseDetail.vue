@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { getModules } from '@/services/moduleService';
+import { getModule } from '@/services/moduleService';
 
 const props = defineProps({
   Course: Object,
@@ -15,7 +15,7 @@ watch(
   () => props.Course,
   async (val) => {
     if (val?.CourseId) {
-      modules.value = await getModules(val.CourseId);
+      modules.value = await getModule(val.CourseId);
     } else {
       modules.value = [];
     }
