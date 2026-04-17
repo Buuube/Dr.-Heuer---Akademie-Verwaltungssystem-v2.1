@@ -8,66 +8,112 @@ const emit = defineEmits(['edit', 'close']);
 </script>
 
 <template>
-  <div v-if="Participant">
+  <div v-if="Participant" class="detail-panel">
     <h3>Teilnehmer Details</h3>
 
-    <p><b>Kundennummer:</b> {{ Participant.AgencyCustomerNumber }}</p>
-    <p><b>Berater:</b> {{ Participant.EmploymentAgentId }}</p>
+    <div class="detail-grid">
+      <!-- Verwaltung -->
+      <div class="detail-group">
+        <div class="detail-group-title">Verwaltung</div>
+        <div class="detail-row">
+          <span class="detail-label">Kundennummer</span
+          ><span>{{ Participant.AgencyCustomerNumber || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Berater</span
+          ><span>{{ Participant.EmploymentAgentId || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Selbstzahler</span
+          ><span>{{ Participant.IsSelfPayer ? 'Ja' : 'Nein' }}</span>
+        </div>
+      </div>
 
-    <hr />
+      <!-- Person -->
+      <div class="detail-group">
+        <div class="detail-group-title">Person</div>
+        <div class="detail-row">
+          <span class="detail-label">Name</span
+          ><span>{{ Participant.FirstName }} {{ Participant.LastName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Geburtsdatum</span
+          ><span>{{ Participant.DateOfBirth || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Geburtsort</span
+          ><span>{{ Participant.PlaceOfBirth || '-' }}</span>
+        </div>
+      </div>
 
-    <p><b>Name:</b> {{ Participant.FirstName }} {{ Participant.LastName }}</p>
-    <p>
-      <b>Geburtstag:</b> {{ Participant.DateOfBirth }} <b>Geburtsort:</b>
-      {{ Participant.PlaceOfBirth }}
-    </p>
+      <!-- Adresse -->
+      <div class="detail-group">
+        <div class="detail-group-title">Adresse</div>
+        <div class="detail-row">
+          <span class="detail-label">Straße</span>
+          <span>{{ Participant.Street }} {{ Participant.HouseNumber }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">PLZ / Ort</span>
+          <span>
+            {{
+              typeof Participant.PostalCode === 'string'
+                ? Participant.PostalCode
+                : Participant.PostalCode?.Code
+            }}
+            {{
+              typeof Participant.PostalCode === 'string'
+                ? Participant.City
+                : Participant.PostalCode?.City
+            }}
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Standort</span
+          ><span>{{ Participant.Location?.Name || '-' }}</span>
+        </div>
+      </div>
 
-    <hr />
-    <p><b>Kontaktdaten</b></p>
-    <p>
-      <b>Email:</b> {{ Participant.Email }} <b>Mobil:</b>
-      {{ Participant.Mobile }}
-    </p>
-    <p>
-      <b>Telefon:</b> {{ Participant.Phone }} <b>Fax:</b> {{ Participant.Fax }}
-    </p>
-    <hr />
+      <!-- Kontakt -->
+      <div class="detail-group">
+        <div class="detail-group-title">Kontakt</div>
+        <div class="detail-row">
+          <span class="detail-label">E-Mail</span
+          ><span>{{ Participant.Email || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Telefon</span
+          ><span>{{ Participant.Phone || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Mobil</span
+          ><span>{{ Participant.Mobile || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Fax</span
+          ><span>{{ Participant.Fax || '-' }}</span>
+        </div>
+      </div>
 
-    <p>
-      <b>Adresse:</b> {{ Participant.Street }} <b>Hausnummer:</b>
-      {{ Participant.HouseNumber }}
-    </p>
+      <!-- Beschäftigung -->
+      <div class="detail-group">
+        <div class="detail-group-title">Beschäftigung</div>
+        <div class="detail-row">
+          <span class="detail-label">Beschäftigt</span
+          ><span>{{ Participant.IsEmployed ? 'Ja' : 'Nein' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Arbeitgeber</span
+          ><span>{{ Participant.Employer || '-' }}</span>
+        </div>
+      </div>
+    </div>
 
-    <p>
-      <b>PLZ:</b>
-      {{
-        typeof Participant.PostalCode === 'string'
-          ? Participant.PostalCode
-          : Participant.PostalCode?.Code
-      }}
-
-      <b>Ort:</b>
-      {{
-        typeof Participant.PostalCode === 'string'
-          ? Participant.City
-          : Participant.PostalCode?.City
-      }}
-    </p>
-
-    <p><b>Umschulungsort:</b> {{ Participant.Location?.Name }}</p>
-
-    <hr />
-
-    <p><b>Selbstzahler:</b> {{ Participant.IsSelfPayer ? 'Ja' : 'Nein' }}</p>
-    <p><b>Beschäftigt:</b> {{ Participant.IsEmployed ? 'Ja' : 'Nein' }}</p>
-
-    <p><b>Arbeitgeber:</b> {{ Participant.Employer || '-' }}</p>
-
-    <hr />
-
-    <button class="btn-edit" @click="emit('edit', Participant)">
-      Bearbeiten
-    </button>
-    <button class="btn-delete" @click="emit('close')">Schließen</button>
+    <div class="detail-actions">
+      <button class="btn-edit" @click="emit('edit', Participant)">
+        Bearbeiten
+      </button>
+      <button class="btn-delete" @click="emit('close')">Schließen</button>
+    </div>
   </div>
 </template>
