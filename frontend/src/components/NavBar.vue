@@ -43,6 +43,7 @@ const links = [
   { to: '/participants', label: 'Teilnehmer' },
   { to: '/courses', label: 'Kurse' },
   { to: '/bookings', label: 'Buchungen' },
+  { to: '/modules', label: 'Module' },
 ];
 </script>
 
