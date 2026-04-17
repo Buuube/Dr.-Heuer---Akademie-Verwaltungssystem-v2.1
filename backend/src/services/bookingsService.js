@@ -134,12 +134,6 @@ async function deleteBookingFromDB(id, cancellationReasonId) {
   return true;
 }
 
-async function getBookingsFromDB() {
-  const pool = await connectDB();
-  const result = await pool.request().query('SELECT * FROM Booking');
-  return result.recordset;
-}
-
 module.exports = {
   getBookingsFromDB,
   createBookingInDB,
