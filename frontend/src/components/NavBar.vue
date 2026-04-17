@@ -3,7 +3,7 @@
     <div class="navbar-inner">
       <div class="brand">
         <div class="logo-wrapper">
-          <img src="@/assets/logo.png" class="Logo" style="height: 75px" ; />
+          <img src="@/assets/logo.png" class="Logo" style="height: 75px" />
         </div>
         <div class="brand-text">
           <span class="brand-name">Verwaltungssystem</span>
@@ -19,20 +19,18 @@
           </router-link>
         </li>
       </ul>
+
       <div class="nav-actions">
-        <button
-          class="theme-toggle"
-          @click="emit('toggle')"
-          :aria-label="isDark ? 'Lightmode' : 'Darkmode'"
-        >
-          {{ isDark ? '☀️' : '🌙' }}
-        </button>
+        <label class="theme-switch">
+          <input
+            type="checkbox"
+            :checked="isDark"
+            @change="emit('toggle')"
+            :aria-label="isDark ? 'Lightmode' : 'Darkmode'"
+          />
+          <span class="slider"></span>
+        </label>
       </div>
-      <!-- <div class="nav-actions">
-        <button class="avatar-btn" aria-label="Profil">
-          <span>AD</span>
-        </button>
-      </div> -->
     </div>
   </nav>
 </template>
@@ -205,35 +203,6 @@ const links = [
   border-color: rgba(139, 92, 246, 0.6);
 }
 
-/* ── Avatar ──
-.nav-actions {
-  display: flex;
-  align-items: center;
-}
-
-.avatar-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  background: linear-gradient(135deg, #1e293b, #334155);
-  color: #94a3b8;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: 'DM Mono', monospace;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.2s ease, color 0.2s ease;
-  letter-spacing: 0.04em;
-}
-
-.avatar-btn:hover {
-  border-color: rgba(139, 92, 246, 0.6);
-  color: #c4b5fd;
-} */
-
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .navbar-inner {
@@ -258,29 +227,7 @@ const links = [
     opacity: 1;
   }
 }
-</style>
 
-<!-- <template>
-  <label class="theme-switch">
-    <input
-      type="checkbox"
-      :checked="isDark"
-      @change="emit('toggle')"
-      :aria-label="isDark ? 'Lightmode' : 'Darkmode'"
-    />
-    <span class="slider"></span>
-  </label>
-</template>
-
-<script setup>
-defineProps({
-  isDark: Boolean
-})
-
-const emit = defineEmits(['toggle'])
-</script>
-
-<style scoped>
 .theme-switch {
   position: relative;
   display: inline-block;
@@ -288,14 +235,12 @@ const emit = defineEmits(['toggle'])
   height: 28px;
 }
 
-/* Verstecke das echte Checkbox */
 .theme-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-/* Hintergrund */
 .slider {
   position: absolute;
   cursor: pointer;
@@ -305,9 +250,8 @@ const emit = defineEmits(['toggle'])
   transition: background-color 0.3s;
 }
 
-/* Kreis */
 .slider::before {
-  content: "";
+  content: '';
   position: absolute;
   height: 22px;
   width: 22px;
@@ -318,12 +262,11 @@ const emit = defineEmits(['toggle'])
   transition: transform 0.3s;
 }
 
-/* Aktiv (Dark Mode) */
 input:checked + .slider {
-  background-color: #34c759; /* Apple green */
+  background-color: #34c759;
 }
 
 input:checked + .slider::before {
   transform: translateX(22px);
 }
-</style> -->
+</style>
