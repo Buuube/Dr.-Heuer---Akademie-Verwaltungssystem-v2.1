@@ -1,6 +1,6 @@
 import './assets/main.css';
 //import './assets/style_bright.css';
-import './assets/style.css';
+import './assets/style2.css';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';

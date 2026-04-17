@@ -13,27 +13,26 @@ import {
 
 const selected = ref(null);
 const formMode = ref(null); // null | 'new' | 'edit'
-const rightMode = ref('list'); // 'list' | 'detail'
-const listKey = ref(0); // hochzählen → Liste neu laden
+const bottomMode = ref('list'); // 'list' | 'detail'
+const listKey = ref(0);
 
 const clone = (p) => JSON.parse(JSON.stringify(p));
 
 const select = (p) => {
   selected.value = clone(p);
-  rightMode.value = 'detail';
+  bottomMode.value = 'detail';
   formMode.value = null;
 };
 
 const edit = (p) => {
   selected.value = clone(p);
   formMode.value = 'edit';
-  // rightMode NICHT anfassen
 };
 
 const createNew = () => {
   selected.value = null;
   formMode.value = 'new';
-  // rightMode NICHT anfassen
+  bottomMode.value = 'list';
 };
 
 const save = async (formData) => {
@@ -46,7 +45,7 @@ const save = async (formData) => {
     }
     selected.value = null;
     formMode.value = null;
-    rightMode.value = 'list';
+    bottomMode.value = 'list';
     listKey.value++;
   } catch (e) {
     console.error('Fehler beim Speichern:', e);
@@ -56,16 +55,14 @@ const save = async (formData) => {
 
 const closeForm = () => {
   formMode.value = null;
-  // selected NICHT leeren → Detail bleibt sichtbar
 };
 
 const closeDetail = () => {
   selected.value = null;
-  rightMode.value = 'list';
+  bottomMode.value = 'list';
   formMode.value = null;
 };
 
-// Ganzes Objekt P übergeben, damit ID sicher gefunden wird
 const remove = async (p) => {
   if (!confirm(`${p.FirstName} ${p.LastName} wirklich löschen?`)) return;
   try {
@@ -73,7 +70,7 @@ const remove = async (p) => {
     await deleteParticipant(id);
     selected.value = null;
     formMode.value = null;
-    rightMode.value = 'list';
+    bottomMode.value = 'list';
     listKey.value++;
   } catch (e) {
     console.error('Fehler beim Löschen:', e);
@@ -84,9 +81,9 @@ const remove = async (p) => {
 
 <template>
   <div class="participant-layout">
-    <!-- LINKS: Button oder Form -->
-    <div class="form-panel">
-      <div v-if="formMode === null">
+    <!-- OBEN: Button oder Form -->
+    <div class="top-panel">
+      <div v-if="formMode === null" class="top-panel-cta">
         <button class="btn-new_part" @click="createNew">
           Neuen Teilnehmer anlegen
         </button>
@@ -104,10 +101,10 @@ const remove = async (p) => {
       />
     </div>
 
-    <!-- RECHTS: List oder Detail -->
-    <div class="list-panel">
+    <!-- UNTEN: Liste oder Detail -->
+    <div class="bottom-panel">
       <ParticipantList
-        v-if="rightMode === 'list'"
+        v-if="bottomMode === 'list'"
         :key="listKey"
         :onEdit="edit"
         :onSelect="select"
@@ -115,7 +112,7 @@ const remove = async (p) => {
       />
 
       <ParticipantDetail
-        v-if="rightMode === 'detail'"
+        v-if="bottomMode === 'detail'"
         :Participant="selected"
         @edit="edit"
         @close="closeDetail"
