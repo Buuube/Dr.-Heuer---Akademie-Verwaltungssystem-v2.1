@@ -1,56 +1,75 @@
-// this file contains the functions that talk to the database
-// the controller calls these functions and waits for the data
-// when the database is ready, uncomment the real queries and delete the mock data
-
 const { sql, connectDB } = require('../db/db');
 
-async function createModuleInDB(moduleData) {
-  // TODO: replace with real DB insert
-  // await connectDB();
-  // const result = await sql.query`
-  //   INSERT INTO Modules (CourseId, ModuleCode, Title, DurationHours, CostPerUnit)
-  //   OUTPUT INSERTED.*
-  //   VALUES (${moduleData.courseId}, ${moduleData.moduleCode}, ${moduleData.title},
-  //           ${moduleData.durationHours}, ${moduleData.costPerUnit})
-  // `;
-  // return result.recordset[0];
+async function getModulesFromDB() {
+  const pool = await connectDB();
+  const result = await pool.request().query(`
+    SELECT m.*, c.Name AS CourseName
+    FROM Module m
+    LEFT JOIN Course c ON m.CourseId = c.CourseId
+    WHERE m.IsDeleted = 0 OR m.IsDeleted IS NULL
+  `);
+  return result.recordset;
+}
 
-  return { id: Date.now(), ...moduleData };
+async function createModuleInDB(moduleData) {
+  const pool = await connectDB();
+  const result = await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, moduleData.moduleCodeId)
+    .input('Name', sql.VarChar, moduleData.name ?? null)
+    .input('CourseId', sql.Int, moduleData.courseId)
+    .input('TeachingFormatId', sql.Int, moduleData.teachingFormatId)
+    .input('Content', sql.NVarChar, moduleData.content ?? '')
+    .input('EstimatedCost', sql.Decimal, moduleData.estimatedCost ?? null)
+    .input('Duration', sql.VarChar, moduleData.duration ?? null).query(`
+      INSERT INTO Module (ModuleCodeId, Name, CourseId, TeachingFormatId, Content, EstimatedCost, Duration)
+      OUTPUT INSERTED.*
+      VALUES (@ModuleCodeId, @Name, @CourseId, @TeachingFormatId, @Content, @EstimatedCost, @Duration)
+    `);
+  return result.recordset[0];
 }
 
 async function updateModuleInDB(id, moduleData) {
-  // TODO: replace with real DB update
-  // await connectDB();
-  // const result = await sql.query`
-  //   UPDATE Modules SET Title = ${moduleData.title}, DurationHours = ${moduleData.durationHours},
-  //   CostPerUnit = ${moduleData.costPerUnit}
-  //   OUTPUT INSERTED.*
-  //   WHERE Id = ${id}
-  // `;
-  // if (result.recordset.length === 0) return null;
-  // return result.recordset[0];
-
-  return { id: Number(id), ...moduleData };
+  const pool = await connectDB();
+  const result = await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, id)
+    .input('Name', sql.VarChar, moduleData.name ?? null)
+    .input('EstimatedCost', sql.Decimal, moduleData.estimatedCost ?? null)
+    .input('Duration', sql.VarChar, moduleData.duration ?? null)
+    .input('Content', sql.NVarChar, moduleData.content ?? '').query(`
+      UPDATE Module SET
+        Name          = @Name,
+        EstimatedCost = @EstimatedCost,
+        Duration      = @Duration,
+        Content       = @Content
+      OUTPUT INSERTED.*
+      WHERE ModuleCodeId = @ModuleCodeId
+    `);
+  if (result.recordset.length === 0) return null;
+  return result.recordset[0];
 }
 
 async function deleteModuleFromDB(id) {
-  // TODO: replace with real DB delete
-  // await connectDB();
-  // check for bookings first — throw a typed error if found
-  // const check = await sql.query`SELECT COUNT(*) AS cnt FROM BookingItems WHERE ModuleId = ${id}`;
-  // if (check.recordset[0].cnt > 0) {
-  //   const err = new Error('Module has bookings');
-  //   err.code = 'HAS_BOOKINGS';
-  //   throw err;
-  // }
-  // await sql.query`DELETE FROM Modules WHERE Id = ${id}`;
-
-  return true;
-}
-async function getModulesFromDB() {
   const pool = await connectDB();
-  const result = await pool.request().query('SELECT * FROM Module');
-  return result.recordset;
+  const check = await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, id)
+    .query(
+      `SELECT COUNT(*) AS cnt FROM BookingModule WHERE ModuleCodeId = @ModuleCodeId`
+    );
+  if (check.recordset[0].cnt > 0) {
+    const err = new Error('Module has bookings');
+    err.code = 'HAS_BOOKINGS';
+    throw err;
+  }
+  await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, id)
+    .query(
+      `UPDATE Module SET IsDeleted = 1 WHERE ModuleCodeId = @ModuleCodeId`
+    );
+  return true;
 }
 
 async function updateExamInDB(moduleCode, examId, examData) {

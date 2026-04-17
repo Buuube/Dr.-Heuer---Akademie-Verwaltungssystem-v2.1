@@ -1,6 +1,3 @@
-// this file contains the functions that talk to the database
-// the controller calls these functions and waits for the data
-
 const { sql, connectDB } = require('../db/db');
 
 async function getCoursesFromDB() {

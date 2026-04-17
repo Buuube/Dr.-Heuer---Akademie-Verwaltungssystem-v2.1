@@ -21,11 +21,14 @@ async function getParticipants(req, res) {
 
 async function createParticipant(req, res) {
   try {
-    const participantData = req.body;
-    const newParticipant = await createParticipantInDB(participantData);
-    res.status(201).json(newParticipant);
+    const participantData = req.body; // grab the data the frontend sent in the request body
+
+    const newParticipant = await createParticipantInDB(participantData); // pass it to the service which talks to the DB
+
+    res.status(201).json(newParticipant); // 201 = "created" — send the new participant back to the frontend
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create participant' });
+    console.error('createParticipant error:', err); // log the real error in the terminal
+    res.status(500).json({ error: `${err}` }); // tell the frontend something went wrong
   }
 }
 
@@ -39,7 +42,8 @@ async function updateParticipant(req, res) {
     }
     res.json(updatedParticipant);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update participant' });
+    console.error('updateParticipant error:', err);
+    res.status(500).json({ error: `${err}` });
   }
 }
 
@@ -49,13 +53,14 @@ async function deleteParticipant(req, res) {
     await deleteParticipantFromDB(id);
     res.status(204).send();
   } catch (err) {
-    // 409 = Conflict — participant still has bookings or absence days
-    if (err.code === 'HAS_BOOKINGS') {
-      return res.status(409).json({
-        error: 'Löschen nicht möglich: Teilnehmer hat aktive Buchungen',
-      });
-    }
-    res.status(500).json({ error: 'Failed to delete participant' });
+    if (err.code === 'HAS_ACTIVE_BOOKINGS')
+      return res.status(409).json({ error: err.message });
+    if (err.code === 'HAS_UNFILLED_ABSENCES')
+      return res.status(409).json({ error: err.message });
+    if (err.code === 'NOT_FOUND')
+      return res.status(404).json({ error: err.message });
+    console.error('deleteParticipant error:', err);
+    res.status(500).json({ error: `${err}` });
   }
 }
 

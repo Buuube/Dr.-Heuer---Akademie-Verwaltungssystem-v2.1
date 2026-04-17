@@ -5,61 +5,117 @@ import ParticipantList from '../components/participants/ParticipantList.vue';
 import ParticipantForm from '../components/participants/ParticipantForm.vue';
 import ParticipantDetail from '../components/participants/ParticipantDetail.vue';
 
-import { saveParticipant } from '../services/participantService';
+import {
+  createParticipant,
+  updateParticipant,
+  deleteParticipant,
+} from '../services/participantService';
 
 const selected = ref(null);
-const mode = ref('list');
-// list | detail | edit
+const formMode = ref(null); // null | 'new' | 'edit'
+const bottomMode = ref('list'); // 'list' | 'detail'
+const listKey = ref(0);
+
+const clone = (p) => JSON.parse(JSON.stringify(p));
 
 const select = (p) => {
-  selected.value = structuredClone(p);
-  mode.value = 'detail';
+  selected.value = clone(p);
+  bottomMode.value = 'detail';
+  formMode.value = null;
 };
 
 const edit = (p) => {
-  selected.value = structuredClone(p);
-  mode.value = 'list'; // optional oder 'edit' – aber Form ist ja immer da
+  selected.value = clone(p);
+  formMode.value = 'edit';
 };
 
 const createNew = () => {
-  selected.value = null; // wichtig!
-};
-// 👉 speichern
-const save = async (p) => {
-  await saveParticipant(p);
   selected.value = null;
-  mode.value = 'list';
+  formMode.value = 'new';
+  bottomMode.value = 'list';
 };
 
-// 👉 schließen / zurück
-const close = () => {
+const save = async (formData) => {
+  try {
+    const isUpdate = !!(formData.Id || formData.ParticipantId);
+    if (isUpdate) {
+      await updateParticipant(formData);
+    } else {
+      await createParticipant(formData);
+    }
+    selected.value = null;
+    formMode.value = null;
+    bottomMode.value = 'list';
+    listKey.value++;
+  } catch (e) {
+    console.error('Fehler beim Speichern:', e);
+    alert('Fehler beim Speichern: ' + e.message);
+  }
+};
+
+const closeForm = () => {
+  formMode.value = null;
+};
+
+const closeDetail = () => {
   selected.value = null;
-  mode.value = 'list';
+  bottomMode.value = 'list';
+  formMode.value = null;
+};
+
+const remove = async (p) => {
+  if (!confirm(`${p.FirstName} ${p.LastName} wirklich löschen?`)) return;
+  try {
+    const id = p.Id || p.ParticipantId;
+    await deleteParticipant(id);
+    selected.value = null;
+    formMode.value = null;
+    bottomMode.value = 'list';
+    listKey.value++;
+  } catch (e) {
+    console.error('Fehler beim Löschen:', e);
+    alert('Fehler beim Löschen: ' + e.message);
+  }
 };
 </script>
 
 <template>
   <div class="participant-layout">
-    <!-- LINKS: FORM (IMMER SICHTBAR) -->
-    <div class="form">
-      <ParticipantForm :participant="selected" @save="save" @cancel="close" />
+    <!-- OBEN: Button oder Form -->
+    <div class="top-panel">
+      <div v-if="formMode === null" class="top-panel-cta">
+        <button class="btn-new_part" @click="createNew">
+          Neuen Teilnehmer anlegen
+        </button>
+      </div>
+
+      <ParticipantForm
+        v-if="formMode !== null"
+        :key="(selected?.Id || selected?.ParticipantId) ?? formMode"
+        :Participant="selected"
+        :title="
+          formMode === 'edit' ? 'Teilnehmer bearbeiten' : 'Teilnehmer anlegen'
+        "
+        @save="save"
+        @cancel="closeForm"
+      />
     </div>
 
-    <!-- RECHTS -->
-    <div class="list-panel">
-      <!-- LIST -->
+    <!-- UNTEN: Liste oder Detail -->
+    <div class="bottom-panel">
       <ParticipantList
-        v-if="mode === 'list'"
-        :OnEdit="edit"
-        :OnSelect="select"
+        v-if="bottomMode === 'list'"
+        :key="listKey"
+        :onEdit="edit"
+        :onSelect="select"
+        :onDelete="remove"
       />
 
-      <!-- DETAIL -->
       <ParticipantDetail
-        v-if="mode === 'detail'"
+        v-if="bottomMode === 'detail'"
         :Participant="selected"
         @edit="edit"
-        @close="close"
+        @close="closeDetail"
       />
     </div>
   </div>
