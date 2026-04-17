@@ -1,26 +1,35 @@
-const express = require('express'); // loads express
-const cors = require('cors'); // loads cors
-require('dotenv').config(); // loads .env file into process.env
+const path = require('path');
+const resolvedPath = path.resolve(__dirname, '../.env');
+console.log('ENV PATH:', resolvedPath);
+const result = require('dotenv').config({ path: resolvedPath });
+console.log('DOTENV RESULT:', result);
+console.log('DB_SERVER:', process.env.DB_SERVER);
 
-const app = express(); // creates the express app
+const express = require('express');
+const cors = require('cors');
 
-// imports the students router we created
-const studentsRouter = require('./routes/students');
+const app = express();
 
-app.use(cors()); // allows frontend to talk to backend
-app.use(express.json()); // lets the app read JSON from incoming requests
+const participantsRouter = require('./routes/participant');
+const moduleRouter = require('./routes/modules');
+const bookingRouter = require('./routes/booking');
+const postalCodeRouter = require('./routes/postalCode');
+const coursesRouter = require('./routes/courses'); // NEU
+const employmentAgentRouter = require('./routes/employmentAgent');
 
-// mounts the students router at /api/students
-// any route defined in students.js gets prefixed with /api/students
-// so router.get('/') in students.js becomes GET /api/students
-app.use('/api/students', studentsRouter);
+app.use(cors());
+app.use(express.json());
 
-// a test route to confirm the backend is running
+app.use('/api/participants', participantsRouter);
+app.use('/api/modules', moduleRouter);
+app.use('/api/bookings', bookingRouter);
+app.use('/api/postalcodes', postalCodeRouter);
+app.use('/api/courses', coursesRouter); // NEU
+app.use('/api/employmentagents', employmentAgentRouter);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// starts the server on port 3000
 app.listen(3000, () => {
   console.log('Backend running on port 3000');
 });
