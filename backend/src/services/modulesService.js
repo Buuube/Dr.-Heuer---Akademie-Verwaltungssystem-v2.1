@@ -1,98 +1,111 @@
 const { sql, connectDB } = require('../db/db');
 
-async function getModulesFromDB() {
+async function getModulesFromDB(courseId) {
   const pool = await connectDB();
-  const result = await pool.request().query(`
-    SELECT m.*, c.Name AS CourseName
-    FROM Module m
-    LEFT JOIN Course c ON m.CourseId = c.CourseId
-    WHERE m.IsDeleted = 0 OR m.IsDeleted IS NULL
-  `);
+  const request = pool.request();
+
+  let query = `
+    SELECT
+      ModuleCodeId        AS ModuleCode,
+      ExternalModuleCode,
+      Name,
+      CourseId,
+      TeachingFormatId,
+      Content,
+      EstimatedCost,
+      Duration,
+      HasInternship
+    FROM Module
+    WHERE (IsDeleted = 0 OR IsDeleted IS NULL)
+  `;
+
+  if (courseId) {
+    request.input('CourseId', sql.Int, Number(courseId));
+    query += ` AND CourseId = @CourseId`;
+  }
+
+  const result = await request.query(query);
   return result.recordset;
 }
 
-async function createModuleInDB(moduleData) {
+async function createModule(data) {
   const pool = await connectDB();
-  const result = await pool
+  await pool
     .request()
-    .input('ModuleCodeId', sql.VarChar, moduleData.moduleCodeId)
-    .input('Name', sql.VarChar, moduleData.name ?? null)
-    .input('CourseId', sql.Int, moduleData.courseId)
-    .input('TeachingFormatId', sql.Int, moduleData.teachingFormatId)
-    .input('Content', sql.NVarChar, moduleData.content ?? '')
-    .input('EstimatedCost', sql.Decimal, moduleData.estimatedCost ?? null)
-    .input('Duration', sql.VarChar, moduleData.duration ?? null).query(`
-      INSERT INTO Module (ModuleCodeId, Name, CourseId, TeachingFormatId, Content, EstimatedCost, Duration)
-      OUTPUT INSERTED.*
-      VALUES (@ModuleCodeId, @Name, @CourseId, @TeachingFormatId, @Content, @EstimatedCost, @Duration)
+    .input('ModuleCodeId', sql.VarChar, data.ModuleCode)
+    .input('ExternalModuleCode', sql.VarChar, data.ExternalModuleCode ?? null)
+    .input('Name', sql.VarChar, data.Name)
+    .input('CourseId', sql.Int, data.CourseId)
+    .input('TeachingFormatId', sql.Int, data.TeachingFormatId ?? null)
+    .input('Content', sql.NVarChar(sql.MAX), data.Content ?? '')
+    .input('EstimatedCost', sql.Decimal(10, 2), data.EstimatedCost ?? null)
+    .input('Duration', sql.VarChar, data.Duration ?? null)
+    .input('HasInternship', sql.Bit, data.HasInternship ?? 0).query(`
+      INSERT INTO Module (
+        ModuleCodeId, ExternalModuleCode, Name,
+        CourseId, TeachingFormatId,
+        Content, EstimatedCost, Duration, HasInternship
+      ) VALUES (
+        @ModuleCodeId, @ExternalModuleCode, @Name,
+        @CourseId, @TeachingFormatId,
+        @Content, @EstimatedCost, @Duration, @HasInternship
+      )
     `);
-  return result.recordset[0];
+  return { message: 'Module created', ModuleCode: data.ModuleCode };
 }
 
-async function updateModuleInDB(id, moduleData) {
+async function updateModule(code, data) {
   const pool = await connectDB();
   const result = await pool
     .request()
-    .input('ModuleCodeId', sql.VarChar, id)
-    .input('Name', sql.VarChar, moduleData.name ?? null)
-    .input('EstimatedCost', sql.Decimal, moduleData.estimatedCost ?? null)
-    .input('Duration', sql.VarChar, moduleData.duration ?? null)
-    .input('Content', sql.NVarChar, moduleData.content ?? '').query(`
+    .input('ModuleCodeId', sql.VarChar, code)
+    .input('ExternalModuleCode', sql.VarChar, data.ExternalModuleCode ?? null)
+    .input('Name', sql.VarChar, data.Name)
+    .input('CourseId', sql.Int, data.CourseId)
+    .input('TeachingFormatId', sql.Int, data.TeachingFormatId ?? null)
+    .input('Content', sql.NVarChar(sql.MAX), data.Content ?? '')
+    .input('EstimatedCost', sql.Decimal(10, 2), data.EstimatedCost ?? null)
+    .input('Duration', sql.VarChar, data.Duration ?? null)
+    .input('HasInternship', sql.Bit, data.HasInternship ?? 0).query(`
       UPDATE Module SET
-        Name          = @Name,
-        EstimatedCost = @EstimatedCost,
-        Duration      = @Duration,
-        Content       = @Content
-      OUTPUT INSERTED.*
+        ExternalModuleCode = @ExternalModuleCode,
+        Name               = @Name,
+        CourseId           = @CourseId,
+        TeachingFormatId   = @TeachingFormatId,
+        Content            = @Content,
+        EstimatedCost      = @EstimatedCost,
+        Duration           = @Duration,
+        HasInternship      = @HasInternship
       WHERE ModuleCodeId = @ModuleCodeId
     `);
-  if (result.recordset.length === 0) return null;
-  return result.recordset[0];
+  if (result.rowsAffected[0] === 0) return null;
+  return { message: 'Module updated', ModuleCode: code };
 }
 
-async function deleteModuleFromDB(id) {
+async function deleteModule(code) {
   const pool = await connectDB();
+
   const check = await pool
     .request()
-    .input('ModuleCodeId', sql.VarChar, id)
+    .input('ModuleCodeId', sql.VarChar, code)
     .query(
       `SELECT COUNT(*) AS cnt FROM BookingModule WHERE ModuleCodeId = @ModuleCodeId`
     );
+
   if (check.recordset[0].cnt > 0) {
     const err = new Error('Module has bookings');
     err.code = 'HAS_BOOKINGS';
     throw err;
   }
+
   await pool
     .request()
-    .input('ModuleCodeId', sql.VarChar, id)
+    .input('ModuleCodeId', sql.VarChar, code)
     .query(
       `UPDATE Module SET IsDeleted = 1 WHERE ModuleCodeId = @ModuleCodeId`
     );
-  return true;
+
+  return { message: 'Module deleted', ModuleCode: code };
 }
 
-async function updateExamInDB(moduleCode, examId, examData) {
-  const pool = await connectDB();
-  const result = await pool
-    .request()
-    .input('ModuleCodeId', sql.VarChar, moduleCode)
-    .input('ModuleExamId', sql.Int, examId)
-    .input('ExamName', sql.VarChar, examData.examName)
-    .input('ExamType', sql.VarChar, examData.examType).query(`
-      UPDATE ModuleExam SET
-        ExamName = @ExamName,
-        ExamType = @ExamType
-      OUTPUT INSERTED.*
-      WHERE ModuleExamId = @ModuleExamId AND ModuleCodeId = @ModuleCodeId
-    `);
-  return result.recordset[0];
-}
-
-module.exports = {
-  getModulesFromDB,
-  createModuleInDB,
-  updateModuleInDB,
-  deleteModuleFromDB,
-  updateExamInDB,
-};
+module.exports = { getModulesFromDB, createModule, updateModule, deleteModule };

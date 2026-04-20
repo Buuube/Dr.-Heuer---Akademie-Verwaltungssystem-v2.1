@@ -1,22 +1,10 @@
-// Route zu modules
-// this file defines which functions handle which HTTP requests for modules
-// it receives requests from server.js and calls the correct controller function
-
 const express = require('express');
 const router = express.Router();
+const controller = require('../controllers/modulesController');
 
-const {
-  getModules,
-  createModule,
-  updateExam,
-  deleteModule,
-} = require('../controllers/modulesController');
-
-// GET supports optional query param: /api/modules?courseId=5
-router.get('/', getModules);
-router.post('/', createModule);
-router.put('/:moduleCode/exams/:examId', updateExam);
-
-router.delete('/:id', deleteModule);
+router.get('/', controller.getModules);
+router.post('/', controller.createModule);
+router.put('/:id', controller.updateModule);
+router.delete('/:id', controller.deleteModule);
 
 module.exports = router;
