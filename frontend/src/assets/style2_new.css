@@ -148,7 +148,7 @@
     --filter-btn-border: #cfe0f5;
 }
 
-body.light{
+body.light {
     background: #f0f4f8 !important;
 }
 
@@ -213,13 +213,11 @@ body {
     inset: 0;
     border-radius: 18px;
     padding: 1px;
-    background: linear-gradient(
-        120deg,
-        transparent,
-        rgba(74, 163, 255, 0.4),
-        rgba(124, 247, 255, 0.25),
-        transparent
-    );
+    background: linear-gradient(120deg,
+            transparent,
+            rgba(74, 163, 255, 0.4),
+            rgba(124, 247, 255, 0.25),
+            transparent);
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     mask-composite: exclude;
@@ -281,7 +279,6 @@ body {
 
 .form-group {
     padding: 0 16px 8px 0;
-    border-right: 1px solid var(--form-group-border);
 }
 
 .form-group:last-child {
@@ -493,7 +490,6 @@ body {
 
 .detail-group {
     padding: 0 16px 8px 0;
-    border-right: 1px solid var(--form-group-border);
 }
 
 .detail-group:last-child {
@@ -723,14 +719,45 @@ td {
 }
 
 /* Spaltenbreiten */
-th:nth-child(1), td:nth-child(1) { width: 100px; }
-th:nth-child(2), td:nth-child(2) { width: 80px; }
-th:nth-child(3), td:nth-child(3) { width: 140px; }
-th:nth-child(4), td:nth-child(4) { width: 140px; }
-th:nth-child(5), td:nth-child(5) { width: 120px; }
-th:nth-child(6), td:nth-child(6) { width: 120px; }
-th:nth-child(7), td:nth-child(7) { width: 120px; }
-th:nth-child(8), td:nth-child(8) { width: 200px; }
+th:nth-child(1),
+td:nth-child(1) {
+    width: 100px;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+    width: 80px;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+    width: 140px;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+    width: 140px;
+}
+
+th:nth-child(5),
+td:nth-child(5) {
+    width: 120px;
+}
+
+th:nth-child(6),
+td:nth-child(6) {
+    width: 120px;
+}
+
+th:nth-child(7),
+td:nth-child(7) {
+    width: 120px;
+}
+
+th:nth-child(8),
+td:nth-child(8) {
+    width: 200px;
+}
 
 tbody tr {
     transition: background 0.2s;

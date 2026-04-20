@@ -123,13 +123,45 @@ const cancel = () => {
       <div class="form-group">
         <div class="form-group-title">Verwaltung</div>
         <label>Kundennummer</label>
-        <input v-model="form.AgencyCustomerNumber" />
+        <input
+          v-model="form.AgencyCustomerNumber"
+          :class="{ 'input-error': errors.AgencyCustomerNumber }"
+        />
+        <div v-if="errors.AgencyCustomerNumber" class="error">
+          {{ errors.AgencyCustomerNumber }}
+        </div>
+
         <label>Berater</label>
-        <input v-model="form.EmploymentAgentId" />
+        <input
+          v-model="form.EmploymentAgentId"
+          :class="{ 'input-error': errors.EmploymentAgentId }"
+        />
+        <div v-if="errors.EmploymentAgentId" class="error">
+          {{ errors.EmploymentAgentId }}
+        </div>
+
         <label>Erster Kontakt</label>
-        <input v-model="form.FirstContactDate" type="date" />
+        <input
+          v-model="form.FirstContactDate"
+          type="date"
+          :class="{ 'input-error': errors.FirstContactDate }"
+        />
+        <div v-if="errors.FirstContactDate" class="error">
+          {{ errors.FirstContactDate }}
+        </div>
+
         <label>Kontaktquelle</label>
-        <input v-model="form.ContactSource" />
+        <input
+          v-model="form.ContactSource"
+          :class="{ 'input-error': errors.ContactSource }"
+        />
+        <div v-if="errors.ContactSource" class="error">
+          {{ errors.ContactSource }}
+        </div>
+        <label class="checkbox">
+          <input type="checkbox" v-model="form.IsSelfPayer" />
+          <span>Selbstzahler</span>
+        </label>
       </div>
 
       <!-- Gruppe: Person -->
@@ -140,18 +172,21 @@ const cancel = () => {
           <option :value="false">Herr</option>
           <option :value="true">Frau</option>
         </select>
+
         <label>Vorname</label>
         <input
           v-model="form.FirstName"
           :class="{ 'input-error': errors.FirstName }"
         />
         <div v-if="errors.FirstName" class="error">{{ errors.FirstName }}</div>
+
         <label>Nachname</label>
         <input
           v-model="form.LastName"
           :class="{ 'input-error': errors.LastName }"
         />
         <div v-if="errors.LastName" class="error">{{ errors.LastName }}</div>
+
         <label>Geburtsdatum</label>
         <input
           v-model="form.DateOfBirth"
@@ -222,10 +257,12 @@ const cancel = () => {
       <!-- Gruppe: Beschäftigung -->
       <div class="form-group">
         <div class="form-group-title">Beschäftigung</div>
+
         <label class="checkbox">
           <input type="checkbox" v-model="form.IsEmployed" />
           <span>Beschäftigt</span>
         </label>
+
         <label>Arbeitgeber</label>
         <input
           v-model="form.Employer"
@@ -236,10 +273,25 @@ const cancel = () => {
           }"
         />
         <div v-if="errors.Employer" class="error">{{ errors.Employer }}</div>
-        <label class="checkbox">
-          <input type="checkbox" v-model="form.IsSelfPayer" />
-          <span>Selbstzahler</span>
-        </label>
+
+        <!-- NEUE ZEILE: Selbstzahler + Startdatum nebeneinander -->
+        <div class="inline-row">
+          <div class="inline-field">
+            <label>Startdatum</label>
+            <input
+              v-model="form.EmploymentStartDate"
+              type="date"
+              :disabled="!form.IsEmployed"
+              :class="{
+                disabled: !form.IsEmployed,
+                'input-error': errors.EmploymentStartDate,
+              }"
+            />
+            <div v-if="errors.EmploymentStartDate" class="error">
+              {{ errors.EmploymentStartDate }}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

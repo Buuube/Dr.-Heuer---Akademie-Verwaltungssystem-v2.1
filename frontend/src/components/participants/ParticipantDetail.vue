@@ -24,6 +24,10 @@ const emit = defineEmits(['edit', 'close']);
           ><span>{{ Participant.EmploymentAgentId || '-' }}</span>
         </div>
         <div class="detail-row">
+          <span class="detail-label">Erstkontakt</span
+          ><span>{{ Participant.FirstContactDate || '-' }}</span>
+        </div>
+        <div class="detail-row">
           <span class="detail-label">Selbstzahler</span
           ><span>{{ Participant.IsSelfPayer ? 'Ja' : 'Nein' }}</span>
         </div>
@@ -32,6 +36,11 @@ const emit = defineEmits(['edit', 'close']);
       <!-- Person -->
       <div class="detail-group">
         <div class="detail-group-title">Person</div>
+
+        <div class="detail-row">
+          <span class="detail-label">Anrede</span
+          ><span>{{ Participant.Salutation ? 'Frau' : 'Mann' }}</span>
+        </div>
         <div class="detail-row">
           <span class="detail-label">Name</span
           ><span>{{ Participant.FirstName }} {{ Participant.LastName }}</span>
@@ -105,6 +114,10 @@ const emit = defineEmits(['edit', 'close']);
         <div class="detail-row">
           <span class="detail-label">Arbeitgeber</span
           ><span>{{ Participant.Employer || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Startdatum</span
+          ><span>{{ Participant.EmploymentStartDate || '-' }}</span>
         </div>
       </div>
     </div>

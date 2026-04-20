@@ -38,14 +38,19 @@ const createNew = () => {
 const save = async (formData) => {
   try {
     const isUpdate = !!(formData.Id || formData.ParticipantId);
+
+    let saved;
+
     if (isUpdate) {
-      await updateParticipant(formData);
+      saved = await updateParticipant(formData);
     } else {
-      await createParticipant(formData);
+      saved = await createParticipant(formData);
     }
-    selected.value = null;
+
+    selected.value = saved || formData;
+
     formMode.value = null;
-    bottomMode.value = 'list';
+    bottomMode.value = 'detail';
     listKey.value++;
   } catch (e) {
     console.error('Fehler beim Speichern:', e);
