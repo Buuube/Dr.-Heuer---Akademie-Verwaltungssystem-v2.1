@@ -93,7 +93,10 @@ const FilteredBookings = computed(() => {
     <div class="toolbar">
       <select v-model="FilterParticipantId">
         <option value="">Alle Teilnehmer</option>
-        <option v-for="P in Participants" :key="P.ParticipantId" :value="P.ParticipantId"
+        <option
+          v-for="P in Participants"
+          :key="P.ParticipantId"
+          :value="P.ParticipantId"
         >
           {{ P.FirstName }} {{ P.LastName }}
         </option>

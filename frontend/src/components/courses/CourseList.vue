@@ -7,14 +7,12 @@ const props = defineProps({
   OnDelete: Function,
   OnSelect: Function,
   OnCreate: Function,
-  OnSave: Function,
-  showForm: Boolean,
 });
 
 const courses = ref([]);
 const search = ref('');
 const filterStatus = ref('all');
-// all | active | expired | deactivated
+// all | active | expired
 
 const isActive = (endDate) => new Date(endDate) >= new Date();
 
@@ -47,14 +45,11 @@ const filteredCourses = computed(() => {
     const text =
       `${course.ApprovalNumber} ${course.Name} ${course.Advisor}`.toLowerCase();
     const matchesSearch = text.includes(search.value.toLowerCase());
-    const deactivated = course.IsDeleted === true || course.IsDeleted === 1;
-    const active = !deactivated && isActive(course.ApprovalEndDate);
-    const expired = !deactivated && !isActive(course.ApprovalEndDate);
+    const active = isActive(course.ApprovalEndDate);
     const matchesStatus =
       filterStatus.value === 'all' ||
       (filterStatus.value === 'active' && active) ||
-      (filterStatus.value === 'expired' && expired) ||
-      (filterStatus.value === 'deactivated' && deactivated);
+      (filterStatus.value === 'expired' && !active);
     return matchesSearch && matchesStatus;
   });
 
@@ -63,10 +58,8 @@ const filteredCourses = computed(() => {
   return [...filtered].sort((a, b) => {
     let valA, valB;
     if (sortKey.value === '_active') {
-      const deactivatedA = a.IsDeleted === true || a.IsDeleted === 1;
-      const deactivatedB = b.IsDeleted === true || b.IsDeleted === 1;
-      valA = deactivatedA ? -1 : isActive(a.ApprovalEndDate) ? 1 : 0;
-      valB = deactivatedB ? -1 : isActive(b.ApprovalEndDate) ? 1 : 0;
+      valA = isActive(a.ApprovalEndDate) ? 1 : 0;
+      valB = isActive(b.ApprovalEndDate) ? 1 : 0;
     } else {
       valA = a[sortKey.value] ?? '';
       valB = b[sortKey.value] ?? '';
@@ -84,28 +77,17 @@ onMounted(async () => {
   <div>
     <div class="list-header">
       <h2>Kurse</h2>
-      <div class="header-buttons">
-        <template v-if="props.showForm">
-          <button class="btn-save" @click="props.OnSave()">Speichern</button>
-          <button class="btn-cancel" @click="props.OnCreate()">
-            Abbrechen
-          </button>
-        </template>
-        <button v-else class="btn-create" @click="props.OnCreate()">
-          + Neuer Kurs
-        </button>
-      </div>
+      <button class="btn-create" @click="props.OnCreate()">+ Neuer Kurs</button>
     </div>
     <div class="toolbar">
       <input
         v-model="search"
         placeholder="Suche nach Nummer, Name, Berater..."
       />
-      <select v-model="filterStatus" class="filter-select">
+      <select v-model="filterStatus">
         <option value="all">Alle</option>
         <option value="active">Aktiv</option>
         <option value="expired">Abgelaufen</option>
-        <option value="deactivated">Deaktiviert</option>
       </select>
     </div>
     <table>
@@ -117,14 +99,13 @@ onMounted(async () => {
           <th @click="toggleSort('Name')" class="sortable">
             Bezeichnung {{ sortIcon('Name') }}
           </th>
-          <th>Berater</th>
+          <th @click="toggleSort('Advisor')" class="sortable">
+            Berater {{ sortIcon('Advisor') }}
+          </th>
           <th>Gültig von</th>
           <th>Gültig bis</th>
-          <th
-            :class="{ sortable: filterStatus === 'all' }"
-            @click="filterStatus === 'all' && toggleSort('_active')"
-          >
-            Status {{ filterStatus === 'all' ? sortIcon('_active') : '' }}
+          <th @click="toggleSort('_active')" class="sortable">
+            Status {{ sortIcon('_active') }}
           </th>
           <th>Aktionen</th>
         </tr>
@@ -143,13 +124,6 @@ onMounted(async () => {
           <td>{{ formatDate(course.ApprovalEndDate) }}</td>
           <td>
             <span
-              v-if="course.IsDeleted === true || course.IsDeleted === 1"
-              class="badge-deactivated"
-            >
-              Deaktiviert
-            </span>
-            <span
-              v-else
               :class="
                 isActive(course.ApprovalEndDate)
                   ? 'badge-active'
@@ -163,7 +137,6 @@ onMounted(async () => {
             <button
               class="btn-icon"
               title="Bearbeiten"
-              :disabled="course.IsDeleted === true || course.IsDeleted === 1"
               @click.stop="props.OnEdit(course)"
             >
               ✏️
@@ -171,7 +144,6 @@ onMounted(async () => {
             <button
               class="btn-icon btn-icon--delete"
               title="Löschen"
-              :disabled="course.IsDeleted === true || course.IsDeleted === 1"
               @click.stop="props.OnDelete(course.CourseId)"
             >
               🗑️
@@ -200,14 +172,6 @@ onMounted(async () => {
   font-size: 0.85em;
 }
 
-.badge-deactivated {
-  background: #95a5a6;
-  color: white;
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 0.85em;
-}
-
 .sortable {
   cursor: pointer;
   user-select: none;
@@ -224,11 +188,6 @@ onMounted(async () => {
   margin-bottom: 12px;
 }
 
-.header-buttons {
-  display: flex;
-  gap: 8px;
-}
-
 .btn-create {
   padding: 6px 16px;
   background: #2ecc71;
@@ -240,32 +199,6 @@ onMounted(async () => {
 
 .btn-create:hover {
   opacity: 0.85;
-}
-
-.btn-save {
-  padding: 6px 16px;
-  background: #2ecc71;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-save:hover {
-  opacity: 0.85;
-}
-
-.btn-cancel {
-  padding: 6px 16px;
-  background: none;
-  border: 1px solid #666;
-  border-radius: 4px;
-  color: inherit;
-  cursor: pointer;
-}
-
-.btn-cancel:hover {
-  border-color: #aaa;
 }
 
 .clickable-row {
@@ -286,16 +219,5 @@ onMounted(async () => {
 
 .btn-icon--delete:hover {
   filter: brightness(1.5);
-}
-
-.btn-icon:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.filter-select {
-  padding: 3px 6px;
-  font-size: 0.85em;
-  width: auto;
 }
 </style>
