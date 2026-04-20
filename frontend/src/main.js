@@ -1,9 +1,7 @@
 import './assets/main.css';
 //import './assets/style_bright.css';
 //import './assets/style.css';
-//import './assets/styleswitch.css';
-//import './assets/style2.css';
-import './assets/style2_new.css'; // Dennis styles + lightmode
+import './assets/styleswitch.css';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';

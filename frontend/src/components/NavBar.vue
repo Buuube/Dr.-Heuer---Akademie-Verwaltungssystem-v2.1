@@ -1,37 +1,14 @@
 <template>
   <nav class="navbar">
-    <div class="navbar-inner">
-      <div class="brand">
-        <div class="logo-wrapper">
-          <img src="@/assets/logo.png" class="Logo" style="height: 75px" />
-        </div>
-        <div class="brand-text">
-          <span class="brand-name">Verwaltungssystem</span>
-        </div>
-      </div>
-
-      <ul class="nav-links">
-        <li v-for="link in links" :key="link.to">
-          <router-link :to="link.to" class="nav-item">
-            <span class="nav-icon">{{ link.icon }}</span>
-            <span class="nav-label">{{ link.label }}</span>
-            <span class="nav-underline"></span>
-          </router-link>
-        </li>
-      </ul>
-
-      <div class="nav-actions">
-        <label class="theme-switch">
-          <input
-            type="checkbox"
-            :checked="isDark"
-            @change="emit('toggle')"
-            :aria-label="isDark ? 'Lightmode' : 'Darkmode'"
-          />
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
+    <h2>MyApp</h2>
+    <ul>
+      <li><router-link to="/">Home</router-link></li>
+      <li><router-link to="/participants">Participants</router-link></li>
+      <li><router-link to="/courses">Courses</router-link></li>
+      <li><router-link to="/modules">Module</router-link></li>
+      <li><router-link to="/bookings">Bookings</router-link></li>
+      <li><router-link to="/about">About</router-link></li>
+    </ul>
   </nav>
 </template>
 
@@ -43,7 +20,6 @@ const links = [
   { to: '/participants', label: 'Teilnehmer' },
   { to: '/courses', label: 'Kurse' },
   { to: '/bookings', label: 'Buchungen' },
-  { to: '/modules', label: 'Module' },
 ];
 </script>
 
@@ -52,21 +28,16 @@ const links = [
 
 .navbar {
   position: sticky;
-  top: 16px; /* etwas Abstand nach oben */
   z-index: 100;
-  width: calc(100% - 48px); /* Abstand links & rechts */
-  max-width: 1600px;
-  margin: 16px auto 0; /* zentriert horizontal */
+  width: 90vw;
+  top: 0;
   left: 0;
-  right: 0;
-  background: rgba(5, 8, 20, 0.85);
+  background: rgba(5, 8, 20, 0.85); /* passend zu --bg: #050814 */
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(120, 180, 255, 0.18);
-  border: 1px solid rgba(120, 180, 255, 0.18); /* rundum Rahmen */
+  border-bottom: 1px solid rgba(120, 180, 255, 0.18); /* dein --border */
   font-family: 'DM Sans', sans-serif;
   border-radius: 10px;
-  box-sizing: border-box;
 }
 
 .navbar-inner {
@@ -110,7 +81,7 @@ const links = [
 }
 
 .brand-name {
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 600;
   color: #f1f5f9;
   letter-spacing: -0.01em;
@@ -209,6 +180,35 @@ const links = [
   border-color: rgba(139, 92, 246, 0.6);
 }
 
+/* ── Avatar ──
+.nav-actions {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #1e293b, #334155);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  letter-spacing: 0.04em;
+}
+
+.avatar-btn:hover {
+  border-color: rgba(139, 92, 246, 0.6);
+  color: #c4b5fd;
+} */
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .navbar-inner {
@@ -232,47 +232,5 @@ const links = [
     font-size: 16px;
     opacity: 1;
   }
-}
-
-.theme-switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 28px;
-}
-
-.theme-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: #ccc;
-  border-radius: 999px;
-  transition: background-color 0.3s;
-}
-
-.slider::before {
-  content: '';
-  position: absolute;
-  height: 22px;
-  width: 22px;
-  left: 3px;
-  top: 3px;
-  background-color: white;
-  border-radius: 50%;
-  transition: transform 0.3s;
-}
-
-input:checked + .slider {
-  background-color: #34c759;
-}
-
-input:checked + .slider::before {
-  transform: translateX(22px);
 }
 </style>

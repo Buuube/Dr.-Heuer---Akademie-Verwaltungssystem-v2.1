@@ -15,62 +15,41 @@ const empty = () => ({
   ApprovalEndDate: '',
   CostPerTeachingUnit: '',
   TeachingUnitDuration: '',
-  DailyTeachingHours: 8.0,
+  DailyTeachingHours: '',
 });
 
 const form = ref(empty());
 
-const toDateInput = (val) => (val ? val.substring(0, 10) : '');
-
 watch(
   () => props.course,
   (val) => {
-    if (!val) {
-      form.value = empty();
-    } else {
-      form.value = {
-        ...val,
-        ApprovalStartDate: toDateInput(val.ApprovalStartDate),
-        ApprovalEndDate: toDateInput(val.ApprovalEndDate),
-      };
-    }
+    form.value = val ? { ...val } : empty();
   },
   { immediate: true }
 );
 
-const nameError = ref('');
-
 const submit = () => {
-  if (!form.value.Name || !form.value.Name.trim()) {
-    nameError.value = 'Bezeichnung ist erforderlich.';
-    return;
-  }
-  nameError.value = '';
   emit('save', { ...form.value });
 };
-
-defineExpose({ submitForm: submit });
 </script>
 
 <template>
   <div class="form-card">
     <div class="form-header">
       <h3>{{ form.CourseId ? 'Kurs bearbeiten' : 'Neuen Kurs anlegen' }}</h3>
+      <button class="btn-close" title="Abbrechen" @click="emit('cancel')">
+        ✕
+      </button>
     </div>
 
     <form @submit.prevent="submit">
       <div class="form-group">
         <label>Zulassungsnummer</label>
-        <input v-model="form.ApprovalNumber" />
+        <input v-model="form.ApprovalNumber" required />
       </div>
       <div class="form-group">
-        <label>Bezeichnung *</label>
-        <input
-          v-model="form.Name"
-          :class="{ 'input-error': nameError }"
-          @input="nameError = ''"
-        />
-        <span v-if="nameError" class="error-msg">{{ nameError }}</span>
+        <label>Bezeichnung</label>
+        <input v-model="form.Name" required />
       </div>
       <div class="form-group">
         <label>Berater</label>
@@ -82,11 +61,11 @@ defineExpose({ submitForm: submit });
       <div class="form-row">
         <div class="form-group">
           <label>Gültig von</label>
-          <input v-model="form.ApprovalStartDate" type="date" />
+          <input v-model="form.ApprovalStartDate" type="date" required />
         </div>
         <div class="form-group">
           <label>Gültig bis</label>
-          <input v-model="form.ApprovalEndDate" type="date" />
+          <input v-model="form.ApprovalEndDate" type="date" required />
         </div>
       </div>
 
@@ -115,12 +94,15 @@ defineExpose({ submitForm: submit });
           <input
             v-model.number="form.DailyTeachingHours"
             type="number"
-            min="0.5"
+            min="0"
             max="24"
             step="0.5"
-            required
           />
         </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-save">Speichern</button>
       </div>
     </form>
   </div>
@@ -128,7 +110,7 @@ defineExpose({ submitForm: submit });
 
 <style scoped>
 .form-card {
-  width: 100%;
+  max-width: 560px;
 }
 
 .form-header {
@@ -136,6 +118,18 @@ defineExpose({ submitForm: submit });
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 1.3em;
+  cursor: pointer;
+}
+
+.btn-close:hover {
+  opacity: 0.75;
 }
 
 .form-group {
@@ -158,15 +152,6 @@ defineExpose({ submitForm: submit });
   color: inherit;
 }
 
-.input-error {
-  border-color: #e74c3c !important;
-}
-
-.error-msg {
-  color: #e74c3c;
-  font-size: 0.8em;
-}
-
 .form-row {
   display: flex;
   gap: 16px;
@@ -174,5 +159,24 @@ defineExpose({ submitForm: submit });
 
 .form-row .form-group {
   flex: 1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.btn-save {
+  padding: 6px 20px;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-save:hover {
+  opacity: 0.85;
 }
 </style>
