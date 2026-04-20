@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
-import { getLocations, getPostalCode } from '../../services/participantService';
+import { ref, watch } from 'vue';
+import { getPostalCode } from '../../services/participantService';
 import { validateParticipant } from '../../utils/participantValidation';
 
 const props = defineProps({
@@ -15,7 +15,11 @@ const emit = defineEmits(['save', 'cancel']);
 
 const formatDate = (val) => {
   if (!val) return '';
-  return new Date(val).toISOString().split('T')[0];
+  try {
+    return new Date(val).toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
 };
 
 const createEmptyForm = () => ({
@@ -45,26 +49,12 @@ const createEmptyForm = () => ({
 });
 
 const form = ref(createEmptyForm());
-const Locations = ref([]);
 const errors = ref({});
-
-const loadLocations = async () => {
-  try {
-    const result = await getLocations();
-    Locations.value = Array.isArray(result) ? result : [];
-  } catch (e) {
-    console.error('Fehler beim Laden der Standorte:', e);
-    Locations.value = [];
-  }
-};
-
-onMounted(() => {
-  loadLocations();
-});
 
 watch(
   () => props.Participant,
   (val) => {
+    errors.value = {};
     if (val) {
       form.value = {
         ...createEmptyForm(),
@@ -83,7 +73,7 @@ watch(
 watch(
   () => form.value.PostalCode,
   async (val) => {
-    if (!val || val.length !== 5) return;
+    if (!val || String(val).length !== 5) return;
     try {
       const result = await getPostalCode(val);
       if (result) {
@@ -108,16 +98,10 @@ watch(
   }
 );
 
-const validateForm = () => {
+const submit = () => {
   const result = validateParticipant(form.value);
   errors.value = result.errors;
-  return result.valid;
-};
-
-const submit = () => {
-  const ok = validateForm();
-  if (!ok) return;
-
+  if (!result.valid) return;
   emit('save', form.value);
 };
 
@@ -130,116 +114,139 @@ const cancel = () => {
   <div class="form">
     <h3>{{ props.title }}</h3>
 
-    <div v-if="!Object.keys(errors).length === false" class="error-box">
+    <div v-if="Object.keys(errors).length > 0" class="error-box form-row-full">
       Bitte korrigiere die markierten Felder
     </div>
 
-    <div>
-      <label>Kundennummer</label>
-      <input v-model="form.AgencyCustomerNumber" />
-      <label>Berater</label>
-      <input v-model="form.EmploymentAgentId" />
-    </div>
-
-    <hr />
-
-    <div>
-      <label>Anrede</label>
-      <select v-model="form.Salutation">
-        <option :value="false">Herr</option>
-        <option :value="true">Frau</option>
-      </select>
-
-      <label>Vorname</label>
-      <input v-model="form.FirstName" />
-      <div v-if="errors.FirstName" class="error">{{ errors.FirstName }}</div>
-
-      <label>Nachname</label>
-      <input v-model="form.LastName" />
-      <div v-if="errors.LastName" class="error">{{ errors.LastName }}</div>
-
-      <label>Geburtsdatum</label>
-      <input v-model="form.DateOfBirth" type="date" />
-      <div v-if="errors.DateOfBirth" class="error">
-        {{ errors.DateOfBirth }}
+    <div class="form-grid">
+      <!-- Gruppe: Verwaltung -->
+      <div class="form-group">
+        <div class="form-group-title">Verwaltung</div>
+        <label>Kundennummer</label>
+        <input v-model="form.AgencyCustomerNumber" />
+        <label>Berater</label>
+        <input v-model="form.EmploymentAgentId" />
+        <label>Erster Kontakt</label>
+        <input v-model="form.FirstContactDate" type="date" />
+        <label>Kontaktquelle</label>
+        <input v-model="form.ContactSource" />
       </div>
 
-      <label>Geburtsort</label>
-      <input v-model="form.PlaceOfBirth" />
-      <div v-if="errors.PlaceOfBirth" class="error">
-        {{ errors.PlaceOfBirth }}
-      </div>
-    </div>
-    <hr />
-
-    <div>
-      <label>Straße</label>
-      <input v-model="form.Street" />
-      <div v-if="errors.Street" class="error">{{ errors.Street }}</div>
-
-      <label>Hausnummer</label>
-      <input v-model="form.HouseNumber" />
-      <div v-if="errors.HouseNumber" class="error">
-        {{ errors.HouseNumber }}
-      </div>
-
-      <label>PLZ</label>
-      <input v-model="form.PostalCode" placeholder="44135" />
-      <div v-if="errors.PostalCode" class="error">{{ errors.PostalCode }}</div>
-
-      <label>Wohnort</label>
-      <input :value="form.City" disabled />
-    </div>
-
-    <hr />
-
-    <div>
-      <label>E-Mail</label>
-      <input v-model="form.Email" />
-      <div v-if="errors.Email" class="error">{{ errors.Email }}</div>
-
-      <label>Telefon</label>
-      <input v-model="form.Phone" />
-
-      <label>Mobil</label>
-      <input v-model="form.Mobile" />
-
-      <div v-if="errors.PhoneMobile" class="error">
-        {{ errors.PhoneMobile }}
+      <!-- Gruppe: Person -->
+      <div class="form-group">
+        <div class="form-group-title">Person</div>
+        <label>Anrede</label>
+        <select v-model="form.Salutation">
+          <option :value="false">Herr</option>
+          <option :value="true">Frau</option>
+        </select>
+        <label>Vorname</label>
+        <input
+          v-model="form.FirstName"
+          :class="{ 'input-error': errors.FirstName }"
+        />
+        <div v-if="errors.FirstName" class="error">{{ errors.FirstName }}</div>
+        <label>Nachname</label>
+        <input
+          v-model="form.LastName"
+          :class="{ 'input-error': errors.LastName }"
+        />
+        <div v-if="errors.LastName" class="error">{{ errors.LastName }}</div>
+        <label>Geburtsdatum</label>
+        <input
+          v-model="form.DateOfBirth"
+          type="date"
+          :class="{ 'input-error': errors.DateOfBirth }"
+        />
+        <div v-if="errors.DateOfBirth" class="error">
+          {{ errors.DateOfBirth }}
+        </div>
+        <label>Geburtsort</label>
+        <input
+          v-model="form.PlaceOfBirth"
+          :class="{ 'input-error': errors.PlaceOfBirth }"
+        />
+        <div v-if="errors.PlaceOfBirth" class="error">
+          {{ errors.PlaceOfBirth }}
+        </div>
       </div>
 
-      <label>Fax</label>
-      <input v-model="form.Fax" />
-      <div v-if="errors.Fax" class="error">{{ errors.Fax }}</div>
-    </div>
+      <!-- Gruppe: Adresse -->
+      <div class="form-group">
+        <div class="form-group-title">Adresse</div>
+        <label>Straße</label>
+        <input
+          v-model="form.Street"
+          :class="{ 'input-error': errors.Street }"
+        />
+        <div v-if="errors.Street" class="error">{{ errors.Street }}</div>
+        <label>Hausnummer</label>
+        <input
+          v-model="form.HouseNumber"
+          :class="{ 'input-error': errors.HouseNumber }"
+        />
+        <div v-if="errors.HouseNumber" class="error">
+          {{ errors.HouseNumber }}
+        </div>
+        <label>PLZ</label>
+        <input
+          v-model="form.PostalCode"
+          placeholder="44135"
+          :class="{ 'input-error': errors.PostalCode }"
+        />
+        <div v-if="errors.PostalCode" class="error">
+          {{ errors.PostalCode }}
+        </div>
+        <label>Wohnort</label>
+        <input :value="form.City" disabled />
+      </div>
 
-    <hr />
+      <!-- Gruppe: Kontakt -->
+      <div class="form-group">
+        <div class="form-group-title">Kontakt</div>
+        <label>E-Mail</label>
+        <input v-model="form.Email" :class="{ 'input-error': errors.Email }" />
+        <div v-if="errors.Email" class="error">{{ errors.Email }}</div>
+        <label>Telefon</label>
+        <input v-model="form.Phone" />
+        <label>Mobil</label>
+        <input v-model="form.Mobile" />
+        <div v-if="errors.PhoneMobile" class="error">
+          {{ errors.PhoneMobile }}
+        </div>
+        <label>Fax</label>
+        <input v-model="form.Fax" :class="{ 'input-error': errors.Fax }" />
+        <div v-if="errors.Fax" class="error">{{ errors.Fax }}</div>
+      </div>
 
-    <div>
-      <label class="checkbox">
-        <input type="checkbox" v-model="form.IsEmployed" />
-        <span>Beschäftigt</span>
-      </label>
-
-      <label>Arbeitgeber</label>
-      <input v-model="form.Employer" :disabled="!form.IsEmployed" />
-
-      <div v-if="errors.Employer" class="error">
-        {{ errors.Employer }}
+      <!-- Gruppe: Beschäftigung -->
+      <div class="form-group">
+        <div class="form-group-title">Beschäftigung</div>
+        <label class="checkbox">
+          <input type="checkbox" v-model="form.IsEmployed" />
+          <span>Beschäftigt</span>
+        </label>
+        <label>Arbeitgeber</label>
+        <input
+          v-model="form.Employer"
+          :disabled="!form.IsEmployed"
+          :class="{
+            disabled: !form.IsEmployed,
+            'input-error': errors.Employer,
+          }"
+        />
+        <div v-if="errors.Employer" class="error">{{ errors.Employer }}</div>
+        <label class="checkbox">
+          <input type="checkbox" v-model="form.IsSelfPayer" />
+          <span>Selbstzahler</span>
+        </label>
       </div>
     </div>
 
-    <hr />
-
-    <div>
-      <label>Erster Kontakt</label>
-      <input v-model="form.FirstContactDate" type="date" />
-
-      <label>Kontaktquelle</label>
-      <input v-model="form.ContactSource" />
+    <!-- Aktionen -->
+    <div class="form-actions">
+      <button class="btn-submit" @click="submit">Speichern</button>
+      <button class="btn-cancel" @click="cancel">Abbrechen</button>
     </div>
-
-    <button @click="submit">Speichern</button>
-    <button @click="cancel">Abbrechen</button>
   </div>
 </template>

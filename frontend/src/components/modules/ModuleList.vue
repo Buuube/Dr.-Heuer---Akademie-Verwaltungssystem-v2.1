@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { getModules } from '@/services/moduleService';
+import { getModule } from '@/services/moduleService';
 import { getExams } from '@/services/moduleExamService';
 
 const props = defineProps({
@@ -20,7 +20,7 @@ const formatCurrency = (value) =>
   }) + ' €';
 
 onMounted(async () => {
-  modules.value = await getModules(props.CourseId);
+  modules.value = await getModule(props.CourseId);
 
   for (const mod of modules.value) {
     try {
