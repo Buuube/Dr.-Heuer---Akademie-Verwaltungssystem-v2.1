@@ -42,8 +42,7 @@ async function updateParticipant(req, res) {
     }
     res.json(updatedParticipant);
   } catch (err) {
-    console.error('updateParticipant error:', err);
-    res.status(500).json({ error: `${err}` });
+    res.status(500).json({ error: 'Failed to update participant' });
   }
 }
 
@@ -53,14 +52,13 @@ async function deleteParticipant(req, res) {
     await deleteParticipantFromDB(id);
     res.status(204).send();
   } catch (err) {
-    if (err.code === 'HAS_ACTIVE_BOOKINGS')
-      return res.status(409).json({ error: err.message });
-    if (err.code === 'HAS_UNFILLED_ABSENCES')
-      return res.status(409).json({ error: err.message });
-    if (err.code === 'NOT_FOUND')
-      return res.status(404).json({ error: err.message });
-    console.error('deleteParticipant error:', err);
-    res.status(500).json({ error: `${err}` });
+    // 409 = Conflict — participant still has bookings or absence days
+    if (err.code === 'HAS_BOOKINGS') {
+      return res.status(409).json({
+        error: 'Löschen nicht möglich: Teilnehmer hat aktive Buchungen',
+      });
+    }
+    res.status(500).json({ error: 'Failed to delete participant' });
   }
 }
 

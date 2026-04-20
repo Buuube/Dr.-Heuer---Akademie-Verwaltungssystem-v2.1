@@ -26,8 +26,7 @@ export async function updateCourse(id, course) {
 }
 
 export async function deleteCourse(id) {
-  const response = await fetch(`${API}/${id}`, {
+  await fetch(`${API}/${id}`, {
     method: 'DELETE',
   });
-  return response;
 }

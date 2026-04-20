@@ -3,7 +3,7 @@ import { ref, watch, computed, onMounted } from 'vue';
 import { createBooking, updateBooking } from '../../services/bookingService';
 import { getParticipants } from '../../services/participantService';
 import { getCourses } from '../../services/courseService';
-import { getModule } from '@/services/moduleService';
+import { getModule } from '../../services/moduleService';
 
 const props = defineProps({
   Booking: Object,
