@@ -52,16 +52,21 @@ const links = [
 
 .navbar {
   position: sticky;
+  top: 16px; /* etwas Abstand nach oben */
   z-index: 100;
-  width: 90vw;
-  top: 0;
+  width: calc(100% - 48px); /* Abstand links & rechts */
+  max-width: 1600px;
+  margin: 16px auto 0; /* zentriert horizontal */
   left: 0;
-  background: rgba(5, 8, 20, 0.85); /* passend zu --bg: #050814 */
+  right: 0;
+  background: rgba(5, 8, 20, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(120, 180, 255, 0.18); /* dein --border */
+  border-bottom: 1px solid rgba(120, 180, 255, 0.18);
+  border: 1px solid rgba(120, 180, 255, 0.18); /* rundum Rahmen */
   font-family: 'DM Sans', sans-serif;
   border-radius: 10px;
+  box-sizing: border-box;
 }
 
 .navbar-inner {
@@ -105,7 +110,7 @@ const links = [
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 600;
   color: #f1f5f9;
   letter-spacing: -0.01em;
