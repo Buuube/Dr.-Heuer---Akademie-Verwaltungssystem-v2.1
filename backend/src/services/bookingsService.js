@@ -82,8 +82,9 @@ async function updateBookingInDB(id, bookingData) {
   return result.recordset[0];
 }
 
-async function addBookingItemsInDB(bookingId, { moduleIds, macroPackageId }) {
+async function addBookingItemsInDB(bookingId, items) {
   const pool = await connectDB();
+
   const check = await pool
     .request()
     .input('BookingId', sql.Int, bookingId)
@@ -93,22 +94,20 @@ async function addBookingItemsInDB(bookingId, { moduleIds, macroPackageId }) {
     err.code = 'BOOKING_NOT_FOUND';
     throw err;
   }
-  const resolvedModuleIds = moduleIds ?? [];
-  for (const moduleCodeId of resolvedModuleIds) {
+
+  for (const item of items) {
     await pool
       .request()
       .input('BookingId', sql.Int, bookingId)
-      .input('ModuleCodeId', sql.VarChar, moduleCodeId)
+      .input('ModuleCodeId', sql.VarChar, item.moduleCodeId)
+      .input('ModuleSessionId', sql.Int, item.moduleSessionId ?? null)
       .input('AttemptNumber', sql.Int, 0).query(`
-        INSERT INTO BookingModule (BookingId, ModuleCodeId, AttemptNumber)
-        VALUES (@BookingId, @ModuleCodeId, @AttemptNumber)
+        INSERT INTO BookingModule (BookingId, ModuleCodeId, ModuleSessionId, AttemptNumber)
+        VALUES (@BookingId, @ModuleCodeId, @ModuleSessionId, @AttemptNumber)
       `);
   }
-  return {
-    bookingId: Number(bookingId),
-    addedModuleIds: resolvedModuleIds,
-    macroPackageId: macroPackageId ?? null,
-  };
+
+  return { bookingId: Number(bookingId), addedItems: items };
 }
 
 async function deleteBookingFromDB(id, cancellationReasonId) {

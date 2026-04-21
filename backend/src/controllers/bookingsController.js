@@ -51,13 +51,14 @@ async function getBookings(req, res) {
 async function addBookingItems(req, res) {
   try {
     const { id } = req.params;
-    const { moduleIds, macroPackageId } = req.body;
-    const result = await addBookingItemsInDB(id, { moduleIds, macroPackageId });
+    const { items } = req.body; // Array von { moduleCodeId, moduleSessionId }
+    const result = await addBookingItemsInDB(id, items);
     res.status(201).json(result);
   } catch (err) {
     if (err.code === 'BOOKING_NOT_FOUND') {
       return res.status(404).json({ error: 'Booking not found' });
     }
+    console.error('addBookingItems error:', err);
     res.status(500).json({ error: 'Failed to add booking items' });
   }
 }

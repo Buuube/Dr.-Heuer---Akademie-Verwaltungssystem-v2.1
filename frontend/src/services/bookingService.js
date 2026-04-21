@@ -57,11 +57,12 @@ export async function updateBooking(booking) {
   return res.json();
 }
 
-export async function addBookingItems(bookingId, moduleIds) {
+export async function addBookingItems(bookingId, items) {
+  // items = Array von { moduleCodeId, moduleSessionId }
   const res = await fetch(`${API}/${bookingId}/items`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ moduleIds }),
+    body: JSON.stringify({ items }),
   });
   if (!res.ok) throw new Error('Fehler beim Zuordnen der Module');
   return res.json();

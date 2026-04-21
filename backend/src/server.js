@@ -16,10 +16,12 @@ const bookingRouter = require('./routes/booking');
 const postalCodeRouter = require('./routes/postalCode');
 const coursesRouter = require('./routes/courses'); // NEU
 const employmentAgentRouter = require('./routes/employmentAgent');
+const moduleSessionRouter = require('./routes/moduleSession');
 
 app.use(cors());
 app.use(express.json());
 
+app.use('/api/modulesessions', moduleSessionRouter);
 app.use('/api/participants', participantsRouter);
 app.use('/api/modules', moduleRouter);
 app.use('/api/bookings', bookingRouter);
