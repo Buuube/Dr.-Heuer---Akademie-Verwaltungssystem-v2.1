@@ -1,13 +1,19 @@
 const { sql, connectDB } = require('../db/db');
 
-async function getModulesFromDB() {
+async function getModulesFromDB(courseId) {
   const pool = await connectDB();
-  const result = await pool.request().query(`
+  const request = pool.request();
+  let query = `
     SELECT m.*, c.Name AS CourseName
     FROM Module m
     LEFT JOIN Course c ON m.CourseId = c.CourseId
-    WHERE m.IsDeleted = 0 OR m.IsDeleted IS NULL
-  `);
+    WHERE 1=1
+  `;
+  if (courseId) {
+    request.input('CourseId', sql.Int, Number(courseId));
+    query += ` AND m.CourseId = @CourseId`;
+  }
+  const result = await request.query(query);
   return result.recordset;
 }
 
@@ -72,6 +78,42 @@ async function deleteModuleFromDB(id) {
   return true;
 }
 
+async function getExamsFromDB(moduleCode) {
+  const pool = await connectDB();
+  const result = await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, moduleCode)
+    .query(`SELECT * FROM ModuleExam WHERE ModuleCodeId = @ModuleCodeId`);
+  return result.recordset;
+}
+
+async function createExamInDB(moduleCode, examData) {
+  const pool = await connectDB();
+  const result = await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, moduleCode)
+    .input('ExamName', sql.VarChar, examData.examName ?? examData.ExamName)
+    .input('ExamType', sql.VarChar, examData.examType ?? examData.ExamType)
+    .query(`
+      INSERT INTO ModuleExam (ModuleCodeId, ExamName, ExamType)
+      OUTPUT INSERTED.*
+      VALUES (@ModuleCodeId, @ExamName, @ExamType)
+    `);
+  return result.recordset[0];
+}
+
+async function deleteExamFromDB(moduleCode, examId) {
+  const pool = await connectDB();
+  await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, moduleCode)
+    .input('ModuleExamId', sql.Int, examId)
+    .query(
+      `DELETE FROM ModuleExam WHERE ModuleExamId = @ModuleExamId AND ModuleCodeId = @ModuleCodeId`
+    );
+  return true;
+}
+
 async function updateExamInDB(moduleCode, examId, examData) {
   const pool = await connectDB();
   const result = await pool
@@ -94,5 +136,8 @@ module.exports = {
   createModuleInDB,
   updateModuleInDB,
   deleteModuleFromDB,
+  getExamsFromDB,
+  createExamInDB,
+  deleteExamFromDB,
   updateExamInDB,
 };

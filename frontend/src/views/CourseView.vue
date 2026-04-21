@@ -28,19 +28,14 @@ const select = (course) => {
 };
 
 const createNew = () => {
-  if (showForm.value) {
-    closeForm();
-  } else {
-    selected.value = null;
-    showForm.value = true;
-    showDetail.value = false;
-  }
+  selected.value = null;
+  showForm.value = true;
+  showDetail.value = false;
 };
 
 const edit = (course) => {
   selected.value = { ...course };
   showForm.value = true;
-  // showDetail bleibt unverändert — aus Detailansicht heraus bleibt Detail sichtbar
 };
 
 const closeForm = () => {
@@ -79,7 +74,7 @@ const save = async (courseData) => {
   if (courseData.CourseId) {
     const updated = await updateCourse(courseData.CourseId, courseData);
     if (showDetail.value) {
-      selected.value = { ...updated }; // Detailansicht mit aktualisierten Daten
+      selected.value = { ...updated };
     }
   } else {
     await createCourse(courseData);
@@ -93,49 +88,52 @@ const save = async (courseData) => {
 </script>
 
 <template>
-  <div>
-    <!-- Formular klappt oben auf — über Liste oder Detail -->
-    <Transition name="form-expand">
-      <div v-if="showForm" class="form-wrapper">
-        <CourseForm
-          ref="formRef"
-          :course="selected"
-          @save="save"
-          @cancel="closeForm"
-        />
+  <div class="course-layout">
+    <!-- OBEN: Button oder Form -->
+    <div class="top-panel">
+      <div v-if="!showForm" class="top-panel-cta">
+        <button class="btn-new_part" @click="createNew">
+          Neuen Kurs anlegen
+        </button>
       </div>
-    </Transition>
 
-    <!-- Detailansicht -->
-    <CourseDetail
-      v-if="showDetail"
-      :Course="selected"
-      :editMode="showForm"
-      @edit="edit(selected)"
-      @save="() => formRef?.submitForm()"
-      @cancel="closeForm"
-      @delete="remove(selected.CourseId)"
-      @close="closeDetail"
-    />
+      <CourseForm
+        v-if="showForm"
+        ref="formRef"
+        :course="selected"
+        @save="save"
+        @cancel="closeForm"
+      />
+    </div>
 
-    <!-- Liste -->
-    <CourseList
-      v-if="!showDetail"
-      :key="reloadKey"
-      :OnEdit="edit"
-      :OnDelete="remove"
-      :OnSelect="select"
-      :OnCreate="createNew"
-      :OnSave="() => formRef?.submitForm()"
-      :showForm="showForm"
-    />
+    <!-- UNTEN: Liste oder Detail -->
+    <div class="bottom-panel">
+      <CourseList
+        v-if="!showDetail"
+        :key="reloadKey"
+        :OnEdit="edit"
+        :OnDelete="remove"
+        :OnSelect="select"
+      />
+
+      <CourseDetail
+        v-if="showDetail"
+        :Course="selected"
+        :editMode="showForm"
+        @edit="edit(selected)"
+        @save="() => formRef?.submitForm()"
+        @cancel="closeForm"
+        @delete="remove(selected.CourseId)"
+        @close="closeDetail"
+      />
+    </div>
 
     <!-- Bestätigungs-Popup -->
     <div v-if="confirmPending" class="modal-overlay">
       <div class="modal">
         <p>Sicher, dass Sie diesen Kurs deaktivieren möchten?</p>
         <div class="modal-actions">
-          <button class="btn-cancel" @click="confirmPending = null">
+          <button class="btn-modal-cancel" @click="confirmPending = null">
             Abbrechen
           </button>
           <button class="btn-confirm" @click="confirmRemove">
@@ -168,46 +166,31 @@ const save = async (courseData) => {
 </template>
 
 <style scoped>
-.form-wrapper {
-  margin-bottom: 24px;
-}
-
-.form-expand-enter-active,
-.form-expand-leave-active {
-  transition:
-    max-height 0.3s ease,
-    opacity 0.3s ease;
-  overflow: hidden;
-  max-height: 600px;
-}
-
-.form-expand-enter-from,
-.form-expand-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
+  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: #1a1a2e;
-  border: 1px solid #444;
-  border-radius: 8px;
+  background: rgba(5, 8, 20, 0.97);
+  border: 1px solid rgba(120, 180, 255, 0.18);
+  border-radius: 18px;
   padding: 24px 28px;
   min-width: 300px;
   max-width: 420px;
+  box-shadow: 0 0 40px rgba(74, 163, 255, 0.15);
+  color: #d7e6ff;
 }
 
 .modal p {
   margin: 0 0 20px 0;
+  font-size: 14px;
 }
 
 .modal-actions {
@@ -216,42 +199,56 @@ const save = async (courseData) => {
   gap: 10px;
 }
 
-.btn-cancel {
-  padding: 6px 16px;
-  background: none;
-  border: 1px solid #666;
-  border-radius: 4px;
-  color: inherit;
-  cursor: pointer;
-}
-
-.btn-cancel:hover {
-  border-color: #aaa;
-}
-
 .btn-confirm {
-  padding: 6px 16px;
-  background: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 77, 109, 0.4);
+  background: rgba(255, 77, 109, 0.12);
+  color: #ff4d6d;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-confirm:hover {
-  opacity: 0.85;
+  box-shadow: 0 0 14px rgba(255, 77, 109, 0.35);
+  border-color: rgba(255, 77, 109, 0.65);
+}
+
+.btn-modal-cancel {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(124, 247, 255, 0.15);
+  background: rgba(74, 163, 255, 0.06);
+  color: rgba(215, 230, 255, 0.6);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-modal-cancel:hover {
+  border-color: rgba(124, 247, 255, 0.3);
+  color: #7cf7ff;
 }
 
 .btn-success {
-  padding: 6px 16px;
-  background: #2ecc71;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(124, 247, 255, 0.4);
+  background: rgba(124, 247, 255, 0.08);
+  color: #7cf7ff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-success:hover {
-  opacity: 0.85;
+  box-shadow: 0 0 14px rgba(124, 247, 255, 0.3);
 }
 </style>

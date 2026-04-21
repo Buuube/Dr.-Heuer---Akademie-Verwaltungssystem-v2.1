@@ -35,7 +35,9 @@ body {
 /* ============================================================
    LAYOUT — vertikal (oben/unten)
 ============================================================ */
-.participant-layout {
+.participant-layout,
+.course-layout,
+.module-layout {
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -590,4 +592,11 @@ tbody tr:hover {
 .btn-detail:hover,
 .btn-delete:hover {
     box-shadow: 0 0 10px rgba(124, 247, 255, 0.15);
+}
+
+.btn-edit:disabled,
+.btn-delete:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    box-shadow: none;
 }

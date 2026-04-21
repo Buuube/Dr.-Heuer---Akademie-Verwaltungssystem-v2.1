@@ -7,13 +7,16 @@ const {
   createModuleInDB,
   updateModuleInDB,
   deleteModuleFromDB,
+  getExamsFromDB,
+  createExamInDB,
+  deleteExamFromDB,
   updateExamInDB,
 } = require('../services/modulesService');
 
 async function getModules(req, res) {
   try {
     const { courseId } = req.query;
-    const modules = await getModulesFromDB();
+    const modules = await getModulesFromDB(courseId);
     res.json(modules);
   } catch (err) {
     console.error('getModules error:', err); // ← diese Zeile hinzufügen
@@ -61,6 +64,36 @@ async function deleteModule(req, res) {
   }
 }
 
+async function getExams(req, res) {
+  try {
+    const { moduleCode } = req.params;
+    const result = await getExamsFromDB(moduleCode);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch exams' });
+  }
+}
+
+async function createExam(req, res) {
+  try {
+    const { moduleCode } = req.params;
+    const result = await createExamInDB(moduleCode, req.body);
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create exam' });
+  }
+}
+
+async function deleteExam(req, res) {
+  try {
+    const { moduleCode, examId } = req.params;
+    await deleteExamFromDB(moduleCode, examId);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete exam' });
+  }
+}
+
 async function updateExam(req, res) {
   try {
     const { moduleCode, examId } = req.params;
@@ -76,5 +109,8 @@ module.exports = {
   createModule,
   updateModule,
   deleteModule,
+  getExams,
+  createExam,
+  deleteExam,
   updateExam,
 };
