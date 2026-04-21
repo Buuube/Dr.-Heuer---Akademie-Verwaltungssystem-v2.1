@@ -2,18 +2,20 @@
 import { ref, watch, onMounted } from 'vue';
 import { getCourses } from '@/services/courseService';
 import { getExams } from '@/services/moduleExamService';
+import { getTeachingFormats } from '@/services/teachingFormatService';
 
 const props = defineProps({
   module: Object,
 });
 
 const emit = defineEmits(['save', 'cancel']);
-
+const teachingFormats = ref([]);
 const courses = ref([]);
 const exams = ref([]);
 
 onMounted(async () => {
   courses.value = await getCourses();
+  teachingFormats.value = await getTeachingFormats();
 });
 
 watch(
@@ -35,7 +37,7 @@ const empty = () => ({
   ExternalModuleCode: '',
   Name: '',
   CourseId: '',
-  TeachingFormatId: 1,
+  TeachingFormatId: '',
   Content: '',
   EstimatedCost: '',
   Duration: '',
@@ -104,19 +106,24 @@ defineExpose({ submitForm: submit });
             errors.CourseId
           }}</span>
         </div>
-
         <div class="form-group">
           <div class="form-group-title">Format & Inhalt</div>
 
           <label>Unterrichtsformat *</label>
-          <input
-            v-model.number="form.TeachingFormatId"
-            type="number"
-            min="1"
-            max="3"
+          <select
+            v-model="form.TeachingFormatId"
             :class="{ 'input-error': errors.TeachingFormatId }"
-            @input="delete errors.TeachingFormatId"
-          />
+            @change="delete errors.TeachingFormatId"
+          >
+            <option value="" disabled>– Format wählen –</option>
+            <option
+              v-for="f in teachingFormats"
+              :key="f.TeachingFormatId"
+              :value="f.TeachingFormatId"
+            >
+              {{ f.Name }}
+            </option>
+          </select>
           <span v-if="errors.TeachingFormatId" class="error">{{
             errors.TeachingFormatId
           }}</span>

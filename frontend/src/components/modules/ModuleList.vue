@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { getModule } from '@/services/moduleService';
 import { getExams } from '@/services/moduleExamService';
 
@@ -23,8 +23,11 @@ const formatCurrency = (value) =>
 
 const isDeactivated = (mod) => mod.IsDeleted === true || mod.IsDeleted === 1;
 
-const sortKey = ref('');
-const sortDir = ref(1);
+const pageSize = ref(10);
+const currentPage = ref(1);
+
+const sortKey = ref('_status');
+const sortDir = ref(-1);
 
 const toggleSort = (key) => {
   if (sortKey.value === key) {
@@ -55,12 +58,31 @@ const filteredModules = computed(() => {
   if (!sortKey.value) return filtered;
 
   return [...filtered].sort((a, b) => {
-    let valA = a[sortKey.value] ?? '';
-    let valB = b[sortKey.value] ?? '';
-    if (typeof valA === 'string') valA = valA.toLowerCase();
-    if (typeof valB === 'string') valB = valB.toLowerCase();
+    let valA, valB;
+    if (sortKey.value === '_status') {
+      valA = isDeactivated(a) ? 0 : 1;
+      valB = isDeactivated(b) ? 0 : 1;
+    } else {
+      valA = a[sortKey.value] ?? '';
+      valB = b[sortKey.value] ?? '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+    }
     return valA < valB ? -sortDir.value : valA > valB ? sortDir.value : 0;
   });
+});
+
+watch([search, filterStatus, sortKey, sortDir, pageSize], () => {
+  currentPage.value = 1;
+});
+
+const totalCount = computed(() => filteredModules.value.length);
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredModules.value.length / pageSize.value))
+);
+const pagedModules = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredModules.value.slice(start, start + pageSize.value);
 });
 
 onMounted(async () => {
@@ -101,16 +123,20 @@ onMounted(async () => {
         <thead>
           <tr>
             <th @click="toggleSort('ExternalModuleCode')" class="sortable">
-              Externe Nummer {{ sortIcon('ExternalModuleCode') }}
+              Externe Nummer
+              <span class="sort-icon">{{
+                sortIcon('ExternalModuleCode')
+              }}</span>
             </th>
             <th @click="toggleSort('Name')" class="sortable">
-              Name {{ sortIcon('Name') }}
+              Name <span class="sort-icon">{{ sortIcon('Name') }}</span>
             </th>
             <th @click="toggleSort('Duration')" class="sortable">
-              Dauer {{ sortIcon('Duration') }}
+              Dauer <span class="sort-icon">{{ sortIcon('Duration') }}</span>
             </th>
             <th @click="toggleSort('EstimatedCost')" class="sortable">
-              Kosten {{ sortIcon('EstimatedCost') }}
+              Kosten
+              <span class="sort-icon">{{ sortIcon('EstimatedCost') }}</span>
             </th>
             <th>Std./Tag</th>
             <th>Int. Prüfungen</th>
@@ -119,18 +145,16 @@ onMounted(async () => {
               :class="{ sortable: filterStatus === 'all' }"
               @click="filterStatus === 'all' && toggleSort('_status')"
             >
-              Status {{ filterStatus === 'all' ? sortIcon('_status') : '' }}
+              Status
+              <span v-if="filterStatus === 'all'" class="sort-icon">{{
+                sortIcon('_status')
+              }}</span>
             </th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="module in filteredModules"
-            :key="module.ModuleCode"
-            class="clickable-row"
-            @click="props.OnSelect(module)"
-          >
+          <tr v-for="module in pagedModules" :key="module.ModuleCode">
             <td>{{ module.ExternalModuleCode }}</td>
             <td>{{ module.Name }}</td>
             <td>{{ module.Duration }}</td>
@@ -145,17 +169,20 @@ onMounted(async () => {
               <span v-else class="badge-active">Aktiv</span>
             </td>
             <td>
+              <button class="btn-detail" @click="props.OnSelect(module)">
+                Details
+              </button>
               <button
                 class="btn-edit"
                 :disabled="isDeactivated(module)"
-                @click.stop="props.OnEdit(module)"
+                @click="props.OnEdit(module)"
               >
                 Bearbeiten
               </button>
               <button
                 class="btn-delete"
                 :disabled="isDeactivated(module)"
-                @click.stop="props.OnDelete(module.ModuleCode)"
+                @click="props.OnDelete(module.ModuleCode)"
               >
                 Deaktivieren
               </button>
@@ -163,6 +190,34 @@ onMounted(async () => {
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination">
+      <div class="pagination-info">
+        {{ totalCount }} Einträge – Seite {{ currentPage }} von {{ totalPages }}
+      </div>
+      <div class="pagination-controls">
+        <button :disabled="currentPage === 1" @click="currentPage = 1">
+          «
+        </button>
+        <button :disabled="currentPage === 1" @click="currentPage--">‹</button>
+        <button :disabled="currentPage === totalPages" @click="currentPage++">
+          ›
+        </button>
+        <button
+          :disabled="currentPage === totalPages"
+          @click="currentPage = totalPages"
+        >
+          »
+        </button>
+      </div>
+      <div class="pagination-size">
+        <select v-model="pageSize">
+          <option :value="10">10 pro Seite</option>
+          <option :value="25">25 pro Seite</option>
+          <option :value="50">50 pro Seite</option>
+        </select>
+      </div>
     </div>
   </div>
 </template>
@@ -177,8 +232,11 @@ onMounted(async () => {
   color: #7cf7ff;
 }
 
-.clickable-row {
-  cursor: pointer;
+.sort-icon {
+  font-size: 14px;
+  margin-left: 4px;
+  opacity: 0.8;
+  vertical-align: middle;
 }
 
 .badge-active {
@@ -205,7 +263,7 @@ td:nth-child(1) {
 }
 th:nth-child(2),
 td:nth-child(2) {
-  width: auto;
+  width: 160px;
 }
 th:nth-child(3),
 td:nth-child(3) {
@@ -235,6 +293,7 @@ td:nth-child(8) {
 }
 th:nth-child(9),
 td:nth-child(9) {
-  width: 200px;
+  width: 270px;
+  white-space: nowrap;
 }
 </style>

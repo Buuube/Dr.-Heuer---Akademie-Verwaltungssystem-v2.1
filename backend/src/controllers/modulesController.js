@@ -30,6 +30,8 @@ async function createModule(req, res) {
     const newModule = await createModuleInDB(moduleData);
     res.status(201).json(newModule);
   } catch (err) {
+    console.log('moduleData:', req.body);
+    console.log('createModule error:', err);
     res.status(500).json({ error: 'Failed to create module' });
   }
 }

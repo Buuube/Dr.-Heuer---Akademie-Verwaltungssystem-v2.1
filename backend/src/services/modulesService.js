@@ -19,18 +19,26 @@ async function getModulesFromDB(courseId) {
 
 async function createModuleInDB(moduleData) {
   const pool = await connectDB();
+
+  const dicklength = await pool
+    .request()
+    .query('SELECT COUNT(*) AS total FROM Module');
+
+  const total = dicklength.recordset[0].total;
+  console.log(total);
+
   const result = await pool
     .request()
-    .input('ModuleCodeId', sql.VarChar, moduleData.moduleCodeId)
-    .input('Name', sql.VarChar, moduleData.name ?? null)
-    .input('CourseId', sql.Int, moduleData.courseId)
-    .input('TeachingFormatId', sql.Int, moduleData.teachingFormatId)
-    .input('Content', sql.NVarChar, moduleData.content ?? '')
-    .input('EstimatedCost', sql.Decimal, moduleData.estimatedCost ?? null)
-    .input('Duration', sql.VarChar, moduleData.duration ?? null).query(`
-      INSERT INTO Module (ModuleCodeId, Name, CourseId, TeachingFormatId, Content, EstimatedCost, Duration)
-      OUTPUT INSERTED.*
-      VALUES (@ModuleCodeId, @Name, @CourseId, @TeachingFormatId, @Content, @EstimatedCost, @Duration)
+    .input('ModuleCodeId', sql.VarChar, String(total))
+    .input('Name', sql.VarChar, moduleData.Name ?? null)
+    .input('CourseId', sql.Int, moduleData.CourseId)
+    .input('TeachingFormatId', sql.Int, moduleData.TeachingFormatId)
+    .input('Content', sql.NVarChar, moduleData.Content ?? '')
+    .input('EstimatedCost', sql.Decimal, moduleData.EstimatedCost ?? null)
+    .input('Duration', sql.VarChar, moduleData.Duration ?? null).query(`
+    INSERT INTO Module (ModuleCodeId, Name, CourseId, TeachingFormatId, Content, EstimatedCost, Duration)
+    OUTPUT INSERTED.*
+    VALUES (@ModuleCodeId, @Name, @CourseId, @TeachingFormatId, @Content, @EstimatedCost, @Duration)
     `);
   return result.recordset[0];
 }

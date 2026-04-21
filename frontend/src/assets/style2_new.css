@@ -155,6 +155,10 @@ body.light {
 /* ============================================================
    BASE
 ============================================================ */
+html{
+    scrollbar-gutter: stable;
+}
+
 body {
     margin: 0;
     font-family: system-ui, sans-serif;

@@ -16,11 +16,10 @@ const config = {
 async function connectDB() {
   try {
     const pool = await sql.connect(config);
-    console.log('SQL Server connected');
-    return pool; // ← this is the only change
+    return pool;
   } catch (err) {
     console.error('DB connection error:', err);
-    throw err; // ← rethrow so the caller knows it failed
+    throw err;
   }
 }
 
