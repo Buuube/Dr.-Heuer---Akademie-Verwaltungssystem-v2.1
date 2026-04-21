@@ -24,10 +24,15 @@ const Load = async () => {
 onMounted(Load);
 
 const Remove = async (Id) => {
-  const reason = prompt(
+  const confirmed = confirm('Möchten Sie diese Buchung wirklich löschen?');
+  if (!confirmed) return;
+
+  const reasonInput = prompt(
     'Stornierungsgrund-ID (leer lassen zum direkten Löschen):'
   );
-  await deleteBooking(Id, reason ? Number(reason) : null);
+  if (reasonInput === null) return; // Abbrechen gedrückt
+
+  await deleteBooking(Id, reasonInput ? Number(reasonInput) : null);
   await Load();
 };
 

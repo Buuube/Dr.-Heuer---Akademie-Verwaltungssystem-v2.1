@@ -61,6 +61,11 @@ export async function addBookingItems(bookingId, items) {
   return res.json();
 }
 
+export async function getBookingById(id) {
+  const res = await fetch(`${API}/${id}`);
+  return res.json();
+}
+
 export async function deleteBooking(id, cancellationReasonId = null) {
   await fetch(`${API}/${id}`, {
     method: 'DELETE',
