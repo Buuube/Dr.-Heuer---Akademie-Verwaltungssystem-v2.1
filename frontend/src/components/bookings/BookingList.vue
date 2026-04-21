@@ -15,7 +15,6 @@ const Participants = ref([]);
 const FilterParticipantId = ref('');
 const FilterSigned = ref('all'); // all | true | false
 const FilterExpired = ref('all'); // all | active | expired
-const FilterLocationId = ref('');
 
 const Load = async () => {
   Bookings.value = await getBookings();
@@ -72,14 +71,6 @@ const FilteredBookings = computed(() => {
     if (FilterExpired.value === 'expired') {
       if (!B.ActualEndDate || new Date(B.ActualEndDate) >= today) return false;
     }
-
-    // Location-Filter
-    if (
-      FilterLocationId.value &&
-      String(B.LocationId) !== FilterLocationId.value
-    )
-      return false;
-
     return true;
   });
 });
@@ -93,7 +84,10 @@ const FilteredBookings = computed(() => {
     <div class="toolbar">
       <select v-model="FilterParticipantId">
         <option value="">Alle Teilnehmer</option>
-        <option v-for="P in Participants" :key="P.ParticipantId" :value="P.ParticipantId"
+        <option
+          v-for="P in Participants"
+          :key="P.ParticipantId"
+          :value="P.ParticipantId"
         >
           {{ P.FirstName }} {{ P.LastName }}
         </option>
@@ -110,12 +104,6 @@ const FilteredBookings = computed(() => {
         <option value="active">Aktiv</option>
         <option value="expired">Abgelaufen</option>
       </select>
-
-      <input
-        v-model="FilterLocationId"
-        placeholder="Location ID..."
-        style="width: 120px"
-      />
     </div>
 
     <table>

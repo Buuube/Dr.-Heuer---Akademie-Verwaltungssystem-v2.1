@@ -88,8 +88,18 @@ onMounted(async () => {
 watch(
   () => props.Booking,
   (Val) => {
-    Form.value = Val ? { ...createEmptyForm(), ...Val } : createEmptyForm();
-    Step.value = 'form';
+    if (Val) {
+      Form.value = {
+        ...createEmptyForm(),
+        ...Val,
+        PlannedStartDate: Val.PlannedStartDate?.slice(0, 10) ?? '',
+        ActualStartDate: Val.ActualStartDate?.slice(0, 10) ?? '',
+        PlannedEndDate: Val.PlannedEndDate?.slice(0, 10) ?? '',
+        ActualEndDate: Val.ActualEndDate?.slice(0, 10) ?? '',
+      };
+    } else {
+      Form.value = createEmptyForm();
+    }
   }
 );
 
