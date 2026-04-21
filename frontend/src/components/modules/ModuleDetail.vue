@@ -68,6 +68,15 @@ const removeExam = async (examId) => {
       <div class="detail-group">
         <div class="detail-group-title">Allgemein</div>
         <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span>
+            <span v-if="Module.IsDeleted" class="badge-deactivated"
+              >Deaktiviert</span
+            >
+            <span v-else class="badge-active">Aktiv</span>
+          </span>
+        </div>
+        <div class="detail-row">
           <span class="detail-label">Modulnummer</span>
           <span>{{ Module.ModuleCode || '–' }}</span>
         </div>
@@ -109,7 +118,11 @@ const removeExam = async (examId) => {
         <div class="exam-section">
           <div class="detail-group-title">
             Interne Prüfungen ({{ internExams.length }})
-            <button class="btn-add-exam" @click="addingIntern = !addingIntern">
+            <button
+              v-if="!Module.IsDeleted"
+              class="btn-add-exam"
+              @click="addingIntern = !addingIntern"
+            >
               + Hinzufügen
             </button>
           </div>
@@ -156,7 +169,11 @@ const removeExam = async (examId) => {
         <div class="exam-section">
           <div class="detail-group-title">
             Externe Prüfungen ({{ externExams.length }})
-            <button class="btn-add-exam" @click="addingExtern = !addingExtern">
+            <button
+              v-if="!Module.IsDeleted"
+              class="btn-add-exam"
+              @click="addingExtern = !addingExtern"
+            >
               + Hinzufügen
             </button>
           </div>
@@ -203,14 +220,34 @@ const removeExam = async (examId) => {
     </div>
 
     <div class="detail-actions">
-      <button class="btn-edit" @click="emit('edit')">Bearbeiten</button>
-      <button class="btn-delete" @click="emit('delete')">Deaktivieren</button>
-      <button class="btn-cancel" @click="emit('close')">Schließen</button>
+      <template v-if="!Module.IsDeleted">
+        <button class="btn-edit" @click="emit('edit')">Bearbeiten</button>
+        <button class="btn-delete" @click="emit('delete')">Deaktivieren</button>
+      </template>
+      <button class="btn-delete" @click="emit('close')">Schließen</button>
     </div>
   </div>
 </template>
 
 <style scoped>
+.badge-active {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+.badge-deactivated {
+  background: rgba(120, 180, 255, 0.08);
+  color: rgba(215, 230, 255, 0.5);
+  border: 1px solid rgba(120, 180, 255, 0.15);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
 .exam-group {
   display: flex;
   flex-direction: column;

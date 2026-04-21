@@ -133,13 +133,15 @@ const FilteredBookings = computed(() => {
           <td>{{ B.EducationalGoal || '-' }}</td>
           <td>{{ B.Remarks || '-' }}</td>
           <td>
+            <button class="btn-detail" @click="props.OnSelect(B)">
+              Details
+            </button>
             <button class="btn-edit" @click="props.OnEdit(B)">
               Bearbeiten
             </button>
             <button class="btn-delete" @click="Remove(B.BookingId)">
               Löschen
             </button>
-            <button class="btn-edit" @click="props.OnSelect(B)">Details</button>
           </td>
         </tr>
       </tbody>

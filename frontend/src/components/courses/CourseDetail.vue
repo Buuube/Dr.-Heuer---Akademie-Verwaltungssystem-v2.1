@@ -145,6 +145,7 @@ const kostenProTag = (course) => {
         <div class="detail-group-title">
           Module ({{ modules.length }})
           <button
+            v-if="!Course.IsDeleted"
             class="btn-add-module"
             @click="
               router.push({
@@ -166,25 +167,32 @@ const kostenProTag = (course) => {
         <div v-if="modules.length === 0" class="detail-row">
           <span>Keine Module vorhanden</span>
         </div>
-        <div v-for="mod in modules" :key="mod.ModuleCode" class="detail-row">
-          <span class="detail-label">{{
-            mod.ExternalModuleCode || mod.ModuleCode
-          }}</span>
-          <span>{{ mod.Name }}</span>
+        <div v-else class="module-tags">
+          <span
+            v-for="mod in modules"
+            :key="mod.ModuleCode"
+            class="module-tag"
+            :class="{ 'module-tag--inactive': mod.IsDeleted }"
+            >{{ mod.ExternalModuleCode || mod.ModuleCode }} –
+            {{ mod.Name }}</span
+          >
         </div>
       </div>
     </div>
 
     <!-- Bestätigungs-Modal -->
-    <div v-if="showDeleteAllConfirm" class="confirm-overlay">
-      <div class="confirm-box">
+    <div v-if="showDeleteAllConfirm" class="modal-overlay">
+      <div class="modal">
         <p>Sind Sie sicher, alle Module löschen zu wollen?</p>
-        <div class="confirm-actions">
-          <button class="btn-submit" @click="deleteAllModules">
-            Ja, alle löschen
-          </button>
-          <button class="btn-cancel" @click="showDeleteAllConfirm = false">
+        <div class="modal-actions">
+          <button
+            class="btn-modal-cancel"
+            @click="showDeleteAllConfirm = false"
+          >
             Abbrechen
+          </button>
+          <button class="btn-confirm" @click="deleteAllModules">
+            Ja, alle löschen
           </button>
         </div>
       </div>
@@ -204,15 +212,42 @@ const kostenProTag = (course) => {
           class="btn-delete"
           @click="emit('delete')"
         >
-          Löschen
+          Deaktivieren
         </button>
-        <button class="btn-cancel" @click="emit('close')">Schließen</button>
+        <button class="btn-delete" @click="emit('close')">Schließen</button>
       </template>
     </div>
   </div>
 </template>
 
 <style scoped>
+.detail-group:last-child {
+  grid-column: 1 / -1;
+}
+
+.module-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 0 2px;
+}
+
+.module-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(124, 247, 255, 0.15);
+  background: rgba(124, 247, 255, 0.05);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.module-tag--inactive {
+  opacity: 0.4;
+  border-color: rgba(120, 180, 255, 0.1);
+  background: transparent;
+}
+
 .btn-add-module {
   margin-left: 10px;
   padding: 2px 10px;
@@ -251,37 +286,73 @@ const kostenProTag = (course) => {
   box-shadow: 0 0 10px rgba(255, 77, 109, 0.25);
 }
 
-.confirm-overlay {
-  position: absolute;
+.modal-overlay {
+  position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: inherit;
-  z-index: 10;
+  z-index: 100;
+  backdrop-filter: blur(4px);
 }
 
-.confirm-box {
-  background: var(--bg-panel, #1a1f2e);
-  border: 1px solid rgba(124, 247, 255, 0.15);
-  border-radius: 14px;
-  padding: 28px 32px;
-  max-width: 360px;
-  text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+.modal {
+  background: rgba(5, 8, 20, 0.97);
+  border: 1px solid rgba(120, 180, 255, 0.18);
+  border-radius: 18px;
+  padding: 24px 28px;
+  min-width: 300px;
+  max-width: 420px;
+  box-shadow: 0 0 40px rgba(74, 163, 255, 0.15);
+  color: #d7e6ff;
 }
 
-.confirm-box p {
-  margin: 0 0 20px;
+.modal p {
+  margin: 0 0 20px 0;
   font-size: 14px;
-  line-height: 1.5;
 }
 
-.confirm-actions {
+.modal-actions {
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-confirm {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 77, 109, 0.4);
+  background: rgba(255, 77, 109, 0.12);
+  color: #ff4d6d;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-confirm:hover {
+  box-shadow: 0 0 14px rgba(255, 77, 109, 0.35);
+  border-color: rgba(255, 77, 109, 0.65);
+}
+
+.btn-modal-cancel {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(124, 247, 255, 0.15);
+  background: rgba(74, 163, 255, 0.06);
+  color: rgba(215, 230, 255, 0.6);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-modal-cancel:hover {
+  border-color: rgba(124, 247, 255, 0.3);
+  color: #7cf7ff;
 }
 
 .badge-active {

@@ -9,6 +9,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['save', 'cancel']);
+  
 const teachingFormats = ref([]);
 const courses = ref([]);
 const exams = ref([]);

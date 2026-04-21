@@ -11,11 +11,11 @@
 import { ref } from 'vue';
 import NavBar from './components/NavBar.vue';
 
-const isDark = ref(true);
+const isDark = ref(false);
+document.body.classList.add('light');
 
 function toggleTheme() {
   isDark.value = !isDark.value;
-  // Body-Klasse synchron halten damit background: #f0f4f8 greift
   document.body.classList.toggle('light', !isDark.value);
   document.body.classList.toggle('dark', isDark.value);
 }
