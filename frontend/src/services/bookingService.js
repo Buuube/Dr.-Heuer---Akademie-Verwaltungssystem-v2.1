@@ -5,9 +5,7 @@ export async function getBookings() {
   return res.json();
 }
 
-// Schritt 1: Buchung anlegen, Schritt 2: Module zuordnen
 export async function createBooking(booking) {
-  // Schritt 1 — Booking-Instanz erstellen
   const res = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -18,18 +16,17 @@ export async function createBooking(booking) {
       plannedEndDate: booking.PlannedEndDate,
       bookingType: booking.BookingType,
       endReason: booking.EndReason ?? '',
+      monthlyRate: booking.MonthlyRate ?? null,
+      remarks: booking.Remarks ?? null,
+      educationalGoal: booking.EducationalGoal ?? null,
+      duration: booking.Duration ?? null,
+      startTerm: booking.StartTerm ?? null,
+      locationId: booking.LocationId ?? null,
     }),
   });
 
   if (!res.ok) throw new Error('Fehler beim Anlegen der Buchung');
-  const newBooking = await res.json();
-
-  // Schritt 2 — Module zuordnen (falls welche ausgewählt wurden)
-  if (booking.SelectedModuleIds?.length > 0) {
-    await addBookingItems(newBooking.BookingId, booking.SelectedModuleIds);
-  }
-
-  return newBooking;
+  return res.json();
 }
 
 export async function updateBooking(booking) {
@@ -44,21 +41,17 @@ export async function updateBooking(booking) {
       remarks: booking.Remarks,
       monthlyRate: booking.MonthlyRate,
       locationId: booking.LocationId,
+      educationalGoal: booking.EducationalGoal,
+      duration: booking.Duration,
+      startTerm: booking.StartTerm,
     }),
   });
 
   if (!res.ok) throw new Error('Fehler beim Aktualisieren der Buchung');
-
-  // Module neu zuordnen falls geändert
-  if (booking.SelectedModuleIds?.length > 0) {
-    await addBookingItems(booking.BookingId, booking.SelectedModuleIds);
-  }
-
   return res.json();
 }
 
 export async function addBookingItems(bookingId, items) {
-  // items = Array von { moduleCodeId, moduleSessionId }
   const res = await fetch(`${API}/${bookingId}/items`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

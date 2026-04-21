@@ -12,16 +12,14 @@ import {
   getModuleSessions,
   createModuleSession,
 } from '../../services/moduleSessionService';
+import { getRooms } from '../../services/roomService';
+import { getLocations } from '../../services/locationService';
 
 const props = defineProps({ Booking: Object });
 const emit = defineEmits(['save', 'cancel']);
 
-// ─── Schritt-Steuerung ───────────────────────────────────────────
-// 'form' → Grunddaten + Modulauswahl
-// 'sessions' → Session-Prüfung + Auswahl/Erstellung pro Modul
 const Step = ref('form');
 
-// ─── Stammdaten ──────────────────────────────────────────────────
 const createEmptyForm = () => ({
   ParticipantId: '',
   IsSigned: false,
@@ -43,6 +41,8 @@ const Form = ref(createEmptyForm());
 const Participants = ref([]);
 const Courses = ref([]);
 const AllModules = ref([]);
+const Rooms = ref([]);
+const Locations = ref([]);
 
 const BuchungsModus = ref('kurs');
 const SelectedCourseId = ref('');
@@ -54,7 +54,6 @@ const ModulesForCourse = computed(() =>
   )
 );
 
-// Die tatsächlich gebuchten Module (abhängig vom Modus)
 const ResolvedModules = computed(() => {
   if (BuchungsModus.value === 'kurs') return ModulesForCourse.value;
   return AllModules.value.filter((M) =>
@@ -83,6 +82,16 @@ onMounted(async () => {
   } catch {
     AllModules.value = [];
   }
+  try {
+    Rooms.value = await getRooms();
+  } catch {
+    Rooms.value = [];
+  }
+  try {
+    Locations.value = await getLocations();
+  } catch {
+    Locations.value = [];
+  }
 });
 
 watch(
@@ -103,8 +112,6 @@ watch(
   }
 );
 
-// ─── Session-Logik ───────────────────────────────────────────────
-// Pro Modul: { moduleCodeId, moduleName, sessions, selectedSessionId, showCreateForm, newSession }
 const SessionResults = ref([]);
 
 const checkSessions = async () => {
@@ -130,7 +137,6 @@ const checkSessions = async () => {
       moduleCodeId: M.ModuleCodeId,
       moduleName: M.Name ?? M.ModuleCodeId,
       sessions,
-      // Wenn genau eine Session → automatisch vorauswählen
       selectedSessionId:
         sessions.length === 1 ? sessions[0].ModuleSessionId : null,
       showCreateForm: sessions.length === 0,
@@ -167,12 +173,10 @@ const cancelSessionCreate = () => {
   Step.value = 'form';
 };
 
-// Prüfen ob alle Module eine Session haben
 const AllSessionsResolved = computed(() =>
   SessionResults.value.every((SR) => SR.selectedSessionId !== null)
 );
 
-// ─── Speichern ───────────────────────────────────────────────────
 const Submit = async () => {
   try {
     let bookingId;
@@ -185,7 +189,6 @@ const Submit = async () => {
       bookingId = created.BookingId;
     }
 
-    // BookingModule Einträge anlegen
     const items = SessionResults.value.map((SR) => ({
       moduleCodeId: SR.moduleCodeId,
       moduleSessionId: SR.selectedSessionId,
@@ -250,6 +253,18 @@ const Submit = async () => {
       <label>Bemerkungen</label>
       <input v-model="Form.Remarks" placeholder="Bemerkungen" />
 
+      <label>Location</label>
+      <select v-model="Form.LocationId">
+        <option value="">Keine</option>
+        <option
+          v-for="L in Locations"
+          :key="L.LocationId"
+          :value="L.LocationId"
+        >
+          {{ L.Name }}
+        </option>
+      </select>
+
       <label class="checkbox">
         <input type="checkbox" v-model="Form.IsSigned" />
         <span>Vertrag unterschrieben</span>
@@ -287,7 +302,7 @@ const Submit = async () => {
 
       <!-- EINZELMODUL-MODUS -->
       <template v-if="BuchungsModus === 'einzeln'">
-        <label>Module auswählen (Mehrfachauswahl mit Strg/Cmd)</label>
+        <label>Modul auswählen</label>
         <select v-model="SelectedSingleModuleIds" multiple>
           <option
             v-for="M in AllModules"
@@ -363,12 +378,13 @@ const Submit = async () => {
             <label>Unterrichtsende</label>
             <input v-model="SR.newSession.teachingEndTime" type="time" />
 
-            <label>Raum ID</label>
-            <input
-              v-model="SR.newSession.roomId"
-              type="number"
-              placeholder="Raum ID"
-            />
+            <label>Raum</label>
+            <select v-model="SR.newSession.roomId">
+              <option disabled value="">Bitte wählen</option>
+              <option v-for="R in Rooms" :key="R.RoomId" :value="R.RoomId">
+                {{ R.Description }}
+              </option>
+            </select>
 
             <label>Kosten</label>
             <input

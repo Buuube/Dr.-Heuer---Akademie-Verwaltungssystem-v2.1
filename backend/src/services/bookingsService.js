@@ -36,17 +36,21 @@ async function createBookingInDB(bookingData) {
     .input('EducationalGoal', sql.VarChar, bookingData.educationalGoal ?? null)
     .input('MonthlyRate', sql.Decimal, bookingData.monthlyRate ?? null)
     .input('Remarks', sql.NVarChar, bookingData.remarks ?? null)
-    .input('LocationId', sql.Int, bookingData.locationId ?? null).query(`
+    .input('LocationId', sql.Int, bookingData.locationId ?? null)
+    .input('Duration', sql.VarChar, bookingData.duration ?? null)
+    .input('StartTerm', sql.VarChar, bookingData.startTerm ?? null).query(`
       INSERT INTO Booking (
         ParticipantId, IsSigned, PlannedStartDate, ActualStartDate,
         PlannedEndDate, ActualEndDate, BookingType, EndReason,
-        EducationalGoal, MonthlyRate, Remarks, LocationId
+        EducationalGoal, MonthlyRate, Remarks, LocationId,
+        Duration, StartTerm
       )
       OUTPUT INSERTED.*
       VALUES (
         @ParticipantId, @IsSigned, @PlannedStartDate, @ActualStartDate,
         @PlannedEndDate, @ActualEndDate, @BookingType, @EndReason,
-        @EducationalGoal, @MonthlyRate, @Remarks, @LocationId
+        @EducationalGoal, @MonthlyRate, @Remarks, @LocationId,
+        @Duration, @StartTerm
       )
     `);
   return result.recordset[0];
@@ -65,7 +69,8 @@ async function updateBookingInDB(id, bookingData) {
     .input('MonthlyRate', sql.Decimal, bookingData.monthlyRate ?? null)
     .input('LocationId', sql.Int, bookingData.locationId ?? null)
     .input('EducationalGoal', sql.VarChar, bookingData.educationalGoal ?? null)
-    .query(`
+    .input('Duration', sql.VarChar, bookingData.duration ?? null)
+    .input('StartTerm', sql.VarChar, bookingData.startTerm ?? null).query(`
       UPDATE Booking SET
         PlannedStartDate = @PlannedStartDate,
         ActualStartDate  = @ActualStartDate,
@@ -74,7 +79,9 @@ async function updateBookingInDB(id, bookingData) {
         Remarks          = @Remarks,
         MonthlyRate      = @MonthlyRate,
         LocationId       = @LocationId,
-        EducationalGoal  = @EducationalGoal
+        EducationalGoal  = @EducationalGoal,
+        Duration         = @Duration,
+        StartTerm        = @StartTerm
       OUTPUT INSERTED.*
       WHERE BookingId = @BookingId
     `);
