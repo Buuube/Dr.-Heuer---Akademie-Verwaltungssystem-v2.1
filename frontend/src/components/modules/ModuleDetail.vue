@@ -1,12 +1,12 @@
 <script setup>
-import { ref, watch } from 'vue';
-import { getExams } from '@/services/moduleExamService';
+import { ref, watch, computed } from 'vue';
+import { getExams, createExam, deleteExam } from '@/services/moduleExamService';
 
 const props = defineProps({
   Module: Object,
 });
 
-const emit = defineEmits(['edit', 'close']);
+const emit = defineEmits(['edit', 'delete', 'close']);
 
 const formatCurrency = (value) =>
   Number(value).toLocaleString('de-DE', {
@@ -16,111 +16,304 @@ const formatCurrency = (value) =>
 
 const exams = ref([]);
 
-watch(
-  () => props.Module,
-  async (mod) => {
-    if (!mod) return;
-    try {
-      exams.value = await getExams(mod.ModuleCode);
-    } catch {
-      exams.value = [];
-    }
-  },
-  { immediate: true }
+const loadExams = async () => {
+  if (!props.Module?.ModuleCode) return;
+  try {
+    exams.value = await getExams(props.Module.ModuleCode);
+  } catch {
+    exams.value = [];
+  }
+};
+
+watch(() => props.Module, loadExams, { immediate: true });
+
+const internExams = computed(() =>
+  exams.value.filter((e) => e.ExamType === 'intern')
+);
+const externExams = computed(() =>
+  exams.value.filter((e) => e.ExamType === 'extern')
 );
 
-const internExams = () => exams.value.filter((e) => e.ExamType === 'intern');
-const externExams = () => exams.value.filter((e) => e.ExamType === 'extern');
+const newIntern = ref('');
+const newExtern = ref('');
+const addingIntern = ref(false);
+const addingExtern = ref(false);
+
+const addExam = async (type) => {
+  const name =
+    type === 'intern' ? newIntern.value.trim() : newExtern.value.trim();
+  if (!name) return;
+  await createExam(props.Module.ModuleCode, { ExamName: name, ExamType: type });
+  if (type === 'intern') {
+    newIntern.value = '';
+    addingIntern.value = false;
+  } else {
+    newExtern.value = '';
+    addingExtern.value = false;
+  }
+  await loadExams();
+};
+
+const removeExam = async (examId) => {
+  await deleteExam(props.Module.ModuleCode, examId);
+  await loadExams();
+};
 </script>
 
 <template>
-  <div v-if="Module" class="detail-card">
-    <div class="detail-header">
-      <h3>Modul Details</h3>
-      <button class="btn-close" title="Schließen" @click="emit('close')">
-        ✕
-      </button>
+  <div v-if="Module" class="detail-panel">
+    <h3>Modul Details</h3>
+
+    <div class="detail-grid">
+      <div class="detail-group">
+        <div class="detail-group-title">Allgemein</div>
+        <div class="detail-row">
+          <span class="detail-label">Modulnummer</span>
+          <span>{{ Module.ModuleCode || '–' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Externe Nummer</span>
+          <span>{{ Module.ExternalModuleCode || '–' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Name</span>
+          <span>{{ Module.Name || '–' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Unterrichtsformat</span>
+          <span>{{ Module.TeachingFormat || '–' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Praktikum</span>
+          <span>{{ Module.HasInternship ? 'Ja' : 'Nein' }}</span>
+        </div>
+      </div>
+
+      <div class="detail-group">
+        <div class="detail-group-title">Zeiten & Kosten</div>
+        <div class="detail-row">
+          <span class="detail-label">Dauer</span>
+          <span>{{ Module.Duration || '–' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Std./Tag</span>
+          <span>{{ Module.DailyTeachingHours ?? '–' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Kosten</span>
+          <span>{{ formatCurrency(Module.EstimatedCost) }}</span>
+        </div>
+      </div>
+
+      <div class="detail-group exam-group">
+        <div class="exam-section">
+          <div class="detail-group-title">
+            Interne Prüfungen ({{ internExams.length }})
+            <button class="btn-add-exam" @click="addingIntern = !addingIntern">
+              + Hinzufügen
+            </button>
+          </div>
+
+          <div v-if="addingIntern" class="exam-add-row">
+            <input
+              v-model="newIntern"
+              placeholder="Prüfungsname"
+              @keydown.enter="addExam('intern')"
+            />
+            <button class="btn-exam-save" @click="addExam('intern')">✓</button>
+            <button
+              class="btn-exam-cancel"
+              @click="
+                addingIntern = false;
+                newIntern = '';
+              "
+            >
+              ✕
+            </button>
+          </div>
+
+          <div
+            v-if="internExams.length === 0 && !addingIntern"
+            class="detail-row"
+          >
+            <span>–</span>
+          </div>
+          <div
+            v-for="exam in internExams"
+            :key="exam.ModuleExamId"
+            class="exam-row"
+          >
+            <span>{{ exam.ExamName }}</span>
+            <button
+              class="btn-exam-delete"
+              @click="removeExam(exam.ModuleExamId)"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div class="exam-section">
+          <div class="detail-group-title">
+            Externe Prüfungen ({{ externExams.length }})
+            <button class="btn-add-exam" @click="addingExtern = !addingExtern">
+              + Hinzufügen
+            </button>
+          </div>
+
+          <div v-if="addingExtern" class="exam-add-row">
+            <input
+              v-model="newExtern"
+              placeholder="Prüfungsname"
+              @keydown.enter="addExam('extern')"
+            />
+            <button class="btn-exam-save" @click="addExam('extern')">✓</button>
+            <button
+              class="btn-exam-cancel"
+              @click="
+                addingExtern = false;
+                newExtern = '';
+              "
+            >
+              ✕
+            </button>
+          </div>
+
+          <div
+            v-if="externExams.length === 0 && !addingExtern"
+            class="detail-row"
+          >
+            <span>–</span>
+          </div>
+          <div
+            v-for="exam in externExams"
+            :key="exam.ModuleExamId"
+            class="exam-row"
+          >
+            <span>{{ exam.ExamName }}</span>
+            <button
+              class="btn-exam-delete"
+              @click="removeExam(exam.ModuleExamId)"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <p><b>Modulnummer:</b> {{ Module.ModuleCode }}</p>
-    <p><b>Externe Nummer:</b> {{ Module.ExternalModuleCode }}</p>
-    <p><b>Name:</b> {{ Module.Name }}</p>
-
-    <hr />
-
-    <p><b>Dauer:</b> {{ Module.Duration }} Std.</p>
-    <p><b>Kosten:</b> {{ formatCurrency(Module.EstimatedCost) }}</p>
-    <p><b>Std./Tag:</b> {{ Module.DailyTeachingHours }}</p>
-    <p><b>Unterrichtsformat:</b> {{ Module.TeachingFormat || '–' }}</p>
-    <p><b>Praktikum:</b> {{ Module.HasInternship ? 'Ja' : 'Nein' }}</p>
-
-    <hr />
-
-    <p><b>Interne Prüfungen:</b> {{ internExams().length }}</p>
-    <ul v-if="internExams().length">
-      <li v-for="exam in internExams()" :key="exam.ModuleExamId">
-        {{ exam.ExamName }}
-      </li>
-    </ul>
-
-    <p><b>Externe Prüfungen:</b> {{ externExams().length }}</p>
-    <ul v-if="externExams().length">
-      <li v-for="exam in externExams()" :key="exam.ModuleExamId">
-        {{ exam.ExamName }}
-      </li>
-    </ul>
-
     <div class="detail-actions">
-      <button class="btn-icon" title="Bearbeiten" @click="emit('edit')">
-        ✏️
-      </button>
-      <button
-        class="btn-icon btn-icon--delete"
-        title="Löschen"
-        @click="emit('delete')"
-      >
-        🗑️
-      </button>
+      <button class="btn-edit" @click="emit('edit')">Bearbeiten</button>
+      <button class="btn-delete" @click="emit('delete')">Deaktivieren</button>
+      <button class="btn-cancel" @click="emit('close')">Schließen</button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.detail-card {
-  position: relative;
+.exam-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.detail-header {
+.exam-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-add-exam {
+  margin-left: 10px;
+  padding: 2px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(124, 247, 255, 0.3);
+  background: rgba(124, 247, 255, 0.08);
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.btn-add-exam:hover {
+  box-shadow: 0 0 10px rgba(124, 247, 255, 0.25);
+}
+
+.exam-add-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 6px 0;
+}
+
+.exam-add-row input {
+  flex: 1;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+}
+
+.exam-add-row input:focus {
+  border-color: var(--cyan);
+}
+
+.btn-exam-save {
+  background: rgba(46, 204, 113, 0.12);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  color: #2ecc71;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: box-shadow 0.2s;
+}
+
+.btn-exam-save:hover {
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
+}
+
+.btn-exam-cancel {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+}
+
+.exam-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 3px 0;
+  font-size: 13px;
 }
 
-.btn-close {
-  background: none;
+.btn-exam-delete {
+  background: transparent;
   border: none;
-  color: #e74c3c;
-  font-size: 1.3em;
+  color: var(--muted);
   cursor: pointer;
+  font-size: 12px;
+  padding: 1px 4px;
   line-height: 1;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
 }
 
-.btn-close:hover {
-  opacity: 0.75;
+.exam-row:hover .btn-exam-delete {
+  opacity: 1;
 }
 
-.detail-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2em;
-  padding: 2px 6px;
+.btn-exam-delete:hover {
+  color: #ff4d6d;
 }
 </style>

@@ -176,7 +176,9 @@ body {
 /* ============================================================
    LAYOUT — vertikal (oben/unten)
 ============================================================ */
-.participant-layout {
+.participant-layout,
+.course-layout,
+.module-layout {
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -482,6 +484,7 @@ body {
 .detail-panel {
     padding: 0;
     box-sizing: border-box;
+    position: relative;
 }
 
 .detail-grid {
@@ -777,6 +780,13 @@ tbody tr:hover {
 .btn-delete:hover {
     box-shadow: 0 0 10px rgba(124, 247, 255, 0.15);
     opacity: 0.85;
+}
+
+.btn-edit:disabled,
+.btn-delete:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .light .btn-edit:hover,

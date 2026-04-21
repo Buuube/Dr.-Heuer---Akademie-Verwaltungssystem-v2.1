@@ -53,47 +53,36 @@ defineExpose({ submitForm: submit });
 </script>
 
 <template>
-  <div class="form-card">
-    <div class="form-header">
-      <h3>{{ form.CourseId ? 'Kurs bearbeiten' : 'Neuen Kurs anlegen' }}</h3>
-    </div>
+  <div class="form">
+    <h3>{{ form.CourseId ? 'Kurs bearbeiten' : 'Neuen Kurs anlegen' }}</h3>
 
     <form @submit.prevent="submit">
-      <div class="form-group">
-        <label>Zulassungsnummer</label>
-        <input v-model="form.ApprovalNumber" />
-      </div>
-      <div class="form-group">
-        <label>Bezeichnung *</label>
-        <input
-          v-model="form.Name"
-          :class="{ 'input-error': nameError }"
-          @input="nameError = ''"
-        />
-        <span v-if="nameError" class="error-msg">{{ nameError }}</span>
-      </div>
-      <div class="form-group">
-        <label>Berater</label>
-        <input v-model="form.Advisor" />
-      </div>
-
-      <hr />
-
-      <div class="form-row">
+      <div class="form-grid">
         <div class="form-group">
+          <div class="form-group-title">Allgemein</div>
+          <label>Zulassungsnummer</label>
+          <input v-model="form.ApprovalNumber" />
+          <label>Bezeichnung *</label>
+          <input
+            v-model="form.Name"
+            :class="{ 'input-error': nameError }"
+            @input="nameError = ''"
+          />
+          <span v-if="nameError" class="error">{{ nameError }}</span>
+          <label>Berater</label>
+          <input v-model="form.Advisor" />
+        </div>
+
+        <div class="form-group">
+          <div class="form-group-title">Gültigkeit</div>
           <label>Gültig von</label>
           <input v-model="form.ApprovalStartDate" type="date" />
-        </div>
-        <div class="form-group">
           <label>Gültig bis</label>
           <input v-model="form.ApprovalEndDate" type="date" />
         </div>
-      </div>
 
-      <hr />
-
-      <div class="form-row">
         <div class="form-group">
+          <div class="form-group-title">Kosten & Zeiten</div>
           <label>Kosten/UE (€)</label>
           <input
             v-model.number="form.CostPerTeachingUnit"
@@ -101,16 +90,12 @@ defineExpose({ submitForm: submit });
             min="0"
             step="0.01"
           />
-        </div>
-        <div class="form-group">
           <label>UE-Dauer (Min.)</label>
           <input
             v-model.number="form.TeachingUnitDuration"
             type="number"
             min="1"
           />
-        </div>
-        <div class="form-group">
           <label>Std./Tag</label>
           <input
             v-model.number="form.DailyTeachingHours"
@@ -122,57 +107,13 @@ defineExpose({ submitForm: submit });
           />
         </div>
       </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">Speichern</button>
+        <button type="button" class="btn-cancel" @click="emit('cancel')">
+          Abbrechen
+        </button>
+      </div>
     </form>
   </div>
 </template>
-
-<style scoped>
-.form-card {
-  width: 100%;
-}
-
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.form-group label {
-  font-size: 0.85em;
-  opacity: 0.75;
-}
-
-.form-group input {
-  padding: 6px 10px;
-  border-radius: 4px;
-  border: 1px solid #444;
-  background: #1a1a2e;
-  color: inherit;
-}
-
-.input-error {
-  border-color: #e74c3c !important;
-}
-
-.error-msg {
-  color: #e74c3c;
-  font-size: 0.8em;
-}
-
-.form-row {
-  display: flex;
-  gap: 16px;
-}
-
-.form-row .form-group {
-  flex: 1;
-}
-</style>
