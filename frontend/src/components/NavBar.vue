@@ -42,8 +42,8 @@ const emit = defineEmits(['toggle']);
 const links = [
   { to: '/participants', label: 'Teilnehmer' },
   { to: '/courses', label: 'Kurse' },
-  { to: '/bookings', label: 'Buchungen' },
   { to: '/modules', label: 'Module' },
+  { to: '/bookings', label: 'Buchungen' },
 ];
 </script>
 
@@ -269,7 +269,7 @@ const links = [
 }
 
 input:checked + .slider {
-  background-color: #34c759;
+  background-color: #ba2b2b;
 }
 
 input:checked + .slider::before {

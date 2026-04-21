@@ -54,5 +54,6 @@ export const deleteParticipant = async (id) => {
   const res = await fetch(`http://localhost:3000/api/participants/${id}`, {
     method: 'DELETE',
   });
-  if (!res.ok) throw new Error('Fehler beim Löschen');
+  const check = await res.json();
+  if (!res.ok) throw new Error(check.error);
 };
