@@ -52,11 +52,11 @@ const links = [
 
 .navbar {
   position: sticky;
-  top: 16px; /* etwas Abstand nach oben */
+  top: 0; /* etwas Abstand nach oben */
   z-index: 100;
   width: calc(100% - 48px); /* Abstand links & rechts */
   max-width: 1600px;
-  margin: 16px auto 0; /* zentriert horizontal */
+  margin: 0 auto 0; /* zentriert horizontal */
   left: 0;
   right: 0;
   background: rgba(5, 8, 20, 0.85);
@@ -65,7 +65,7 @@ const links = [
   border-bottom: 1px solid rgba(120, 180, 255, 0.18);
   border: 1px solid rgba(120, 180, 255, 0.18); /* rundum Rahmen */
   font-family: 'DM Sans', sans-serif;
-  border-radius: 10px;
+  border-radius: 0 0 10px 10px;
   box-sizing: border-box;
 }
 
