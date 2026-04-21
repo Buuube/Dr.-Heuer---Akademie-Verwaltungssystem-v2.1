@@ -60,6 +60,7 @@ const validate = () => {
   if (!form.value.CourseId) errors.value.CourseId = 'Pflichtfeld';
   if (!form.value.TeachingFormatId)
     errors.value.TeachingFormatId = 'Pflichtfeld';
+  if (!form.value.Content?.trim()) errors.value.Content = 'Pflichtfeld';
   return Object.keys(errors.value).length === 0;
 };
 
@@ -89,7 +90,7 @@ defineExpose({ submitForm: submit });
           <label>Name</label>
           <input v-model="form.Name" maxlength="150" />
 
-          <label>Kurs *</label>
+          <label>Kurs <span class="required">*</span></label>
           <select
             v-model="form.CourseId"
             :class="{ 'input-error': errors.CourseId }"
@@ -108,7 +109,7 @@ defineExpose({ submitForm: submit });
         <div class="form-group">
           <div class="form-group-title">Format & Inhalt</div>
 
-          <label>Unterrichtsformat *</label>
+          <label>Unterrichtsformat <span class="required">*</span></label>
           <input
             v-model.number="form.TeachingFormatId"
             type="number"
@@ -133,8 +134,13 @@ defineExpose({ submitForm: submit });
         <div class="form-group">
           <div class="form-group-title">Inhalt</div>
 
-          <label>Curriculum</label>
-          <textarea v-model="form.Content" rows="6"></textarea>
+          <label>Curriculum <span class="required">*</span></label>
+          <textarea
+            v-model="form.Content"
+            rows="6"
+            :class="{ 'input-error': errors.Content }"
+          ></textarea>
+          <span v-if="errors.Content" class="error">{{ errors.Content }}</span>
         </div>
 
         <div class="form-group">

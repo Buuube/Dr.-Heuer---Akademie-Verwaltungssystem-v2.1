@@ -21,8 +21,8 @@ const formatDate = (date) =>
     year: 'numeric',
   });
 
-const sortKey = ref('');
-const sortDir = ref(1);
+const sortKey = ref('_active');
+const sortDir = ref(-1);
 
 const toggleSort = (key) => {
   if (sortKey.value === key) {
@@ -98,10 +98,11 @@ onMounted(async () => {
         <thead>
           <tr>
             <th @click="toggleSort('ApprovalNumber')" class="sortable">
-              Zulassungsnummer {{ sortIcon('ApprovalNumber') }}
+              Zulassungsnummer
+              <span class="sort-icon">{{ sortIcon('ApprovalNumber') }}</span>
             </th>
             <th @click="toggleSort('Name')" class="sortable">
-              Bezeichnung {{ sortIcon('Name') }}
+              Bezeichnung <span class="sort-icon">{{ sortIcon('Name') }}</span>
             </th>
             <th>Berater</th>
             <th>Gültig von</th>
@@ -110,18 +111,16 @@ onMounted(async () => {
               :class="{ sortable: filterStatus === 'all' }"
               @click="filterStatus === 'all' && toggleSort('_active')"
             >
-              Status {{ filterStatus === 'all' ? sortIcon('_active') : '' }}
+              Status
+              <span v-if="filterStatus === 'all'" class="sort-icon">{{
+                sortIcon('_active')
+              }}</span>
             </th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="course in filteredCourses"
-            :key="course.CourseId"
-            class="clickable-row"
-            @click="props.OnSelect(course)"
-          >
+          <tr v-for="course in filteredCourses" :key="course.CourseId">
             <td>{{ course.ApprovalNumber }}</td>
             <td>{{ course.Name }}</td>
             <td>{{ course.Advisor }}</td>
@@ -145,19 +144,22 @@ onMounted(async () => {
               </span>
             </td>
             <td>
+              <button class="btn-detail" @click="props.OnSelect(course)">
+                Details
+              </button>
               <button
                 class="btn-edit"
                 :disabled="course.IsDeleted === true || course.IsDeleted === 1"
-                @click.stop="props.OnEdit(course)"
+                @click="props.OnEdit(course)"
               >
                 Bearbeiten
               </button>
               <button
                 class="btn-delete"
                 :disabled="course.IsDeleted === true || course.IsDeleted === 1"
-                @click.stop="props.OnDelete(course.CourseId)"
+                @click="props.OnDelete(course.CourseId)"
               >
-                Löschen
+                Deaktivieren
               </button>
             </td>
           </tr>
@@ -204,8 +206,11 @@ onMounted(async () => {
   color: #7cf7ff;
 }
 
-.clickable-row {
-  cursor: pointer;
+.sort-icon {
+  font-size: 14px;
+  margin-left: 4px;
+  opacity: 0.8;
+  vertical-align: middle;
 }
 
 th:nth-child(1),
@@ -214,26 +219,27 @@ td:nth-child(1) {
 }
 th:nth-child(2),
 td:nth-child(2) {
-  width: auto;
+  width: 180px;
 }
 th:nth-child(3),
 td:nth-child(3) {
-  width: 140px;
+  width: 130px;
 }
 th:nth-child(4),
 td:nth-child(4) {
-  width: 110px;
+  width: 105px;
 }
 th:nth-child(5),
 td:nth-child(5) {
-  width: 110px;
+  width: 105px;
 }
 th:nth-child(6),
 td:nth-child(6) {
-  width: 120px;
+  width: 110px;
 }
 th:nth-child(7),
 td:nth-child(7) {
-  width: 190px;
+  width: 260px;
+  white-space: nowrap;
 }
 </style>

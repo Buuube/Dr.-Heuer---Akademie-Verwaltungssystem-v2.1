@@ -17,7 +17,22 @@ const Search = ref('');
 const genderFilter = ref('all');
 const emailFilter = ref('all');
 const selfFilter = ref('all');
-const sortBy = ref('lastname_asc');
+const sortKey = ref('');
+const sortDir = ref(1);
+
+const toggleSort = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value *= -1;
+  } else {
+    sortKey.value = key;
+    sortDir.value = 1;
+  }
+};
+
+const sortIcon = (key) => {
+  if (sortKey.value !== key) return '↕';
+  return sortDir.value === 1 ? '↑' : '↓';
+};
 
 /* =========================
    PAGINATION
@@ -36,9 +51,12 @@ const Load = async () => {
 onMounted(Load);
 
 // Seite zurücksetzen wenn Filter/Suche sich ändert
-watch([Search, genderFilter, emailFilter, selfFilter, sortBy, pageSize], () => {
-  currentPage.value = 1;
-});
+watch(
+  [Search, genderFilter, emailFilter, selfFilter, sortKey, sortDir, pageSize],
+  () => {
+    currentPage.value = 1;
+  }
+);
 
 /* =========================
    FILTER + SORT
@@ -73,25 +91,15 @@ const FilteredParticipants = computed(() => {
   if (selfFilter.value === 'no') list = list.filter((p) => !p.IsSelfPayer);
 
   // SORT
-  list.sort((a, b) => {
-    const fnA = a.FirstName || '';
-    const fnB = b.FirstName || '';
-    const lnA = a.LastName || '';
-    const lnB = b.LastName || '';
-
-    switch (sortBy.value) {
-      case 'firstname_asc':
-        return fnA.localeCompare(fnB);
-      case 'firstname_desc':
-        return fnB.localeCompare(fnA);
-      case 'lastname_asc':
-        return lnA.localeCompare(lnB);
-      case 'lastname_desc':
-        return lnB.localeCompare(lnA);
-      default:
-        return 0;
-    }
-  });
+  if (sortKey.value) {
+    list.sort((a, b) => {
+      let valA = a[sortKey.value] ?? '';
+      let valB = b[sortKey.value] ?? '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      return valA < valB ? -sortDir.value : valA > valB ? sortDir.value : 0;
+    });
+  }
 
   return list;
 });
@@ -142,14 +150,6 @@ const totalCount = computed(() => FilteredParticipants.value.length);
         <option value="yes">Selbstzahler: Ja</option>
         <option value="no">Selbstzahler: Nein</option>
       </select>
-
-      <!-- SORT -->
-      <select v-model="sortBy">
-        <option value="lastname_asc">Nachname A–Z</option>
-        <option value="lastname_desc">Nachname Z–A</option>
-        <option value="firstname_asc">Vorname A–Z</option>
-        <option value="firstname_desc">Vorname Z–A</option>
-      </select>
     </div>
 
     <!-- TABLE -->
@@ -157,10 +157,19 @@ const totalCount = computed(() => FilteredParticipants.value.length);
       <table>
         <thead>
           <tr>
-            <th>Kundennr.</th>
+            <th @click="toggleSort('AgencyCustomerNumber')" class="sortable">
+              Kundennr.
+              <span class="sort-icon">{{
+                sortIcon('AgencyCustomerNumber')
+              }}</span>
+            </th>
             <th>Anrede</th>
-            <th>Vorname</th>
-            <th>Nachname</th>
+            <th @click="toggleSort('FirstName')" class="sortable">
+              Vorname <span class="sort-icon">{{ sortIcon('FirstName') }}</span>
+            </th>
+            <th @click="toggleSort('LastName')" class="sortable">
+              Nachname <span class="sort-icon">{{ sortIcon('LastName') }}</span>
+            </th>
             <th>E-Mail</th>
             <th>Telefon</th>
             <th>Mobil</th>
@@ -182,11 +191,11 @@ const totalCount = computed(() => FilteredParticipants.value.length);
             <td>{{ P.Phone }}</td>
             <td>{{ P.Mobile }}</td>
             <td>
-              <button class="btn-edit" @click="props.onEdit?.(P)">
-                Bearbeiten
-              </button>
               <button class="btn-detail" @click="props.onSelect?.(P)">
                 Details
+              </button>
+              <button class="btn-edit" @click="props.onEdit?.(P)">
+                Bearbeiten
               </button>
               <button class="btn-delete" @click="props.onDelete?.(P)">
                 Löschen
