@@ -47,6 +47,12 @@ const save = async (formData) => {
       saved = await createParticipant(formData);
     }
 
+    // Falls Backend PostalCode nur als ID zurückgibt, aus formData übernehmen
+    if (saved && typeof saved.PostalCode !== 'object') {
+      saved.PostalCode = formData.PostalCode;
+      saved.City = formData.City;
+    }
+
     selected.value = saved || formData;
 
     formMode.value = null;
