@@ -16,10 +16,15 @@ const bookingRouter = require('./routes/booking');
 const postalCodeRouter = require('./routes/postalCode');
 const coursesRouter = require('./routes/courses'); // NEU
 const employmentAgentRouter = require('./routes/employmentAgent');
+const moduleSessionRouter = require('./routes/moduleSession');
+const roomRouter = require('./routes/room');
+const locationRouter = require('./routes/location');
 
 app.use(cors());
 app.use(express.json());
-
+app.use('/api/rooms', roomRouter);
+app.use('/api/locations', locationRouter);
+app.use('/api/modulesessions', moduleSessionRouter);
 app.use('/api/participants', participantsRouter);
 app.use('/api/modules', moduleRouter);
 app.use('/api/bookings', bookingRouter);

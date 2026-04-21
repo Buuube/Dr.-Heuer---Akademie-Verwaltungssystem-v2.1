@@ -36,17 +36,21 @@ async function createBookingInDB(bookingData) {
     .input('EducationalGoal', sql.VarChar, bookingData.educationalGoal ?? null)
     .input('MonthlyRate', sql.Decimal, bookingData.monthlyRate ?? null)
     .input('Remarks', sql.NVarChar, bookingData.remarks ?? null)
-    .input('LocationId', sql.Int, bookingData.locationId ?? null).query(`
+    .input('LocationId', sql.Int, bookingData.locationId ?? null)
+    .input('Duration', sql.VarChar, bookingData.duration ?? null)
+    .input('StartTerm', sql.VarChar, bookingData.startTerm ?? null).query(`
       INSERT INTO Booking (
         ParticipantId, IsSigned, PlannedStartDate, ActualStartDate,
         PlannedEndDate, ActualEndDate, BookingType, EndReason,
-        EducationalGoal, MonthlyRate, Remarks, LocationId
+        EducationalGoal, MonthlyRate, Remarks, LocationId,
+        Duration, StartTerm
       )
       OUTPUT INSERTED.*
       VALUES (
         @ParticipantId, @IsSigned, @PlannedStartDate, @ActualStartDate,
         @PlannedEndDate, @ActualEndDate, @BookingType, @EndReason,
-        @EducationalGoal, @MonthlyRate, @Remarks, @LocationId
+        @EducationalGoal, @MonthlyRate, @Remarks, @LocationId,
+        @Duration, @StartTerm
       )
     `);
   return result.recordset[0];
@@ -65,7 +69,8 @@ async function updateBookingInDB(id, bookingData) {
     .input('MonthlyRate', sql.Decimal, bookingData.monthlyRate ?? null)
     .input('LocationId', sql.Int, bookingData.locationId ?? null)
     .input('EducationalGoal', sql.VarChar, bookingData.educationalGoal ?? null)
-    .query(`
+    .input('Duration', sql.VarChar, bookingData.duration ?? null)
+    .input('StartTerm', sql.VarChar, bookingData.startTerm ?? null).query(`
       UPDATE Booking SET
         PlannedStartDate = @PlannedStartDate,
         ActualStartDate  = @ActualStartDate,
@@ -74,7 +79,9 @@ async function updateBookingInDB(id, bookingData) {
         Remarks          = @Remarks,
         MonthlyRate      = @MonthlyRate,
         LocationId       = @LocationId,
-        EducationalGoal  = @EducationalGoal
+        EducationalGoal  = @EducationalGoal,
+        Duration         = @Duration,
+        StartTerm        = @StartTerm
       OUTPUT INSERTED.*
       WHERE BookingId = @BookingId
     `);
@@ -82,8 +89,9 @@ async function updateBookingInDB(id, bookingData) {
   return result.recordset[0];
 }
 
-async function addBookingItemsInDB(bookingId, { moduleIds, macroPackageId }) {
+async function addBookingItemsInDB(bookingId, items) {
   const pool = await connectDB();
+
   const check = await pool
     .request()
     .input('BookingId', sql.Int, bookingId)
@@ -93,22 +101,20 @@ async function addBookingItemsInDB(bookingId, { moduleIds, macroPackageId }) {
     err.code = 'BOOKING_NOT_FOUND';
     throw err;
   }
-  const resolvedModuleIds = moduleIds ?? [];
-  for (const moduleCodeId of resolvedModuleIds) {
+
+  for (const item of items) {
     await pool
       .request()
       .input('BookingId', sql.Int, bookingId)
-      .input('ModuleCodeId', sql.VarChar, moduleCodeId)
+      .input('ModuleCodeId', sql.VarChar, item.moduleCodeId)
+      .input('ModuleSessionId', sql.Int, item.moduleSessionId ?? null)
       .input('AttemptNumber', sql.Int, 0).query(`
-        INSERT INTO BookingModule (BookingId, ModuleCodeId, AttemptNumber)
-        VALUES (@BookingId, @ModuleCodeId, @AttemptNumber)
+        INSERT INTO BookingModule (BookingId, ModuleCodeId, ModuleSessionId, AttemptNumber)
+        VALUES (@BookingId, @ModuleCodeId, @ModuleSessionId, @AttemptNumber)
       `);
   }
-  return {
-    bookingId: Number(bookingId),
-    addedModuleIds: resolvedModuleIds,
-    macroPackageId: macroPackageId ?? null,
-  };
+
+  return { bookingId: Number(bookingId), addedItems: items };
 }
 
 async function deleteBookingFromDB(id, cancellationReasonId) {
