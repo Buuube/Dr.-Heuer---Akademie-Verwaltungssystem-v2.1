@@ -64,7 +64,7 @@ const links = [
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(120, 180, 255, 0.18);
   border: 1px solid rgba(120, 180, 255, 0.18); /* rundum Rahmen */
-  font-family: 'DM Sans', sans-serif;
+  font-family: system-ui, sans-serif;
   border-radius: 0 0 10px 10px;
   box-sizing: border-box;
 }
