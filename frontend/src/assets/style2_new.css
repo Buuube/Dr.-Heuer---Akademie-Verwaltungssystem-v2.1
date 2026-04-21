@@ -148,7 +148,7 @@
     --filter-btn-border: #cfe0f5;
 }
 
-body.light{
+body.light {
     background: #f0f4f8 !important;
 }
 
@@ -215,13 +215,11 @@ body {
     inset: 0;
     border-radius: 18px;
     padding: 1px;
-    background: linear-gradient(
-        120deg,
-        transparent,
-        rgba(74, 163, 255, 0.4),
-        rgba(124, 247, 255, 0.25),
-        transparent
-    );
+    background: linear-gradient(120deg,
+            transparent,
+            rgba(74, 163, 255, 0.4),
+            rgba(124, 247, 255, 0.25),
+            transparent);
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     mask-composite: exclude;
@@ -283,7 +281,6 @@ body {
 
 .form-group {
     padding: 0 16px 8px 0;
-    border-right: 1px solid var(--form-group-border);
 }
 
 .form-group:last-child {
@@ -496,7 +493,6 @@ body {
 
 .detail-group {
     padding: 0 16px 8px 0;
-    border-right: 1px solid var(--form-group-border);
 }
 
 .detail-group:last-child {
@@ -547,6 +543,7 @@ body {
 .list-panel {
     display: flex;
     flex-direction: column;
+    min-height: 420px;
     max-height: 70vh;
     padding: 0;
 }
@@ -726,14 +723,45 @@ td {
 }
 
 /* Spaltenbreiten */
-th:nth-child(1), td:nth-child(1) { width: 100px; }
-th:nth-child(2), td:nth-child(2) { width: 80px; }
-th:nth-child(3), td:nth-child(3) { width: 140px; }
-th:nth-child(4), td:nth-child(4) { width: 140px; }
-th:nth-child(5), td:nth-child(5) { width: 120px; }
-th:nth-child(6), td:nth-child(6) { width: 120px; }
-th:nth-child(7), td:nth-child(7) { width: 120px; }
-th:nth-child(8), td:nth-child(8) { width: 200px; }
+th:nth-child(1),
+td:nth-child(1) {
+    width: 100px;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+    width: 80px;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+    width: 140px;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+    width: 140px;
+}
+
+th:nth-child(5),
+td:nth-child(5) {
+    width: 120px;
+}
+
+th:nth-child(6),
+td:nth-child(6) {
+    width: 120px;
+}
+
+th:nth-child(7),
+td:nth-child(7) {
+    width: 120px;
+}
+
+th:nth-child(8),
+td:nth-child(8) {
+    width: 200px;
+}
 
 tbody tr {
     transition: background 0.2s;
@@ -793,4 +821,71 @@ tbody tr:hover {
 .light .btn-detail:hover,
 .light .btn-delete:hover {
     box-shadow: 0 2px 8px rgba(15, 37, 65, 0.15);
+}
+
+/* ============================================================
+   PAGINATION
+============================================================ */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 10px 20px 14px;
+    border-top: 1px solid var(--td-border);
+    flex-shrink: 0;
+}
+
+.pagination-info {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.3px;
+    margin-right: auto;   /* Info links, Rest rechts */
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.pagination-controls button {
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--btn-edit-border);
+    background: var(--btn-edit-bg);
+    color: var(--btn-edit-color);
+    font-size: 13px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, opacity 0.2s;
+    line-height: 1;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    box-shadow: 0 0 10px rgba(124, 247, 255, 0.15);
+    opacity: 0.85;
+}
+
+.light .pagination-controls button:hover:not(:disabled) {
+    box-shadow: 0 2px 8px rgba(15, 37, 65, 0.15);
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+.pagination-size select {
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-input);
+    background: var(--bg-input);
+    color: var(--text);
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.25s;
+}
+
+.pagination-size select:focus {
+    border-color: var(--cyan);
 }
