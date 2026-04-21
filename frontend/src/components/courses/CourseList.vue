@@ -6,15 +6,11 @@ const props = defineProps({
   OnEdit: Function,
   OnDelete: Function,
   OnSelect: Function,
-  OnCreate: Function,
-  OnSave: Function,
-  showForm: Boolean,
 });
 
 const courses = ref([]);
 const search = ref('');
 const filterStatus = ref('all');
-// all | active | expired | deactivated
 
 const isActive = (endDate) => new Date(endDate) >= new Date();
 
@@ -25,8 +21,8 @@ const formatDate = (date) =>
     year: 'numeric',
   });
 
-const sortKey = ref('');
-const sortDir = ref(1); // 1 = asc, -1 = desc
+const sortKey = ref('_active');
+const sortDir = ref(-1);
 
 const toggleSort = (key) => {
   if (sortKey.value === key) {
@@ -81,129 +77,122 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <div class="list-header">
-      <h2>Kurse</h2>
-      <div class="header-buttons">
-        <template v-if="props.showForm">
-          <button class="btn-save" @click="props.OnSave()">Speichern</button>
-          <button class="btn-cancel" @click="props.OnCreate()">
-            Abbrechen
-          </button>
-        </template>
-        <button v-else class="btn-create" @click="props.OnCreate()">
-          + Neuer Kurs
-        </button>
-      </div>
-    </div>
+  <div class="list-panel">
+    <h3>Kurse</h3>
+
     <div class="toolbar">
       <input
         v-model="search"
         placeholder="Suche nach Nummer, Name, Berater..."
       />
-      <select v-model="filterStatus" class="filter-select">
-        <option value="all">Alle</option>
+      <select v-model="filterStatus">
+        <option value="all">Alle Status</option>
         <option value="active">Aktiv</option>
         <option value="expired">Abgelaufen</option>
         <option value="deactivated">Deaktiviert</option>
       </select>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th @click="toggleSort('ApprovalNumber')" class="sortable">
-            Zulassungsnummer {{ sortIcon('ApprovalNumber') }}
-          </th>
-          <th @click="toggleSort('Name')" class="sortable">
-            Bezeichnung {{ sortIcon('Name') }}
-          </th>
-          <th>Berater</th>
-          <th>Gültig von</th>
-          <th>Gültig bis</th>
-          <th
-            :class="{ sortable: filterStatus === 'all' }"
-            @click="filterStatus === 'all' && toggleSort('_active')"
-          >
-            Status {{ filterStatus === 'all' ? sortIcon('_active') : '' }}
-          </th>
-          <th>Aktionen</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="course in filteredCourses"
-          :key="course.CourseId"
-          class="clickable-row"
-          @click="props.OnSelect(course)"
-        >
-          <td>{{ course.ApprovalNumber }}</td>
-          <td>{{ course.Name }}</td>
-          <td>{{ course.Advisor }}</td>
-          <td>{{ formatDate(course.ApprovalStartDate) }}</td>
-          <td>{{ formatDate(course.ApprovalEndDate) }}</td>
-          <td>
-            <span
-              v-if="course.IsDeleted === true || course.IsDeleted === 1"
-              class="badge-deactivated"
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th @click="toggleSort('ApprovalNumber')" class="sortable">
+              Zulassungsnummer
+              <span class="sort-icon">{{ sortIcon('ApprovalNumber') }}</span>
+            </th>
+            <th @click="toggleSort('Name')" class="sortable">
+              Bezeichnung <span class="sort-icon">{{ sortIcon('Name') }}</span>
+            </th>
+            <th>Berater</th>
+            <th>Gültig von</th>
+            <th>Gültig bis</th>
+            <th
+              :class="{ sortable: filterStatus === 'all' }"
+              @click="filterStatus === 'all' && toggleSort('_active')"
             >
-              Deaktiviert
-            </span>
-            <span
-              v-else
-              :class="
-                isActive(course.ApprovalEndDate)
-                  ? 'badge-active'
-                  : 'badge-expired'
-              "
-            >
-              {{ isActive(course.ApprovalEndDate) ? 'Aktiv' : 'Abgelaufen' }}
-            </span>
-          </td>
-          <td>
-            <button
-              class="btn-icon"
-              title="Bearbeiten"
-              :disabled="course.IsDeleted === true || course.IsDeleted === 1"
-              @click.stop="props.OnEdit(course)"
-            >
-              ✏️
-            </button>
-            <button
-              class="btn-icon btn-icon--delete"
-              title="Löschen"
-              :disabled="course.IsDeleted === true || course.IsDeleted === 1"
-              @click.stop="props.OnDelete(course.CourseId)"
-            >
-              🗑️
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+              Status
+              <span v-if="filterStatus === 'all'" class="sort-icon">{{
+                sortIcon('_active')
+              }}</span>
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="course in filteredCourses" :key="course.CourseId">
+            <td>{{ course.ApprovalNumber }}</td>
+            <td>{{ course.Name }}</td>
+            <td>{{ course.Advisor }}</td>
+            <td>{{ formatDate(course.ApprovalStartDate) }}</td>
+            <td>{{ formatDate(course.ApprovalEndDate) }}</td>
+            <td>
+              <span
+                v-if="course.IsDeleted === true || course.IsDeleted === 1"
+                class="badge-deactivated"
+                >Deaktiviert</span
+              >
+              <span
+                v-else
+                :class="
+                  isActive(course.ApprovalEndDate)
+                    ? 'badge-active'
+                    : 'badge-expired'
+                "
+              >
+                {{ isActive(course.ApprovalEndDate) ? 'Aktiv' : 'Abgelaufen' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-detail" @click="props.OnSelect(course)">
+                Details
+              </button>
+              <button
+                class="btn-edit"
+                :disabled="course.IsDeleted === true || course.IsDeleted === 1"
+                @click="props.OnEdit(course)"
+              >
+                Bearbeiten
+              </button>
+              <button
+                class="btn-delete"
+                :disabled="course.IsDeleted === true || course.IsDeleted === 1"
+                @click="props.OnDelete(course.CourseId)"
+              >
+                Deaktivieren
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .badge-active {
-  background: #2ecc71;
-  color: white;
-  padding: 2px 10px;
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  padding: 3px 10px;
   border-radius: 12px;
   font-size: 0.85em;
 }
 
 .badge-expired {
-  background: #e74c3c;
-  color: white;
-  padding: 2px 10px;
+  background: rgba(231, 76, 60, 0.12);
+  color: #ff4d6d;
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  padding: 3px 10px;
   border-radius: 12px;
   font-size: 0.85em;
 }
 
 .badge-deactivated {
-  background: #95a5a6;
-  color: white;
-  padding: 2px 10px;
+  background: rgba(120, 180, 255, 0.08);
+  color: rgba(215, 230, 255, 0.5);
+  border: 1px solid rgba(120, 180, 255, 0.15);
+  padding: 3px 10px;
   border-radius: 12px;
   font-size: 0.85em;
 }
@@ -214,88 +203,43 @@ onMounted(async () => {
 }
 
 .sortable:hover {
-  opacity: 0.75;
+  color: #7cf7ff;
 }
 
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.header-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-create {
-  padding: 6px 16px;
-  background: #2ecc71;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-create:hover {
-  opacity: 0.85;
-}
-
-.btn-save {
-  padding: 6px 16px;
-  background: #2ecc71;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-save:hover {
-  opacity: 0.85;
-}
-
-.btn-cancel {
-  padding: 6px 16px;
-  background: none;
-  border: 1px solid #666;
-  border-radius: 4px;
-  color: inherit;
-  cursor: pointer;
-}
-
-.btn-cancel:hover {
-  border-color: #aaa;
-}
-
-.clickable-row {
-  cursor: pointer;
-}
-
-.clickable-row:hover {
+.sort-icon {
+  font-size: 14px;
+  margin-left: 4px;
   opacity: 0.8;
+  vertical-align: middle;
 }
 
-.btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1em;
-  padding: 2px 6px;
+th:nth-child(1),
+td:nth-child(1) {
+  width: 210px;
 }
-
-.btn-icon--delete:hover {
-  filter: brightness(1.5);
+th:nth-child(2),
+td:nth-child(2) {
+  width: 180px;
 }
-
-.btn-icon:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+th:nth-child(3),
+td:nth-child(3) {
+  width: 130px;
 }
-
-.filter-select {
-  padding: 3px 6px;
-  font-size: 0.85em;
-  width: auto;
+th:nth-child(4),
+td:nth-child(4) {
+  width: 105px;
+}
+th:nth-child(5),
+td:nth-child(5) {
+  width: 105px;
+}
+th:nth-child(6),
+td:nth-child(6) {
+  width: 110px;
+}
+th:nth-child(7),
+td:nth-child(7) {
+  width: 260px;
+  white-space: nowrap;
 }
 </style>

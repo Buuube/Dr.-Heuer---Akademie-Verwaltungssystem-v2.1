@@ -155,10 +155,25 @@ body.light {
 /* ============================================================
    BASE
 ============================================================ */
+::selection {
+    background: rgba(74, 163, 255, 0.3);
+    color: inherit;
+}
+
+.light ::selection {
+    background: rgba(15, 37, 65, 0.2);
+    color: inherit;
+}
+
+input, textarea, select {
+    user-select: text;
+}
+
 body {
     margin: 0;
     font-family: system-ui, sans-serif;
     color: var(--text);
+    user-select: none;
     background:
         radial-gradient(circle at 20% 20%, rgba(74, 163, 255, 0.15), transparent 40%),
         radial-gradient(circle at 80% 10%, rgba(176, 124, 255, 0.12), transparent 45%),
@@ -176,7 +191,9 @@ body {
 /* ============================================================
    LAYOUT — vertikal (oben/unten)
 ============================================================ */
-.participant-layout {
+.participant-layout,
+.course-layout,
+.module-layout {
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -430,6 +447,12 @@ body {
     text-shadow: 0 0 8px rgba(255, 77, 109, 0.4);
 }
 
+.required {
+    color: var(--danger);
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .light .error {
     text-shadow: none;
 }
@@ -476,9 +499,18 @@ body {
 /* ============================================================
    DETAIL PANEL — horizontales Grid
 ============================================================ */
+.bottom-panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
 .detail-panel {
     padding: 0;
     box-sizing: border-box;
+    position: relative;
+    width: 100%;
+    align-self: stretch;
 }
 
 .detail-grid {
@@ -574,6 +606,20 @@ body {
 .toolbar input:focus,
 .toolbar select:focus {
     border-color: var(--cyan);
+}
+
+.toolbar select option,
+.form select option,
+.pagination-size select option {
+    background: #0a0e1f;
+    color: #d7e6ff;
+}
+
+.light .toolbar select option,
+.light .form select option,
+.light .pagination-size select option {
+    background: #ffffff;
+    color: #1a2035;
 }
 
 /* ============================================================
@@ -688,6 +734,26 @@ thead {
 thead th {
     background: var(--thead-bg);
     color: var(--thead-color);
+    user-select: none;
+}
+
+thead th.sortable {
+    cursor: pointer;
+}
+
+thead th.sortable:hover {
+    color: #7cf7ff;
+}
+
+.light thead th.sortable:hover {
+    color: #1a7abf;
+}
+
+.sort-icon {
+    font-size: 14px;
+    margin-left: 4px;
+    opacity: 0.8;
+    vertical-align: middle;
 }
 
 thead th:first-child {
@@ -778,6 +844,7 @@ tbody tr:hover {
     border-radius: 8px;
     font-size: 12px;
     cursor: pointer;
+    user-select: none;
     transition: box-shadow 0.2s, opacity 0.2s;
     margin-right: 4px;
 }
@@ -805,6 +872,13 @@ tbody tr:hover {
 .btn-delete:hover {
     box-shadow: 0 0 10px rgba(124, 247, 255, 0.15);
     opacity: 0.85;
+}
+
+.btn-edit:disabled,
+.btn-delete:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .light .btn-edit:hover,
@@ -878,4 +952,10 @@ tbody tr:hover {
 
 .pagination-size select:focus {
     border-color: var(--cyan);
+}
+
+.light .badge-deactivated {
+    background: rgba(100, 110, 130, 0.12) !important;
+    color: #5a6270 !important;
+    border: 1px solid rgba(100, 110, 130, 0.35) !important;
 }
