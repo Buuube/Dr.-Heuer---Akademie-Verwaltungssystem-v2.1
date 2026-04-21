@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { getParticipants } from '../../services/participantService';
 
 const props = defineProps({
@@ -14,10 +14,16 @@ const Search = ref('');
 /* =========================
    FILTER STATE
 ========================= */
-const genderFilter = ref('all'); // all | male | female
-const emailFilter = ref('all'); // all | has | none
-const selfFilter = ref('all'); // all | yes | no
-const sortBy = ref('firstname'); // firstname | lastname
+const genderFilter = ref('all');
+const emailFilter = ref('all');
+const selfFilter = ref('all');
+const sortBy = ref('lastname_asc');
+
+/* =========================
+   PAGINATION
+========================= */
+const pageSize = ref(10);
+const currentPage = ref(1);
 
 /* =========================
    LOAD
@@ -29,17 +35,24 @@ const Load = async () => {
 
 onMounted(Load);
 
+// Seite zurücksetzen wenn Filter/Suche sich ändert
+watch([Search, genderFilter, emailFilter, selfFilter, sortBy, pageSize], () => {
+  currentPage.value = 1;
+});
+
 /* =========================
    FILTER + SORT
 ========================= */
 const FilteredParticipants = computed(() => {
   let list = [...Participants.value];
 
-  // SEARCH
+  // SEARCH — Vorname, Nachname, E-Mail, Kundennummer
   const search = Search.value.toLowerCase();
   if (search) {
     list = list.filter((p) =>
-      `${p.FirstName} ${p.LastName} ${p.Email}`.toLowerCase().includes(search)
+      `${p.FirstName} ${p.LastName} ${p.Email} ${p.AgencyCustomerNumber}`
+        .toLowerCase()
+        .includes(search)
     );
   }
 
@@ -52,22 +65,12 @@ const FilteredParticipants = computed(() => {
   }
 
   // EMAIL
-  if (emailFilter.value === 'has') {
-    list = list.filter((p) => !!p.Email);
-  }
-  if (emailFilter.value === 'none') {
-    list = list.filter((p) => !p.Email);
-  }
+  if (emailFilter.value === 'has') list = list.filter((p) => !!p.Email);
+  if (emailFilter.value === 'none') list = list.filter((p) => !p.Email);
 
   // SELF PAYER
-  if (selfFilter.value === 'yes') {
-    list = list.filter((p) => p.IsSelfPayer);
-  }
-  if (selfFilter.value === 'no') {
-    list = list.filter((p) => !p.IsSelfPayer);
-  }
-
-  const sortBy = ref('lastname_asc');
+  if (selfFilter.value === 'yes') list = list.filter((p) => p.IsSelfPayer);
+  if (selfFilter.value === 'no') list = list.filter((p) => !p.IsSelfPayer);
 
   // SORT
   list.sort((a, b) => {
@@ -79,16 +82,12 @@ const FilteredParticipants = computed(() => {
     switch (sortBy.value) {
       case 'firstname_asc':
         return fnA.localeCompare(fnB);
-
       case 'firstname_desc':
         return fnB.localeCompare(fnA);
-
       case 'lastname_asc':
         return lnA.localeCompare(lnB);
-
       case 'lastname_desc':
         return lnB.localeCompare(lnA);
-
       default:
         return 0;
     }
@@ -96,6 +95,20 @@ const FilteredParticipants = computed(() => {
 
   return list;
 });
+
+/* =========================
+   PAGINATION COMPUTED
+========================= */
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(FilteredParticipants.value.length / pageSize.value))
+);
+
+const PagedParticipants = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return FilteredParticipants.value.slice(start, start + pageSize.value);
+});
+
+const totalCount = computed(() => FilteredParticipants.value.length);
 </script>
 
 <template>
@@ -104,7 +117,10 @@ const FilteredParticipants = computed(() => {
 
     <!-- SEARCH + FILTER -->
     <div class="toolbar">
-      <input v-model="Search" placeholder="Suche..." />
+      <input
+        v-model="Search"
+        placeholder="Suche nach Name, E-Mail, Kundennr. …"
+      />
 
       <!-- GENDER -->
       <select v-model="genderFilter">
@@ -131,7 +147,6 @@ const FilteredParticipants = computed(() => {
       <select v-model="sortBy">
         <option value="lastname_asc">Nachname A–Z</option>
         <option value="lastname_desc">Nachname Z–A</option>
-
         <option value="firstname_asc">Vorname A–Z</option>
         <option value="firstname_desc">Vorname Z–A</option>
       </select>
@@ -150,26 +165,22 @@ const FilteredParticipants = computed(() => {
             <th>Telefon</th>
             <th>Mobil</th>
             <th></th>
-            <!--nichts löschen, platzhalter für aktionen-->
           </tr>
         </thead>
 
         <tbody>
-          <tr v-for="P in FilteredParticipants" :key="P.ParticipantId || P.Id">
+          <tr v-for="P in PagedParticipants" :key="P.ParticipantId || P.Id">
             <td>{{ P.AgencyCustomerNumber }}</td>
-
             <td>
               {{
                 P.Salutation === false || P.Salutation === 0 ? 'Herr' : 'Frau'
               }}
             </td>
-
             <td>{{ P.FirstName }}</td>
             <td>{{ P.LastName }}</td>
             <td>{{ P.Email }}</td>
             <td>{{ P.Phone }}</td>
             <td>{{ P.Mobile }}</td>
-
             <td>
               <button class="btn-edit" @click="props.onEdit?.(P)">
                 Bearbeiten
@@ -184,6 +195,37 @@ const FilteredParticipants = computed(() => {
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination">
+      <div class="pagination-info">
+        {{ totalCount }} Einträge – Seite {{ currentPage }} von {{ totalPages }}
+      </div>
+
+      <div class="pagination-controls">
+        <button :disabled="currentPage === 1" @click="currentPage = 1">
+          «
+        </button>
+        <button :disabled="currentPage === 1" @click="currentPage--">‹</button>
+        <button :disabled="currentPage === totalPages" @click="currentPage++">
+          ›
+        </button>
+        <button
+          :disabled="currentPage === totalPages"
+          @click="currentPage = totalPages"
+        >
+          »
+        </button>
+      </div>
+
+      <div class="pagination-size">
+        <select v-model="pageSize">
+          <option :value="10">10 pro Seite</option>
+          <option :value="25">25 pro Seite</option>
+          <option :value="50">50 pro Seite</option>
+        </select>
+      </div>
     </div>
   </div>
 </template>
