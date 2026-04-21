@@ -17,7 +17,7 @@ const Search = ref('');
 const genderFilter = ref('all'); // all | male | female
 const emailFilter = ref('all'); // all | has | none
 const selfFilter = ref('all'); // all | yes | no
-const sortBy = ref('lastname'); // firstname | lastname
+const sortBy = ref('firstname'); // firstname | lastname
 
 /* =========================
    LOAD
@@ -108,23 +108,23 @@ const FilteredParticipants = computed(() => {
 
       <!-- GENDER -->
       <select v-model="genderFilter">
-        <option value="all">Alle Geschlechter</option>
-        <option value="male">Mann</option>
-        <option value="female">Frau</option>
+        <option value="all">Geschlecht: -</option>
+        <option value="male">Geschlecht: Mann</option>
+        <option value="female">Geschlecht: Frau</option>
       </select>
 
       <!-- EMAIL -->
       <select v-model="emailFilter">
-        <option value="all">E-Mail: Alle</option>
-        <option value="has">Mit E-Mail</option>
-        <option value="none">Ohne E-Mail</option>
+        <option value="all">E-Mail: -</option>
+        <option value="has">E-Mail: vorhanden</option>
+        <option value="none">E-Mail: nicht vorhanden</option>
       </select>
 
       <!-- SELF PAYER -->
       <select v-model="selfFilter">
-        <option value="all">Selbstzahler: Alle</option>
-        <option value="yes">Ja</option>
-        <option value="no">Nein</option>
+        <option value="all">Selbstzahler: -</option>
+        <option value="yes">Selbstzahler: Ja</option>
+        <option value="no">Selbstzahler: Nein</option>
       </select>
 
       <!-- SORT -->
