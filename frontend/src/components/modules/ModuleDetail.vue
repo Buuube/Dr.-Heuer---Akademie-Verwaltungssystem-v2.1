@@ -230,100 +230,6 @@ const removeExam = async (examId) => {
 </template>
 
 <style scoped>
-.badge-active {
-  background: rgba(46, 204, 113, 0.15);
-  color: #2ecc71;
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 0.85em;
-}
-
-.badge-deactivated {
-  background: rgba(120, 180, 255, 0.08);
-  color: rgba(215, 230, 255, 0.5);
-  border: 1px solid rgba(120, 180, 255, 0.15);
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 0.85em;
-}
-
-.exam-group {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.exam-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.btn-add-exam {
-  margin-left: 10px;
-  padding: 2px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(124, 247, 255, 0.3);
-  background: rgba(124, 247, 255, 0.08);
-  color: var(--cyan);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: box-shadow 0.2s;
-}
-
-.btn-add-exam:hover {
-  box-shadow: 0 0 10px rgba(124, 247, 255, 0.25);
-}
-
-.exam-add-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin: 6px 0;
-}
-
-.exam-add-row input {
-  flex: 1;
-  padding: 4px 8px;
-  border-radius: 8px;
-  border: 1px solid var(--border-input);
-  background: var(--bg-input);
-  color: var(--text);
-  font-size: 12px;
-  outline: none;
-}
-
-.exam-add-row input:focus {
-  border-color: var(--cyan);
-}
-
-.btn-exam-save {
-  background: rgba(46, 204, 113, 0.12);
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  color: #2ecc71;
-  border-radius: 6px;
-  padding: 2px 8px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: box-shadow 0.2s;
-}
-
-.btn-exam-save:hover {
-  box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
-}
-
-.btn-exam-cancel {
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 13px;
-  padding: 2px 4px;
-}
-
 .exam-row {
   display: flex;
   justify-content: space-between;
@@ -332,25 +238,7 @@ const removeExam = async (examId) => {
   font-size: 13px;
 }
 
-.btn-exam-delete {
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 12px;
-  padding: 1px 4px;
-  line-height: 1;
-  opacity: 0;
-  transition:
-    opacity 0.2s,
-    color 0.2s;
-}
-
 .exam-row:hover .btn-exam-delete {
   opacity: 1;
-}
-
-.btn-exam-delete:hover {
-  color: #ff4d6d;
 }
 </style>
