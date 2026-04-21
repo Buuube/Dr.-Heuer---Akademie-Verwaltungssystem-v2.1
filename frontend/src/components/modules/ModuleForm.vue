@@ -2,18 +2,21 @@
 import { ref, watch, onMounted } from 'vue';
 import { getCourses } from '@/services/courseService';
 import { getExams } from '@/services/moduleExamService';
+import { getTeachingFormats } from '@/services/teachingFormatService';
 
 const props = defineProps({
   module: Object,
 });
 
 const emit = defineEmits(['save', 'cancel']);
-
+  
+const teachingFormats = ref([]);
 const courses = ref([]);
 const exams = ref([]);
 
 onMounted(async () => {
   courses.value = await getCourses();
+  teachingFormats.value = await getTeachingFormats();
 });
 
 watch(
@@ -35,7 +38,7 @@ const empty = () => ({
   ExternalModuleCode: '',
   Name: '',
   CourseId: '',
-  TeachingFormatId: 1,
+  TeachingFormatId: '',
   Content: '',
   EstimatedCost: '',
   Duration: '',
@@ -60,7 +63,6 @@ const validate = () => {
   if (!form.value.CourseId) errors.value.CourseId = 'Pflichtfeld';
   if (!form.value.TeachingFormatId)
     errors.value.TeachingFormatId = 'Pflichtfeld';
-  if (!form.value.Content?.trim()) errors.value.Content = 'Pflichtfeld';
   return Object.keys(errors.value).length === 0;
 };
 
@@ -90,7 +92,7 @@ defineExpose({ submitForm: submit });
           <label>Name</label>
           <input v-model="form.Name" maxlength="150" />
 
-          <label>Kurs <span class="required">*</span></label>
+          <label>Kurs *</label>
           <select
             v-model="form.CourseId"
             :class="{ 'input-error': errors.CourseId }"
@@ -105,19 +107,24 @@ defineExpose({ submitForm: submit });
             errors.CourseId
           }}</span>
         </div>
-
         <div class="form-group">
           <div class="form-group-title">Format & Inhalt</div>
 
-          <label>Unterrichtsformat <span class="required">*</span></label>
-          <input
-            v-model.number="form.TeachingFormatId"
-            type="number"
-            min="1"
-            max="3"
+          <label>Unterrichtsformat *</label>
+          <select
+            v-model="form.TeachingFormatId"
             :class="{ 'input-error': errors.TeachingFormatId }"
-            @input="delete errors.TeachingFormatId"
-          />
+            @change="delete errors.TeachingFormatId"
+          >
+            <option value="" disabled>– Format wählen –</option>
+            <option
+              v-for="f in teachingFormats"
+              :key="f.TeachingFormatId"
+              :value="f.TeachingFormatId"
+            >
+              {{ f.Name }}
+            </option>
+          </select>
           <span v-if="errors.TeachingFormatId" class="error">{{
             errors.TeachingFormatId
           }}</span>
@@ -134,13 +141,8 @@ defineExpose({ submitForm: submit });
         <div class="form-group">
           <div class="form-group-title">Inhalt</div>
 
-          <label>Curriculum <span class="required">*</span></label>
-          <textarea
-            v-model="form.Content"
-            rows="6"
-            :class="{ 'input-error': errors.Content }"
-          ></textarea>
-          <span v-if="errors.Content" class="error">{{ errors.Content }}</span>
+          <label>Curriculum</label>
+          <textarea v-model="form.Content" rows="6"></textarea>
         </div>
 
         <div class="form-group">
