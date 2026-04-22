@@ -243,9 +243,15 @@ const cancel = () => {
         <input v-model="form.Email" :class="{ 'input-error': errors.Email }" />
         <div v-if="errors.Email" class="error">{{ errors.Email }}</div>
         <label>Telefon</label>
-        <input v-model="form.Phone" />
+        <input
+          v-model="form.Phone"
+          :class="{ 'input-error': errors.PhoneMobile }"
+        />
         <label>Mobil</label>
-        <input v-model="form.Mobile" />
+        <input
+          v-model="form.Mobile"
+          :class="{ 'input-error': errors.PhoneMobile }"
+        />
         <div v-if="errors.PhoneMobile" class="error">
           {{ errors.PhoneMobile }}
         </div>
