@@ -8,15 +8,23 @@ const router = express.Router();
 const {
   getModules,
   createModule,
-  updateExam,
+  updateModule,
   deleteModule,
+  getExams,
+  createExam,
+  deleteExam,
+  updateExam,
 } = require('../controllers/modulesController');
 
 // GET supports optional query param: /api/modules?courseId=5
 router.get('/', getModules);
 router.post('/', createModule);
-router.put('/:moduleCode/exams/:examId', updateExam);
-
+router.put('/:id', updateModule);
 router.delete('/:id', deleteModule);
+
+router.get('/:moduleCode/exams', getExams);
+router.post('/:moduleCode/exams', createExam);
+router.put('/:moduleCode/exams/:examId', updateExam);
+router.delete('/:moduleCode/exams/:examId', deleteExam);
 
 module.exports = router;

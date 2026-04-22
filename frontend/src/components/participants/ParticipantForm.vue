@@ -122,7 +122,7 @@ const cancel = () => {
       <!-- Gruppe: Verwaltung -->
       <div class="form-group">
         <div class="form-group-title">Verwaltung</div>
-        <label>Kundennummer</label>
+        <label>Kundennummer <span class="required">*</span></label>
         <input
           v-model="form.AgencyCustomerNumber"
           :class="{ 'input-error': errors.AgencyCustomerNumber }"
@@ -180,14 +180,14 @@ const cancel = () => {
         />
         <div v-if="errors.FirstName" class="error">{{ errors.FirstName }}</div>
 
-        <label>Nachname</label>
+        <label>Nachname <span class="required">*</span></label>
         <input
           v-model="form.LastName"
           :class="{ 'input-error': errors.LastName }"
         />
         <div v-if="errors.LastName" class="error">{{ errors.LastName }}</div>
 
-        <label>Geburtsdatum</label>
+        <label>Geburtsdatum <span class="required">*</span></label>
         <input
           v-model="form.DateOfBirth"
           type="date"
@@ -196,7 +196,7 @@ const cancel = () => {
         <div v-if="errors.DateOfBirth" class="error">
           {{ errors.DateOfBirth }}
         </div>
-        <label>Geburtsort</label>
+        <label>Geburtsort <span class="required">*</span></label>
         <input
           v-model="form.PlaceOfBirth"
           :class="{ 'input-error': errors.PlaceOfBirth }"
@@ -209,13 +209,13 @@ const cancel = () => {
       <!-- Gruppe: Adresse -->
       <div class="form-group">
         <div class="form-group-title">Adresse</div>
-        <label>Straße</label>
+        <label>Straße <span class="required">*</span></label>
         <input
           v-model="form.Street"
           :class="{ 'input-error': errors.Street }"
         />
         <div v-if="errors.Street" class="error">{{ errors.Street }}</div>
-        <label>Hausnummer</label>
+        <label>Hausnummer <span class="required">*</span></label>
         <input
           v-model="form.HouseNumber"
           :class="{ 'input-error': errors.HouseNumber }"
@@ -223,7 +223,7 @@ const cancel = () => {
         <div v-if="errors.HouseNumber" class="error">
           {{ errors.HouseNumber }}
         </div>
-        <label>PLZ</label>
+        <label>PLZ <span class="required">*</span></label>
         <input
           v-model="form.PostalCode"
           placeholder="44135"
@@ -239,13 +239,19 @@ const cancel = () => {
       <!-- Gruppe: Kontakt -->
       <div class="form-group">
         <div class="form-group-title">Kontakt</div>
-        <label>E-Mail</label>
+        <label>E-Mail <span class="required">*</span></label>
         <input v-model="form.Email" :class="{ 'input-error': errors.Email }" />
         <div v-if="errors.Email" class="error">{{ errors.Email }}</div>
         <label>Telefon</label>
-        <input v-model="form.Phone" />
+        <input
+          v-model="form.Phone"
+          :class="{ 'input-error': errors.PhoneMobile }"
+        />
         <label>Mobil</label>
-        <input v-model="form.Mobile" />
+        <input
+          v-model="form.Mobile"
+          :class="{ 'input-error': errors.PhoneMobile }"
+        />
         <div v-if="errors.PhoneMobile" class="error">
           {{ errors.PhoneMobile }}
         </div>

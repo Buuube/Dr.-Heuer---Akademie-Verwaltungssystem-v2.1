@@ -27,7 +27,9 @@ export const validateParticipant = (f) => {
     setError('DateOfBirth', 'Geburtsdatum muss zwischen 1900 und heute liegen');
   }
 
-  if (f.PlaceOfBirth && f.PlaceOfBirth.length > 100) {
+  if (!f.PlaceOfBirth) {
+    setError('PlaceOfBirth', 'Geburtsort ist erforderlich');
+  } else if (f.PlaceOfBirth.length > 100) {
     setError('PlaceOfBirth', 'Maximal 100 Zeichen erlaubt');
   }
 
@@ -53,10 +55,6 @@ export const validateParticipant = (f) => {
     setError('PostalCode', 'PLZ ist erforderlich');
   } else if (!/^\d{5}$/.test(f.PostalCode)) {
     setError('PostalCode', 'PLZ muss 5 Ziffern haben');
-  }
-
-  if (!f.PlaceOfBirth) {
-    setError('PlaceOfBirth', 'Geburtsort ist erforderlich');
   }
 
   if (!f.Phone && !f.Mobile) {

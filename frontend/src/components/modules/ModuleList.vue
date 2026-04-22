@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { getModule } from '@/services/moduleService';
 import { getExams } from '@/services/moduleExamService';
 
@@ -12,12 +12,78 @@ const props = defineProps({
 
 const modules = ref([]);
 const examCounts = ref({});
+const filterStatus = ref('all');
+const search = ref('');
 
 const formatCurrency = (value) =>
   Number(value).toLocaleString('de-DE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }) + ' €';
+
+const isDeactivated = (mod) => mod.IsDeleted === true || mod.IsDeleted === 1;
+
+const pageSize = ref(10);
+const currentPage = ref(1);
+
+const sortKey = ref('_status');
+const sortDir = ref(-1);
+
+const toggleSort = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value *= -1;
+  } else {
+    sortKey.value = key;
+    sortDir.value = 1;
+  }
+};
+
+const sortIcon = (key) => {
+  if (sortKey.value !== key) return '↕';
+  return sortDir.value === 1 ? '↑' : '↓';
+};
+
+const filteredModules = computed(() => {
+  const filtered = modules.value.filter((mod) => {
+    const text =
+      `${mod.ExternalModuleCode ?? ''} ${mod.Name ?? ''}`.toLowerCase();
+    const matchesSearch = text.includes(search.value.toLowerCase());
+    if (filterStatus.value === 'active')
+      return matchesSearch && !isDeactivated(mod);
+    if (filterStatus.value === 'deactivated')
+      return matchesSearch && isDeactivated(mod);
+    return matchesSearch;
+  });
+
+  if (!sortKey.value) return filtered;
+
+  return [...filtered].sort((a, b) => {
+    let valA, valB;
+    if (sortKey.value === '_status') {
+      valA = isDeactivated(a) ? 0 : 1;
+      valB = isDeactivated(b) ? 0 : 1;
+    } else {
+      valA = a[sortKey.value] ?? '';
+      valB = b[sortKey.value] ?? '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+    }
+    return valA < valB ? -sortDir.value : valA > valB ? sortDir.value : 0;
+  });
+});
+
+watch([search, filterStatus, sortKey, sortDir, pageSize], () => {
+  currentPage.value = 1;
+});
+
+const totalCount = computed(() => filteredModules.value.length);
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredModules.value.length / pageSize.value))
+);
+const pagedModules = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredModules.value.slice(start, start + pageSize.value);
+});
 
 onMounted(async () => {
   modules.value = await getModule(props.CourseId);
@@ -37,75 +103,197 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <h2>Module</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Externe Nummer</th>
-          <th>Name</th>
-          <th>Dauer</th>
-          <th>Kosten</th>
-          <th>Std./Tag</th>
-          <th>Int. Prüfungen</th>
-          <th>Ext. Prüfungen</th>
-          <th>Aktionen</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="module in modules"
-          :key="module.ModuleCode"
-          class="clickable-row"
-          @click="props.OnSelect(module)"
+  <div class="list-panel">
+    <h3>Module</h3>
+
+    <div class="toolbar">
+      <input
+        v-model="search"
+        placeholder="Suche nach Name oder externer Nummer..."
+      />
+      <select v-model="filterStatus">
+        <option value="all">Alle Status</option>
+        <option value="active">Aktiv</option>
+        <option value="deactivated">Deaktiviert</option>
+      </select>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th @click="toggleSort('ExternalModuleCode')" class="sortable">
+              Externe Nummer
+              <span class="sort-icon">{{
+                sortIcon('ExternalModuleCode')
+              }}</span>
+            </th>
+            <th @click="toggleSort('Name')" class="sortable">
+              Name <span class="sort-icon">{{ sortIcon('Name') }}</span>
+            </th>
+            <th @click="toggleSort('Duration')" class="sortable">
+              Dauer <span class="sort-icon">{{ sortIcon('Duration') }}</span>
+            </th>
+            <th @click="toggleSort('EstimatedCost')" class="sortable">
+              Kosten
+              <span class="sort-icon">{{ sortIcon('EstimatedCost') }}</span>
+            </th>
+            <th>Std./Tag</th>
+            <th>Int. Prüfungen</th>
+            <th>Ext. Prüfungen</th>
+            <th
+              :class="{ sortable: filterStatus === 'all' }"
+              @click="filterStatus === 'all' && toggleSort('_status')"
+            >
+              Status
+              <span v-if="filterStatus === 'all'" class="sort-icon">{{
+                sortIcon('_status')
+              }}</span>
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="module in pagedModules" :key="module.ModuleCode">
+            <td>{{ module.ExternalModuleCode }}</td>
+            <td>{{ module.Name }}</td>
+            <td>{{ module.Duration }}</td>
+            <td>{{ formatCurrency(module.EstimatedCost) }}</td>
+            <td>{{ module.DailyTeachingHours }}</td>
+            <td>{{ examCounts[module.ModuleCode]?.intern ?? '–' }}</td>
+            <td>{{ examCounts[module.ModuleCode]?.extern ?? '–' }}</td>
+            <td>
+              <span v-if="isDeactivated(module)" class="badge-deactivated"
+                >Deaktiviert</span
+              >
+              <span v-else class="badge-active">Aktiv</span>
+            </td>
+            <td>
+              <button class="btn-detail" @click="props.OnSelect(module)">
+                Details
+              </button>
+              <button
+                class="btn-edit"
+                :disabled="isDeactivated(module)"
+                @click="props.OnEdit(module)"
+              >
+                Bearbeiten
+              </button>
+              <button
+                class="btn-delete"
+                :disabled="isDeactivated(module)"
+                @click="props.OnDelete(module.ModuleCode)"
+              >
+                Deaktivieren
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <div class="pagination-info">
+        {{ totalCount }} Einträge – Seite {{ currentPage }} von {{ totalPages }}
+      </div>
+      <div class="pagination-controls">
+        <button :disabled="currentPage === 1" @click="currentPage = 1">
+          «
+        </button>
+        <button :disabled="currentPage === 1" @click="currentPage--">‹</button>
+        <button :disabled="currentPage === totalPages" @click="currentPage++">
+          ›
+        </button>
+        <button
+          :disabled="currentPage === totalPages"
+          @click="currentPage = totalPages"
         >
-          <td>{{ module.ExternalModuleCode }}</td>
-          <td>{{ module.Name }}</td>
-          <td>{{ module.Duration }}</td>
-          <td>{{ formatCurrency(module.EstimatedCost) }}</td>
-          <td>{{ module.DailyTeachingHours }}</td>
-          <td>{{ examCounts[module.ModuleCode]?.intern ?? '–' }}</td>
-          <td>{{ examCounts[module.ModuleCode]?.extern ?? '–' }}</td>
-          <td>
-            <button
-              class="btn-icon"
-              title="Bearbeiten"
-              @click.stop="props.OnEdit(module)"
-            >
-              ✏️
-            </button>
-            <button
-              class="btn-icon btn-icon--delete"
-              title="Löschen"
-              @click.stop="props.OnDelete(module.ModuleCode)"
-            >
-              🗑️
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          »
+        </button>
+      </div>
+      <div class="pagination-size">
+        <select v-model="pageSize">
+          <option :value="10">10 pro Seite</option>
+          <option :value="25">25 pro Seite</option>
+          <option :value="50">50 pro Seite</option>
+        </select>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.clickable-row {
+.sortable {
   cursor: pointer;
+  user-select: none;
 }
 
-.clickable-row:hover {
+.sortable:hover {
+  color: #7cf7ff;
+}
+
+.sort-icon {
+  font-size: 14px;
+  margin-left: 4px;
   opacity: 0.8;
+  vertical-align: middle;
 }
 
-.btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1em;
-  padding: 2px 6px;
+.badge-active {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
 }
 
-.btn-icon--delete:hover {
-  filter: brightness(1.5);
+.badge-deactivated {
+  background: rgba(120, 180, 255, 0.08);
+  color: rgba(215, 230, 255, 0.5);
+  border: 1px solid rgba(120, 180, 255, 0.15);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+th:nth-child(1),
+td:nth-child(1) {
+  width: 185px;
+}
+th:nth-child(2),
+td:nth-child(2) {
+  width: 160px;
+}
+th:nth-child(3),
+td:nth-child(3) {
+  width: 90px;
+}
+th:nth-child(4),
+td:nth-child(4) {
+  width: 110px;
+}
+th:nth-child(5),
+td:nth-child(5) {
+  width: 80px;
+}
+th:nth-child(6),
+td:nth-child(6) {
+  width: 120px;
+  white-space: nowrap;
+}
+th:nth-child(7),
+td:nth-child(7) {
+  width: 120px;
+  white-space: nowrap;
+}
+th:nth-child(8),
+td:nth-child(8) {
+  width: 110px;
+}
+th:nth-child(9),
+td:nth-child(9) {
+  width: 270px;
+  white-space: nowrap;
 }
 </style>

@@ -15,7 +15,6 @@ const Participants = ref([]);
 const FilterParticipantId = ref('');
 const FilterSigned = ref('all'); // all | true | false
 const FilterExpired = ref('all'); // all | active | expired
-const FilterLocationId = ref('');
 
 const Load = async () => {
   Bookings.value = await getBookings();
@@ -25,10 +24,15 @@ const Load = async () => {
 onMounted(Load);
 
 const Remove = async (Id) => {
-  const reason = prompt(
+  const confirmed = confirm('Möchten Sie diese Buchung wirklich löschen?');
+  if (!confirmed) return;
+
+  const reasonInput = prompt(
     'Stornierungsgrund-ID (leer lassen zum direkten Löschen):'
   );
-  await deleteBooking(Id, reason ? Number(reason) : null);
+  if (reasonInput === null) return; // Abbrechen gedrückt
+
+  await deleteBooking(Id, reasonInput ? Number(reasonInput) : null);
   await Load();
 };
 
@@ -72,14 +76,6 @@ const FilteredBookings = computed(() => {
     if (FilterExpired.value === 'expired') {
       if (!B.ActualEndDate || new Date(B.ActualEndDate) >= today) return false;
     }
-
-    // Location-Filter
-    if (
-      FilterLocationId.value &&
-      String(B.LocationId) !== FilterLocationId.value
-    )
-      return false;
-
     return true;
   });
 });
@@ -93,7 +89,10 @@ const FilteredBookings = computed(() => {
     <div class="toolbar">
       <select v-model="FilterParticipantId">
         <option value="">Alle Teilnehmer</option>
-        <option v-for="P in Participants" :key="P.ParticipantId" :value="P.ParticipantId"
+        <option
+          v-for="P in Participants"
+          :key="P.ParticipantId"
+          :value="P.ParticipantId"
         >
           {{ P.FirstName }} {{ P.LastName }}
         </option>
@@ -110,12 +109,6 @@ const FilteredBookings = computed(() => {
         <option value="active">Aktiv</option>
         <option value="expired">Abgelaufen</option>
       </select>
-
-      <input
-        v-model="FilterLocationId"
-        placeholder="Location ID..."
-        style="width: 120px"
-      />
     </div>
 
     <table>
@@ -145,13 +138,15 @@ const FilteredBookings = computed(() => {
           <td>{{ B.EducationalGoal || '-' }}</td>
           <td>{{ B.Remarks || '-' }}</td>
           <td>
+            <button class="btn-detail" @click="props.OnSelect(B)">
+              Details
+            </button>
             <button class="btn-edit" @click="props.OnEdit(B)">
               Bearbeiten
             </button>
             <button class="btn-delete" @click="Remove(B.BookingId)">
               Löschen
             </button>
-            <button class="btn-edit" @click="props.OnSelect(B)">Details</button>
           </td>
         </tr>
       </tbody>

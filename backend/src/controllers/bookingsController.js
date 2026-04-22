@@ -1,14 +1,35 @@
-// this file contains the functions that run when a route is hit
-// it receives the request from the route file, asks the service for data, and sends the response back
-// it never talks to the database directly — that is the service's job
-
 const {
+  getBookingsFromDB,
+  getBookingByIdFromDB,
   createBookingInDB,
   updateBookingInDB,
   addBookingItemsInDB,
   deleteBookingFromDB,
-  getBookingsFromDB,
 } = require('../services/bookingsService');
+
+async function getBookings(req, res) {
+  try {
+    const bookings = await getBookingsFromDB();
+    res.json(bookings);
+  } catch (err) {
+    console.error('getBookings error:', err);
+    res.status(500).json({ error: 'Failed to fetch bookings' });
+  }
+}
+
+async function getBookingById(req, res) {
+  try {
+    const { id } = req.params;
+    const booking = await getBookingByIdFromDB(id);
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.json(booking);
+  } catch (err) {
+    console.error('getBookingById error:', err);
+    res.status(500).json({ error: 'Failed to fetch booking' });
+  }
+}
 
 async function createBooking(req, res) {
   try {
@@ -16,7 +37,7 @@ async function createBooking(req, res) {
     const newBooking = await createBookingInDB(bookingData);
     res.status(201).json(newBooking);
   } catch (err) {
-    console.error('createBooking error:', err); // ← hinzufügen
+    console.error('createBooking error:', err);
     res.status(500).json({ error: 'Failed to create booking' });
   }
 }
@@ -35,29 +56,17 @@ async function updateBooking(req, res) {
   }
 }
 
-async function getBookings(req, res) {
-  try {
-    const bookings = await getBookingsFromDB();
-    res.json(bookings);
-  } catch (err) {
-    console.error('getBookings error:', err);
-    res.status(500).json({ error: 'Failed to fetch bookings' });
-  }
-}
-
-// POST /api/bookings/:id/items
-// body: { moduleIds: [1, 2, 3] } for manual selection
-// body: { macroPackageId: 7 }    for automated package selection
 async function addBookingItems(req, res) {
   try {
     const { id } = req.params;
-    const { moduleIds, macroPackageId } = req.body;
-    const result = await addBookingItemsInDB(id, { moduleIds, macroPackageId });
+    const { items } = req.body;
+    const result = await addBookingItemsInDB(id, items);
     res.status(201).json(result);
   } catch (err) {
     if (err.code === 'BOOKING_NOT_FOUND') {
       return res.status(404).json({ error: 'Booking not found' });
     }
+    console.error('addBookingItems error:', err);
     res.status(500).json({ error: 'Failed to add booking items' });
   }
 }
@@ -78,6 +87,7 @@ async function deleteBooking(req, res) {
 
 module.exports = {
   getBookings,
+  getBookingById,
   createBooking,
   updateBooking,
   addBookingItems,
