@@ -956,8 +956,314 @@ tbody tr:hover {
     border-color: var(--cyan);
 }
 
+/* ============================================================
+   BADGES
+============================================================ */
+.badge-active {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+
+.badge-expired {
+    background: rgba(231, 76, 60, 0.12);
+    color: #ff4d6d;
+    border: 1px solid rgba(255, 77, 109, 0.3);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+
+.badge-deactivated {
+    background: rgba(120, 180, 255, 0.08);
+    color: rgba(215, 230, 255, 0.5);
+    border: 1px solid rgba(120, 180, 255, 0.15);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+
 .light .badge-deactivated {
     background: rgba(100, 110, 130, 0.12) !important;
     color: #5a6270 !important;
     border: 1px solid rgba(100, 110, 130, 0.35) !important;
+}
+
+/* ============================================================
+   MODAL
+============================================================ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+}
+
+.modal {
+    background: rgba(5, 8, 20, 0.97);
+    border: 1px solid rgba(120, 180, 255, 0.18);
+    border-radius: 18px;
+    padding: 24px 28px;
+    min-width: 300px;
+    max-width: 420px;
+    box-shadow: 0 0 40px rgba(74, 163, 255, 0.15);
+    color: #d7e6ff;
+}
+
+.modal p {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-confirm {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 77, 109, 0.4);
+    background: rgba(255, 77, 109, 0.12);
+    color: #ff4d6d;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-confirm:hover {
+    box-shadow: 0 0 14px rgba(255, 77, 109, 0.35);
+    border-color: rgba(255, 77, 109, 0.65);
+}
+
+.btn-modal-cancel {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(124, 247, 255, 0.15);
+    background: rgba(74, 163, 255, 0.06);
+    color: rgba(215, 230, 255, 0.6);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-modal-cancel:hover {
+    border-color: rgba(124, 247, 255, 0.3);
+    color: #7cf7ff;
+}
+
+.btn-success {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(124, 247, 255, 0.4);
+    background: rgba(124, 247, 255, 0.08);
+    color: #7cf7ff;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-success:hover {
+    box-shadow: 0 0 14px rgba(124, 247, 255, 0.3);
+}
+
+/* ============================================================
+   INLINE ACTION BUTTONS (in group titles)
+============================================================ */
+.btn-add-exam,
+.btn-add-module {
+    margin-left: 10px;
+    padding: 2px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(124, 247, 255, 0.3);
+    background: rgba(124, 247, 255, 0.08);
+    color: var(--cyan);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.btn-add-exam:hover,
+.btn-add-module:hover {
+    box-shadow: 0 0 10px rgba(124, 247, 255, 0.25);
+}
+
+/* ============================================================
+   MODULE TAGS (CourseDetail)
+============================================================ */
+.module-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 0 2px;
+}
+
+.module-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(124, 247, 255, 0.15);
+    background: rgba(124, 247, 255, 0.05);
+    font-size: 12px;
+    color: var(--text);
+}
+
+.module-tag--inactive {
+    opacity: 0.4;
+    border-color: rgba(120, 180, 255, 0.1);
+    background: transparent;
+}
+
+.btn-delete-modules {
+    margin-left: 8px;
+    padding: 2px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 77, 109, 0.3);
+    background: rgba(255, 77, 109, 0.08);
+    color: #ff4d6d;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.btn-delete-modules:hover {
+    box-shadow: 0 0 10px rgba(255, 77, 109, 0.25);
+}
+
+/* ============================================================
+   EXAM DETAIL (ModuleDetail)
+============================================================ */
+.exam-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.exam-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.exam-add-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 6px 0;
+}
+
+.exam-add-row input {
+    flex: 1;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-input);
+    background: var(--bg-input);
+    color: var(--text);
+    font-size: 12px;
+    outline: none;
+}
+
+.exam-add-row input:focus {
+    border-color: var(--cyan);
+}
+
+.btn-exam-save {
+    background: rgba(46, 204, 113, 0.12);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
+    border-radius: 6px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: box-shadow 0.2s;
+}
+
+.btn-exam-save:hover {
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
+}
+
+.btn-exam-cancel {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+}
+
+.btn-exam-delete {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 1px 4px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.btn-exam-delete:hover {
+    color: #ff4d6d;
+}
+
+/* ============================================================
+   EXAM FORM (ModuleForm)
+============================================================ */
+.field-hint {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+}
+
+.exam-empty {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 6px 0;
+}
+
+.exam-name {
+    flex: 1;
+}
+
+.exam-type {
+    width: 90px;
+    flex-shrink: 0;
+}
+
+.btn-remove-exam {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.btn-remove-exam:hover {
+    color: #ff4d6d;
 }
