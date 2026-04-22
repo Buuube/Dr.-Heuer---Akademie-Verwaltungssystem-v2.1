@@ -5,7 +5,6 @@ import { getBookingById } from '../../services/bookingService';
 const props = defineProps({
   Booking: Object,
 });
-
 const emit = defineEmits(['edit', 'close']);
 
 const Detail = ref(null);
@@ -15,10 +14,8 @@ const formatDate = (date) => {
   return new Date(date).toISOString().slice(0, 10);
 };
 
-// Module gruppiert nach Kurs
 const groupedModules = () => {
   if (!Detail.value?.Modules?.length) return [];
-
   const groups = {};
   for (const M of Detail.value.Modules) {
     const key = M.CourseId ?? 'einzeln';
@@ -48,64 +45,132 @@ watch(
 </script>
 
 <template>
-  <div v-if="Detail">
+  <div v-if="Detail" class="detail-panel">
     <h3>Buchung Details</h3>
 
-    <p><b>Buchungs-ID:</b> {{ Detail.BookingId }}</p>
-    <p><b>Teilnehmer:</b> {{ Detail.ParticipantName }}</p>
-    <p><b>Typ:</b> {{ Detail.BookingType }}</p>
-    <p><b>Unterschrieben:</b> {{ Detail.IsSigned ? 'Ja' : 'Nein' }}</p>
+    <div class="detail-grid">
+      <div class="detail-group">
+        <div class="detail-group-title">Buchung</div>
+        <div class="detail-row">
+          <span class="detail-label">Booking-ID</span>
+          <span>{{ Detail.BookingId }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Teilnehmer</span>
+          <span>{{ Detail.ParticipantName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Typ</span>
+          <span>{{ Detail.BookingType || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Bildungsziel</span>
+          <span>{{ Detail.EducationalGoal || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Starttermin</span>
+          <span>{{ Detail.StartTerm || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Laufzeit</span>
+          <span>{{ Detail.Duration || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Unterschrieben</span>
+          <span>{{ Detail.IsSigned ? 'Ja' : 'Nein' }}</span>
+        </div>
+      </div>
 
-    <hr />
+      <div class="detail-group">
+        <div class="detail-group-title">Zeitraum</div>
+        <div class="detail-row">
+          <span class="detail-label">Start (geplant)</span>
+          <span>{{ formatDate(Detail.PlannedStartDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Ende (geplant)</span>
+          <span>{{ formatDate(Detail.PlannedEndDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Start (tatsächlich)</span>
+          <span>{{ formatDate(Detail.ActualStartDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Ende (tatsächlich)</span>
+          <span>{{ formatDate(Detail.ActualEndDate) }}</span>
+        </div>
+      </div>
 
-    <p><b>Start (geplant):</b> {{ formatDate(Detail.PlannedStartDate) }}</p>
-    <p><b>Ende (geplant):</b> {{ formatDate(Detail.PlannedEndDate) }}</p>
-    <p><b>Start (tatsächlich):</b> {{ formatDate(Detail.ActualStartDate) }}</p>
-    <p><b>Ende (tatsächlich):</b> {{ formatDate(Detail.ActualEndDate) }}</p>
-    <p><b>Laufzeit:</b> {{ Detail.Duration || '-' }}</p>
-    <p><b>Starttermin:</b> {{ Detail.StartTerm || '-' }}</p>
+      <div class="detail-group">
+        <div class="detail-group-title">Finanzen</div>
+        <div class="detail-row">
+          <span class="detail-label">Monatliche Rate</span>
+          <span>{{ Detail.MonthlyRate || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Location</span>
+          <span>{{ Detail.LocationName || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Bemerkungen</span>
+          <span>{{ Detail.Remarks || '-' }}</span>
+        </div>
+      </div>
 
-    <hr />
-
-    <p><b>Bildungsziel:</b> {{ Detail.EducationalGoal || '-' }}</p>
-    <p><b>Monatliche Rate:</b> {{ Detail.MonthlyRate || '-' }}</p>
-    <p><b>Bemerkungen:</b> {{ Detail.Remarks || '-' }}</p>
-    <p><b>Location:</b> {{ Detail.LocationName || '-' }}</p>
-
-    <hr />
-
-    <h4>Gebuchte Module</h4>
-
-    <div v-if="!Detail.Modules?.length">
-      <p>Keine Module gebucht.</p>
+      <div class="detail-group">
+        <div class="detail-group-title">Gebuchte Module</div>
+        <div
+          v-if="!Detail.Modules?.length"
+          style="font-size: 13px; color: var(--muted)"
+        >
+          Keine Module gebucht.
+        </div>
+        <div
+          v-for="G in groupedModules()"
+          :key="G.courseId ?? 'einzeln'"
+          style="margin-bottom: 10px"
+        >
+          <div
+            style="
+              font-size: 11px;
+              font-weight: 600;
+              color: var(--cyan);
+              margin-bottom: 4px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            "
+          >
+            {{ G.courseName }}
+          </div>
+          <div
+            v-for="M in G.modules"
+            :key="M.BookingModuleId"
+            style="font-size: 13px; color: var(--text); margin-bottom: 3px"
+          >
+            {{ M.ModuleCodeId }} — {{ M.ModuleName ?? M.ModuleCodeId }}
+            <span
+              v-if="M.SessionStartDate"
+              style="color: var(--muted); font-size: 11px"
+            >
+              ({{ formatDate(M.SessionStartDate) }} –
+              {{ formatDate(M.SessionEndDate) }})
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div
-      v-for="G in groupedModules()"
-      :key="G.courseId ?? 'einzeln'"
-      style="margin-bottom: 12px"
-    >
-      <p>
-        <b>{{ G.courseName }}</b>
-      </p>
-      <ul>
-        <li v-for="M in G.modules" :key="M.BookingModuleId">
-          {{ M.ModuleCodeId }} — {{ M.ModuleName ?? M.ModuleCodeId }}
-          <span v-if="M.SessionStartDate">
-            ({{ formatDate(M.SessionStartDate) }} –
-            {{ formatDate(M.SessionEndDate) }})
-          </span>
-        </li>
-      </ul>
+    <div class="detail-actions">
+      <button class="btn-edit" @click="emit('edit')">Bearbeiten</button>
+      <button class="btn-delete" @click="emit('close')">Schließen</button>
     </div>
-
-    <hr />
-
-    <button @click="emit('edit')">Bearbeiten</button>
-    <button @click="emit('close')">Schließen</button>
   </div>
 
-  <div v-else>
-    <p>Lade...</p>
+  <div
+    v-else
+    class="detail-panel"
+    style="padding: 20px; color: var(--muted); font-size: 13px"
+  >
+    Lade...
   </div>
 </template>
