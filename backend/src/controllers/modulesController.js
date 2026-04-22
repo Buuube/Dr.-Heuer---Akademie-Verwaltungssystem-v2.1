@@ -46,6 +46,8 @@ async function updateModule(req, res) {
     }
     res.json(updatedModule);
   } catch (err) {
+    console.log('updateModule error:', err);
+    console.error('updateModule error:', err);
     res.status(500).json({ error: 'Failed to update module' });
   }
 }

@@ -60,14 +60,11 @@ const close = () => {
 };
 
 const save = async (formData) => {
+  console.log('formData:', formData);
   try {
     const { exams = [], ...moduleData } = formData;
-    if (
-      moduleData.ModuleCode &&
-      selected.value?.ModuleCode === moduleData.ModuleCode &&
-      showDetail.value
-    ) {
-      await updateModule(moduleData.ModuleCode, moduleData);
+    if (moduleData.ModuleCodeId) {
+      await updateModule(moduleData.ModuleCodeId, moduleData);
       const existing = await getExams(moduleData.ModuleCode);
       const existingIds = new Set(existing.map((e) => e.ModuleExamId));
       const incomingIds = new Set(
