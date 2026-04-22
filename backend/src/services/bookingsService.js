@@ -89,6 +89,48 @@ async function updateBookingInDB(id, bookingData) {
   return result.recordset[0];
 }
 
+async function getBookingByIdFromDB(id) {
+  const pool = await connectDB();
+
+  const bookingResult = await pool.request().input('BookingId', sql.Int, id)
+    .query(`
+      SELECT 
+        b.*,
+        p.FirstName + ' ' + p.LastName AS ParticipantName,
+        l.Name AS LocationName
+      FROM Booking b
+      LEFT JOIN Participant p ON b.ParticipantId = p.ParticipantId
+      LEFT JOIN Location l ON b.LocationId = l.LocationId
+      WHERE b.BookingId = @BookingId
+    `);
+
+  if (bookingResult.recordset.length === 0) return null;
+  const booking = bookingResult.recordset[0];
+
+  const modulesResult = await pool.request().input('BookingId', sql.Int, id)
+    .query(`
+      SELECT 
+        bm.BookingModuleId,
+        bm.ModuleCodeId,
+        bm.ModuleSessionId,
+        bm.AttemptNumber,
+        bm.SeatNumber,
+        m.Name AS ModuleName,
+        m.CourseId,
+        c.Name AS CourseName,
+        ms.StartDate AS SessionStartDate,
+        ms.EndDate AS SessionEndDate
+      FROM BookingModule bm
+      LEFT JOIN Module m ON bm.ModuleCodeId = m.ModuleCodeId
+      LEFT JOIN Course c ON m.CourseId = c.CourseId
+      LEFT JOIN ModuleSession ms ON bm.ModuleSessionId = ms.ModuleSessionId
+      WHERE bm.BookingId = @BookingId
+    `);
+
+  booking.Modules = modulesResult.recordset;
+  return booking;
+}
+
 async function addBookingItemsInDB(bookingId, items) {
   const pool = await connectDB();
 
@@ -142,6 +184,7 @@ async function deleteBookingFromDB(id, cancellationReasonId) {
 
 module.exports = {
   getBookingsFromDB,
+  getBookingByIdFromDB, // ← neu
   createBookingInDB,
   updateBookingInDB,
   addBookingItemsInDB,

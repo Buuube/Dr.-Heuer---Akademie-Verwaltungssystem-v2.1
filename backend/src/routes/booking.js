@@ -6,17 +6,19 @@ const express = require('express');
 const router = express.Router();
 
 const {
+  getBookings,
+  getBookingById, // ← neu
   createBooking,
   updateBooking,
   addBookingItems,
   deleteBooking,
-  getBookings,
 } = require('../controllers/bookingsController');
 
-router.post('/', createBooking);
 router.get('/', getBookings);
+router.get('/:id', getBookingById); // ← neu
+router.post('/', createBooking);
 router.put('/:id', updateBooking);
-router.post('/:id/items', addBookingItems); // add modules (single or package) to a booking
+router.post('/:id/items', addBookingItems);
 router.delete('/:id', deleteBooking);
 
 module.exports = router;
