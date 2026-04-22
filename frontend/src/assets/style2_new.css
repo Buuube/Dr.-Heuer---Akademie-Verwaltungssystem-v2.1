@@ -593,6 +593,7 @@ body {
     flex-shrink: 0;
 }
 
+
 .toolbar input,
 .toolbar select {
     flex: 1;

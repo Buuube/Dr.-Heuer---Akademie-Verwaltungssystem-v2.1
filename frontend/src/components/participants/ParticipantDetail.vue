@@ -27,7 +27,7 @@ const emit = defineEmits(['edit', 'close']);
           <span class="detail-label">Erstkontakt</span>
           <span>
             {{
-              Participant?.DateOfBirth
+              Participant?.FirstContactDate
                 ? new Date(Participant.FirstContactDate).toLocaleDateString(
                     'de-DE'
                   )
@@ -133,7 +133,7 @@ const emit = defineEmits(['edit', 'close']);
           <span class="detail-label">Startdatum</span>
           <span>
             {{
-              Participant?.DateOfBirth
+              Participant?.EmploymentStartDate
                 ? new Date(Participant.EmploymentStartDate).toLocaleDateString(
                     'de-DE'
                   )
