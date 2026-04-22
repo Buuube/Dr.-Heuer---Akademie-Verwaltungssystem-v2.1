@@ -5,9 +5,6 @@
         <div class="logo-wrapper">
           <img src="@/assets/logo.png" class="Logo" style="height: 75px" />
         </div>
-        <div class="brand-text">
-          <span class="brand-name">Verwaltungssystem</span>
-        </div>
       </div>
 
       <ul class="nav-links">
@@ -64,8 +61,8 @@ const links = [
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(120, 180, 255, 0.18);
   border: 1px solid rgba(120, 180, 255, 0.18); /* rundum Rahmen */
-  font-family: 'DM Sans', sans-serif;
-  border-radius: 10px;
+  font-family: system-ui, sans-serif;
+  border-radius: 0 0 10px 10px;
   box-sizing: border-box;
 }
 
@@ -101,19 +98,6 @@ const links = [
   height: 28px;
   object-fit: contain;
   filter: brightness(0) invert(1);
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.brand-name {
-  font-size: 20px;
-  font-weight: 600;
-  color: #f1f5f9;
-  letter-spacing: -0.01em;
 }
 
 /* ── Nav Links ── */

@@ -1,20 +1,51 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { getBookings, deleteBooking } from '../../services/bookingService';
+import { ref, computed, watch, onMounted } from 'vue';
+import { getBookings } from '../../services/bookingService';
 import { getParticipants } from '../../services/participantService';
 
 const props = defineProps({
-  OnEdit: Function,
-  OnSelect: Function,
+  onEdit: Function,
+  onSelect: Function,
+  onDelete: Function,
 });
 
 const Bookings = ref([]);
 const Participants = ref([]);
+const Search = ref('');
+const FilterSigned = ref('all');
+const FilterExpired = ref('all');
+const sortKey = ref('');
+const sortDir = ref(1);
+const pageSize = ref(10);
+const currentPage = ref(1);
 
-// Filter
-const FilterParticipantId = ref('');
-const FilterSigned = ref('all'); // all | true | false
-const FilterExpired = ref('all'); // all | active | expired
+const today = new Date();
+
+const toggleSort = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value *= -1;
+  } else {
+    sortKey.value = key;
+    sortDir.value = 1;
+  }
+};
+
+const sortIcon = (key) => {
+  if (sortKey.value !== key) return '↕';
+  return sortDir.value === 1 ? '↑' : '↓';
+};
+
+const participantName = (id) => {
+  const p = Participants.value.find(
+    (p) => p.ParticipantId === id || p.Id === id
+  );
+  return p ? `${p.FirstName} ${p.LastName}` : id;
+};
+
+const formatDate = (date) => {
+  if (!date) return '-';
+  return new Date(date).toISOString().slice(0, 10);
+};
 
 const Load = async () => {
   Bookings.value = await getBookings();
@@ -23,128 +54,195 @@ const Load = async () => {
 
 onMounted(Load);
 
-const Remove = async (Id) => {
-  const reason = prompt(
-    'Stornierungsgrund-ID (leer lassen zum direkten Löschen):'
-  );
-  await deleteBooking(Id, reason ? Number(reason) : null);
-  await Load();
-};
-
-// Laufzeit in Monaten berechnen
-const calcDuration = (start, end) => {
-  if (!start || !end) return '-';
-  const s = new Date(start);
-  const e = new Date(end);
-  const months =
-    (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
-  return months > 0 ? `${months} Mon.` : '-';
-};
-
-const formatDate = (date) => {
-  if (!date) return '-';
-  return new Date(date).toISOString().slice(0, 10);
-};
-
-const today = new Date();
+watch([Search, FilterSigned, FilterExpired, sortKey, sortDir, pageSize], () => {
+  currentPage.value = 1;
+});
 
 const FilteredBookings = computed(() => {
-  return Bookings.value.filter((B) => {
-    // Teilnehmer-Filter
-    if (
-      FilterParticipantId.value &&
-      String(B.ParticipantId) !== String(FilterParticipantId.value)
-    )
-      return false;
+  let list = [...Bookings.value];
 
-    // Unterschrieben-Filter
-    if (
-      FilterSigned.value !== 'all' &&
-      String(B.IsSigned) !== FilterSigned.value
-    )
-      return false;
+  if (Search.value) {
+    const s = Search.value.toLowerCase();
+    list = list.filter((b) =>
+      `${participantName(b.ParticipantId)} ${b.EducationalGoal ?? ''} ${b.BookingId}`
+        .toLowerCase()
+        .includes(s)
+    );
+  }
 
-    // Abgelaufen-Filter
-    if (FilterExpired.value === 'active') {
-      if (B.ActualEndDate && new Date(B.ActualEndDate) < today) return false;
-    }
-    if (FilterExpired.value === 'expired') {
-      if (!B.ActualEndDate || new Date(B.ActualEndDate) >= today) return false;
-    }
-    return true;
-  });
+  if (FilterSigned.value !== 'all') {
+    list = list.filter((b) => String(b.IsSigned) === FilterSigned.value);
+  }
+
+  if (FilterExpired.value === 'active') {
+    list = list.filter(
+      (b) => !b.ActualEndDate || new Date(b.ActualEndDate) >= today
+    );
+  }
+  if (FilterExpired.value === 'expired') {
+    list = list.filter(
+      (b) => b.ActualEndDate && new Date(b.ActualEndDate) < today
+    );
+  }
+
+  if (sortKey.value) {
+    list.sort((a, b) => {
+      let valA = a[sortKey.value] ?? '';
+      let valB = b[sortKey.value] ?? '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      return valA < valB ? -sortDir.value : valA > valB ? sortDir.value : 0;
+    });
+  }
+
+  return list;
+});
+
+const totalCount = computed(() => FilteredBookings.value.length);
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(FilteredBookings.value.length / pageSize.value))
+);
+const PagedBookings = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return FilteredBookings.value.slice(start, start + pageSize.value);
 });
 </script>
 
 <template>
-  <div>
+  <div class="list-panel">
     <h3>Buchungen</h3>
 
-    <!-- FILTER-LEISTE -->
     <div class="toolbar">
-      <select v-model="FilterParticipantId">
-        <option value="">Alle Teilnehmer</option>
-        <option
-          v-for="P in Participants"
-          :key="P.ParticipantId"
-          :value="P.ParticipantId"
-        >
-          {{ P.FirstName }} {{ P.LastName }}
-        </option>
-      </select>
+      <input
+        v-model="Search"
+        placeholder="Suche nach Teilnehmer, Bildungsziel …"
+      />
 
       <select v-model="FilterSigned">
-        <option value="all">Alle (Unterschrift)</option>
+        <option value="all">Unterschrift: -</option>
         <option value="true">Unterschrieben</option>
         <option value="false">Nicht unterschrieben</option>
       </select>
 
       <select v-model="FilterExpired">
-        <option value="all">Alle (Status)</option>
+        <option value="all">Status: -</option>
         <option value="active">Aktiv</option>
         <option value="expired">Abgelaufen</option>
       </select>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Booking ID</th>
-          <th>Start (geplant)</th>
-          <th>Start (tatsächlich)</th>
-          <th>Ende (geplant)</th>
-          <th>Ende (tatsächlich)</th>
-          <th>Laufzeit</th>
-          <th>Rate (mtl.)</th>
-          <th>Bildungsziel</th>
-          <th>Bemerkungen</th>
-          <th>Aktionen</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="B in FilteredBookings" :key="B.BookingId">
-          <td>{{ B.BookingId }}</td>
-          <td>{{ formatDate(B.PlannedStartDate) }}</td>
-          <td>{{ formatDate(B.ActualStartDate) }}</td>
-          <td>{{ formatDate(B.PlannedEndDate) }}</td>
-          <td>{{ formatDate(B.ActualEndDate) }}</td>
-          <td>{{ B.Duration }}</td>
-          <td>{{ B.MonthlyRate || '-' }}</td>
-          <td>{{ B.EducationalGoal || '-' }}</td>
-          <td>{{ B.Remarks || '-' }}</td>
-          <td>
-            <button class="btn-detail" @click="props.OnSelect(B)">
-              Details
-            </button>
-            <button class="btn-edit" @click="props.OnEdit(B)">
-              Bearbeiten
-            </button>
-            <button class="btn-delete" @click="Remove(B.BookingId)">
-              Löschen
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th @click="toggleSort('BookingId')" class="sortable">
+              ID <span class="sort-icon">{{ sortIcon('BookingId') }}</span>
+            </th>
+            <th>Teilnehmer</th>
+            <th @click="toggleSort('PlannedStartDate')" class="sortable">
+              Start (geplant)
+              <span class="sort-icon">{{ sortIcon('PlannedStartDate') }}</span>
+            </th>
+            <th @click="toggleSort('PlannedEndDate')" class="sortable">
+              Ende (geplant)
+              <span class="sort-icon">{{ sortIcon('PlannedEndDate') }}</span>
+            </th>
+            <th>Laufzeit</th>
+            <th @click="toggleSort('MonthlyRate')" class="sortable">
+              Rate (mtl.)
+              <span class="sort-icon">{{ sortIcon('MonthlyRate') }}</span>
+            </th>
+            <th>Bildungsziel</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="B in PagedBookings" :key="B.BookingId">
+            <td>{{ B.BookingId }}</td>
+            <td>{{ participantName(B.ParticipantId) }}</td>
+            <td>{{ formatDate(B.PlannedStartDate) }}</td>
+            <td>{{ formatDate(B.PlannedEndDate) }}</td>
+            <td>{{ B.Duration || '-' }}</td>
+            <td>{{ B.MonthlyRate || '-' }}</td>
+            <td>{{ B.EducationalGoal || '-' }}</td>
+            <td>
+              <button class="btn-detail" @click="props.onSelect?.(B)">
+                Details
+              </button>
+              <button class="btn-edit" @click="props.onEdit?.(B)">
+                Bearbeiten
+              </button>
+              <button class="btn-delete" @click="props.onDelete?.(B)">
+                Löschen
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <div class="pagination-info">
+        {{ totalCount }} Einträge – Seite {{ currentPage }} von {{ totalPages }}
+      </div>
+      <div class="pagination-controls">
+        <button :disabled="currentPage === 1" @click="currentPage = 1">
+          «
+        </button>
+        <button :disabled="currentPage === 1" @click="currentPage--">‹</button>
+        <button :disabled="currentPage === totalPages" @click="currentPage++">
+          ›
+        </button>
+        <button
+          :disabled="currentPage === totalPages"
+          @click="currentPage = totalPages"
+        >
+          »
+        </button>
+      </div>
+      <div class="pagination-size">
+        <select v-model="pageSize">
+          <option :value="10">10 pro Seite</option>
+          <option :value="25">25 pro Seite</option>
+          <option :value="50">50 pro Seite</option>
+        </select>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+th:nth-child(1),
+td:nth-child(1) {
+  width: 60px;
+}
+th:nth-child(2),
+td:nth-child(2) {
+  width: 160px;
+}
+th:nth-child(3),
+td:nth-child(3) {
+  width: 130px;
+}
+th:nth-child(4),
+td:nth-child(4) {
+  width: 130px;
+}
+th:nth-child(5),
+td:nth-child(5) {
+  width: 90px;
+}
+th:nth-child(6),
+td:nth-child(6) {
+  width: 100px;
+}
+th:nth-child(7),
+td:nth-child(7) {
+  width: 160px;
+}
+th:nth-child(8),
+td:nth-child(8) {
+  width: 240px;
+  white-space: nowrap;
+}
+</style>

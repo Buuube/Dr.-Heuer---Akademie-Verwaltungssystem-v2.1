@@ -19,21 +19,6 @@ onMounted(async () => {
   teachingFormats.value = await getTeachingFormats();
 });
 
-watch(
-  () => props.module,
-  async (val) => {
-    if (val?.ModuleCode) {
-      exams.value = await getExams(val.ModuleCode);
-    } else {
-      exams.value = [];
-    }
-  },
-  { immediate: true }
-);
-
-const addExam = () => exams.value.push({ ExamName: '', ExamType: 'intern' });
-const removeExam = (i) => exams.value.splice(i, 1);
-
 const empty = () => ({
   ExternalModuleCode: '',
   Name: '',
@@ -50,11 +35,15 @@ const form = ref(empty());
 
 watch(
   () => props.module,
-  (val) => {
+  async (val) => {
     form.value = val ? { ...empty(), ...val } : empty();
+    exams.value = val?.ModuleCode ? await getExams(val.ModuleCode) : [];
   },
   { immediate: true }
 );
+
+const addExam = () => exams.value.push({ ExamName: '', ExamType: 'intern' });
+const removeExam = (i) => exams.value.splice(i, 1);
 
 const errors = ref({});
 
@@ -73,8 +62,6 @@ const submit = () => {
     exams: exams.value.filter((e) => e.ExamName.trim()),
   });
 };
-
-defineExpose({ submitForm: submit });
 </script>
 
 <template>
@@ -241,68 +228,10 @@ textarea:focus {
   box-shadow: 0 0 15px rgba(124, 247, 255, 0.25);
 }
 
-.field-hint {
-  display: block;
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 4px;
-  line-height: 1.6;
-  letter-spacing: 0.3px;
-}
-
-.btn-add-exam {
-  margin-left: 10px;
-  padding: 2px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(124, 247, 255, 0.3);
-  background: rgba(124, 247, 255, 0.08);
-  color: var(--cyan);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: box-shadow 0.2s;
-}
-
-.btn-add-exam:hover {
-  box-shadow: 0 0 10px rgba(124, 247, 255, 0.25);
-}
-
-.exam-empty {
-  font-size: 12px;
-  color: var(--muted);
-  margin: 6px 0;
-}
-
 .exam-row {
   display: flex;
   gap: 6px;
   align-items: center;
   margin-bottom: 6px;
-}
-
-.exam-name {
-  flex: 1;
-}
-
-.exam-type {
-  width: 90px;
-  flex-shrink: 0;
-}
-
-.btn-remove-exam {
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 13px;
-  padding: 2px 4px;
-  line-height: 1;
-  transition: color 0.2s;
-}
-
-.btn-remove-exam:hover {
-  color: #ff4d6d;
 }
 </style>

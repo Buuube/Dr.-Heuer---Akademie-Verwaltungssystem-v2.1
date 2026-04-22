@@ -24,7 +24,6 @@ const showDetail = ref(false);
 const reloadKey = ref(0);
 
 const confirmPending = ref(null);
-const showConfirm = ref(false);
 
 onMounted(() => {
   if (route.query.openForm && route.query.courseId) {
@@ -98,11 +97,9 @@ const save = async (formData) => {
 
 const remove = (moduleCode) => {
   confirmPending.value = moduleCode;
-  showConfirm.value = true;
 };
 
 const confirmRemove = async () => {
-  showConfirm.value = false;
   try {
     await deleteModule(confirmPending.value);
     selected.value = null;
@@ -116,7 +113,6 @@ const confirmRemove = async () => {
 };
 
 const cancelRemove = () => {
-  showConfirm.value = false;
   confirmPending.value = null;
 };
 </script>
@@ -159,7 +155,7 @@ const cancelRemove = () => {
     </div>
 
     <!-- Bestätigungs-Modal -->
-    <div v-if="showConfirm" class="modal-overlay">
+    <div v-if="confirmPending" class="modal-overlay">
       <div class="modal">
         <p>Sicher, dass Sie dieses Modul deaktivieren möchten?</p>
         <div class="modal-actions">
@@ -174,74 +170,3 @@ const cancelRemove = () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(4px);
-}
-
-.modal {
-  background: rgba(5, 8, 20, 0.97);
-  border: 1px solid rgba(120, 180, 255, 0.18);
-  border-radius: 18px;
-  padding: 24px 28px;
-  min-width: 300px;
-  max-width: 420px;
-  box-shadow: 0 0 40px rgba(74, 163, 255, 0.15);
-  color: #d7e6ff;
-}
-
-.modal p {
-  margin: 0 0 20px 0;
-  font-size: 14px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.btn-confirm {
-  padding: 8px 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 77, 109, 0.4);
-  background: rgba(255, 77, 109, 0.12);
-  color: #ff4d6d;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-confirm:hover {
-  box-shadow: 0 0 14px rgba(255, 77, 109, 0.35);
-  border-color: rgba(255, 77, 109, 0.65);
-}
-
-.btn-modal-cancel {
-  padding: 8px 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(124, 247, 255, 0.15);
-  background: rgba(74, 163, 255, 0.06);
-  color: rgba(215, 230, 255, 0.6);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-modal-cancel:hover {
-  border-color: rgba(124, 247, 255, 0.3);
-  color: #7cf7ff;
-}
-</style>
