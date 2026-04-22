@@ -49,7 +49,6 @@ watch(
     <h3>Buchung Details</h3>
 
     <div class="detail-grid">
-      <!-- Buchung -->
       <div class="detail-group">
         <div class="detail-group-title">Buchung</div>
         <div class="detail-row">
@@ -82,7 +81,6 @@ watch(
         </div>
       </div>
 
-      <!-- Zeitraum -->
       <div class="detail-group">
         <div class="detail-group-title">Zeitraum</div>
         <div class="detail-row">
@@ -103,7 +101,6 @@ watch(
         </div>
       </div>
 
-      <!-- Finanzen -->
       <div class="detail-group">
         <div class="detail-group-title">Finanzen</div>
         <div class="detail-row">
@@ -120,7 +117,6 @@ watch(
         </div>
       </div>
 
-      <!-- Module -->
       <div class="detail-group">
         <div class="detail-group-title">Gebuchte Module</div>
         <div
@@ -166,7 +162,7 @@ watch(
 
     <div class="detail-actions">
       <button class="btn-edit" @click="emit('edit')">Bearbeiten</button>
-      <button class="btn-cancel" @click="emit('close')">Schließen</button>
+      <button class="btn-delete" @click="emit('close')">Schließen</button>
     </div>
   </div>
 
