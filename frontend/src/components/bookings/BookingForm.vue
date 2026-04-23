@@ -4,6 +4,7 @@ import {
   createBooking,
   updateBooking,
   addBookingItems,
+  getBookingById,
 } from '../../services/bookingService';
 import { getParticipants } from '../../services/participantService';
 import { getCourses } from '../../services/courseService';
@@ -72,6 +73,9 @@ const BuchungsModus = ref('kurs');
 const SelectedCourseId = ref('');
 const SelectedSingleModuleId = ref('');
 
+// Bestehende Module beim Bearbeiten
+const ExistingModules = ref([]);
+
 const ModulesForCourse = computed(() =>
   AllModules.value.filter(
     (M) => String(M.CourseId) === String(SelectedCourseId.value)
@@ -120,10 +124,34 @@ onMounted(async () => {
   }
 });
 
+// Bestehende Modulauswahl beim Bearbeiten vorausfüllen
+const prefillModuleSelection = (modules) => {
+  if (!modules || modules.length === 0) return;
+
+  ExistingModules.value = modules;
+
+  // Prüfen ob alle Module zur gleichen CourseId gehören
+  const courseIds = [...new Set(modules.map((M) => M.CourseId))];
+
+  if (courseIds.length === 1 && courseIds[0]) {
+    // Alle Module gehören zum gleichen Kurs → Kurs-Modus
+    BuchungsModus.value = 'kurs';
+    SelectedCourseId.value = String(courseIds[0]);
+  } else if (modules.length === 1) {
+    // Einzelnes Modul
+    BuchungsModus.value = 'einzeln';
+    SelectedSingleModuleId.value = modules[0].ModuleCodeId;
+  }
+};
+
 watch(
   () => props.Booking,
-  (Val) => {
+  async (Val) => {
     errors.value = {};
+    ExistingModules.value = [];
+    SelectedCourseId.value = '';
+    SelectedSingleModuleId.value = '';
+
     if (Val) {
       Form.value = {
         ...createEmptyForm(),
@@ -133,11 +161,25 @@ watch(
         ActualStartDate: Val.ActualStartDate?.slice(0, 10) ?? '',
         ActualEndDate: Val.ActualEndDate?.slice(0, 10) ?? '',
       };
+
+      // Teilnehmer-Name vorausfüllen
       if (Val.ParticipantId && Participants.value.length > 0) {
         const P = Participants.value.find(
           (p) => p.ParticipantId === Val.ParticipantId
         );
         if (P) ParticipantSearch.value = `${P.FirstName} ${P.LastName}`;
+      }
+
+      // Bestehende Module laden wenn Bearbeiten
+      if (Val.BookingId) {
+        try {
+          const detail = await getBookingById(Val.BookingId);
+          if (detail?.Modules?.length > 0) {
+            prefillModuleSelection(detail.Modules);
+          }
+        } catch {
+          /* ignorieren */
+        }
       }
     } else {
       Form.value = createEmptyForm();
@@ -166,10 +208,16 @@ const validateForm = () => {
     e.PlannedStartDate = 'Startdatum ist erforderlich';
   if (!Form.value.PlannedEndDate)
     e.PlannedEndDate = 'Enddatum ist erforderlich';
-  if (BuchungsModus.value === 'kurs' && !SelectedCourseId.value)
-    e.SelectedCourseId = 'Kurs ist erforderlich';
-  if (BuchungsModus.value === 'einzeln' && !SelectedSingleModuleId.value)
-    e.SelectedSingleModuleId = 'Modul ist erforderlich';
+
+  // Modul-Validierung nur beim Neuanlegen oder wenn Auswahl geändert wurde
+  const isEditing = !!Form.value.BookingId;
+  if (!isEditing) {
+    if (BuchungsModus.value === 'kurs' && !SelectedCourseId.value)
+      e.SelectedCourseId = 'Kurs ist erforderlich';
+    if (BuchungsModus.value === 'einzeln' && !SelectedSingleModuleId.value)
+      e.SelectedSingleModuleId = 'Modul ist erforderlich';
+  }
+
   errors.value = e;
   return Object.keys(e).length === 0;
 };
@@ -178,6 +226,14 @@ const SessionResults = ref([]);
 
 const checkSessions = async () => {
   if (!validateForm()) return;
+
+  const isEditing = !!Form.value.BookingId;
+
+  // Beim Bearbeiten ohne neue Modulauswahl → direkt speichern ohne Session-Check
+  if (isEditing && ResolvedModules.value.length === 0) {
+    await Submit(true);
+    return;
+  }
 
   SessionResults.value = [];
 
@@ -229,7 +285,7 @@ const AllSessionsResolved = computed(() =>
   SessionResults.value.every((SR) => SR.selectedSessionId !== null)
 );
 
-const Submit = async () => {
+const Submit = async (skipItems = false) => {
   sessionErrors.value = [];
   try {
     let bookingId;
@@ -242,12 +298,11 @@ const Submit = async () => {
       bookingId = created.BookingId;
     }
 
-    const items = SessionResults.value.map((SR) => ({
-      moduleCodeId: SR.moduleCodeId,
-      moduleSessionId: SR.selectedSessionId,
-    }));
-
-    if (items.length > 0) {
+    if (!skipItems && SessionResults.value.length > 0) {
+      const items = SessionResults.value.map((SR) => ({
+        moduleCodeId: SR.moduleCodeId,
+        moduleSessionId: SR.selectedSessionId,
+      }));
       await addBookingItems(bookingId, items);
     }
 
@@ -426,6 +481,25 @@ const Submit = async () => {
         <div class="form-group">
           <div class="form-group-title">Module</div>
 
+          <!-- Beim Bearbeiten: bestehende Module anzeigen -->
+          <template v-if="Form.BookingId && ExistingModules.length > 0">
+            <div
+              style="font-size: 11px; color: var(--muted); margin-bottom: 6px"
+            >
+              Bestehende Module ({{ ExistingModules.length }}):
+            </div>
+            <div
+              v-for="M in ExistingModules"
+              :key="M.BookingModuleId"
+              style="font-size: 12px; color: var(--text); margin-bottom: 3px"
+            >
+              {{ M.ModuleCodeId }} — {{ M.ModuleName ?? M.ModuleCodeId }}
+            </div>
+            <div style="margin-top: 10px; font-size: 11px; color: var(--muted)">
+              Neue Module hinzufügen:
+            </div>
+          </template>
+
           <label>Buchungsmodus</label>
           <select v-model="BuchungsModus">
             <option value="kurs">Kurs buchen (alle Module)</option>
@@ -486,7 +560,13 @@ const Submit = async () => {
       </div>
 
       <div class="form-actions">
-        <button class="btn-submit" @click="checkSessions">Weiter →</button>
+        <button class="btn-submit" @click="checkSessions">
+          {{
+            Form.BookingId && ResolvedModules.length === 0
+              ? 'Speichern'
+              : 'Weiter →'
+          }}
+        </button>
         <button class="btn-cancel" @click="emit('cancel')">Abbrechen</button>
       </div>
     </template>
@@ -621,7 +701,7 @@ const Submit = async () => {
       <div class="form-actions">
         <button
           class="btn-submit"
-          @click="Submit"
+          @click="Submit(false)"
           :disabled="!AllSessionsResolved"
         >
           Buchung speichern
