@@ -26,13 +26,7 @@ async function createCourseInDB(courseData) {
         ? parseFloat(courseData.CostPerTeachingUnit)
         : null
     )
-    .input(
-      'TeachingUnitDuration',
-      sql.Int,
-      courseData.TeachingUnitDuration
-        ? parseInt(courseData.TeachingUnitDuration)
-        : null
-    )
+    .input('TeachingUnitDuration', sql.VarChar, courseData.TeachingUnitDuration)
     .input(
       'DailyTeachingHours',
       sql.Decimal(5, 2),
@@ -72,7 +66,7 @@ async function updateCourseInDB(id, courseData) {
       sql.Decimal(10, 2),
       courseData.CostPerTeachingUnit
     )
-    .input('TeachingUnitDuration', sql.Int, courseData.TeachingUnitDuration)
+    .input('TeachingUnitDuration', sql.VarChar, courseData.TeachingUnitDuration)
     .input(
       'DailyTeachingHours',
       sql.Decimal(5, 2),
@@ -85,7 +79,7 @@ async function updateCourseInDB(id, courseData) {
         ApprovalStartDate = @ApprovalStartDate,
         ApprovalEndDate = @ApprovalEndDate,
         CostPerTeachingUnit = @CostPerTeachingUnit,
- 
+
         TeachingUnitDuration = @TeachingUnitDuration,
         DailyTeachingHours = @DailyTeachingHours
       OUTPUT INSERTED.*
