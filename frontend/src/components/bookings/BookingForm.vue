@@ -30,6 +30,8 @@ const createEmptyForm = () => ({
   IsSigned: false,
   PlannedStartDate: '',
   PlannedEndDate: '',
+  ActualStartDate: '',
+  ActualEndDate: '',
   BookingType: '',
   EndReason: '',
   Remarks: '',
@@ -47,6 +49,25 @@ const AllModules = ref([]);
 const Rooms = ref([]);
 const Locations = ref([]);
 
+// Teilnehmer-Suche
+const ParticipantSearch = ref('');
+const ShowParticipantDropdown = ref(false);
+
+const FilteredParticipants = computed(() => {
+  const s = ParticipantSearch.value.toLowerCase();
+  if (!s) return Participants.value.slice(0, 20);
+  return Participants.value
+    .filter((P) => `${P.FirstName} ${P.LastName}`.toLowerCase().includes(s))
+    .slice(0, 20);
+});
+
+const selectParticipant = (P) => {
+  Form.value.ParticipantId = P.ParticipantId;
+  ParticipantSearch.value = `${P.FirstName} ${P.LastName}`;
+  ShowParticipantDropdown.value = false;
+};
+
+// Modul-Auswahl
 const BuchungsModus = ref('kurs');
 const SelectedCourseId = ref('');
 const SelectedSingleModuleId = ref('');
@@ -109,14 +130,32 @@ watch(
         ...Val,
         PlannedStartDate: Val.PlannedStartDate?.slice(0, 10) ?? '',
         PlannedEndDate: Val.PlannedEndDate?.slice(0, 10) ?? '',
+        ActualStartDate: Val.ActualStartDate?.slice(0, 10) ?? '',
+        ActualEndDate: Val.ActualEndDate?.slice(0, 10) ?? '',
       };
+      if (Val.ParticipantId && Participants.value.length > 0) {
+        const P = Participants.value.find(
+          (p) => p.ParticipantId === Val.ParticipantId
+        );
+        if (P) ParticipantSearch.value = `${P.FirstName} ${P.LastName}`;
+      }
     } else {
       Form.value = createEmptyForm();
+      ParticipantSearch.value = '';
     }
     Step.value = 'form';
   },
   { immediate: true }
 );
+
+watch(Participants, () => {
+  if (Form.value.ParticipantId && !ParticipantSearch.value) {
+    const P = Participants.value.find(
+      (p) => p.ParticipantId === Form.value.ParticipantId
+    );
+    if (P) ParticipantSearch.value = `${P.FirstName} ${P.LastName}`;
+  }
+});
 
 const validateForm = () => {
   const e = {};
@@ -236,19 +275,53 @@ const Submit = async () => {
           <div class="form-group-title">Buchung</div>
 
           <label>Teilnehmer</label>
-          <select
-            v-model="Form.ParticipantId"
-            :class="{ 'input-error': errors.ParticipantId }"
-          >
-            <option disabled value="">Bitte wählen</option>
-            <option
-              v-for="P in Participants"
-              :key="P.ParticipantId"
-              :value="P.ParticipantId"
+          <div style="position: relative">
+            <input
+              v-model="ParticipantSearch"
+              placeholder="Name suchen..."
+              :class="{ 'input-error': errors.ParticipantId }"
+              @focus="ShowParticipantDropdown = true"
+              @blur="setTimeout(() => (ShowParticipantDropdown = false), 150)"
+              autocomplete="off"
+            />
+            <div
+              v-if="ShowParticipantDropdown && FilteredParticipants.length > 0"
+              style="
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                z-index: 50;
+                background: var(--dropdown-bg, rgba(5, 8, 20, 0.97));
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                max-height: 200px;
+                overflow-y: auto;
+                box-shadow: 0 0 20px rgba(74, 163, 255, 0.2);
+              "
             >
-              {{ P.FirstName }} {{ P.LastName }}
-            </option>
-          </select>
+              <div
+                v-for="P in FilteredParticipants"
+                :key="P.ParticipantId"
+                @mousedown="selectParticipant(P)"
+                style="
+                  padding: 8px 12px;
+                  font-size: 13px;
+                  cursor: pointer;
+                  border-bottom: 1px solid rgba(124, 247, 255, 0.06);
+                  color: var(--text);
+                "
+                @mouseover="
+                  $event.currentTarget.style.background = 'rgba(74,163,255,0.1)'
+                "
+                @mouseleave="
+                  $event.currentTarget.style.background = 'transparent'
+                "
+              >
+                {{ P.FirstName }} {{ P.LastName }}
+              </div>
+            </div>
+          </div>
           <div v-if="errors.ParticipantId" class="error">
             {{ errors.ParticipantId }}
           </div>
@@ -315,6 +388,22 @@ const Submit = async () => {
           <div v-if="errors.PlannedEndDate" class="error">
             {{ errors.PlannedEndDate }}
           </div>
+
+          <label>Start (tatsächlich)</label>
+          <input
+            v-model="Form.ActualStartDate"
+            type="date"
+            :disabled="!Form.BookingId"
+            :class="{ disabled: !Form.BookingId }"
+          />
+
+          <label>Ende (tatsächlich)</label>
+          <input
+            v-model="Form.ActualEndDate"
+            type="date"
+            :disabled="!Form.BookingId"
+            :class="{ disabled: !Form.BookingId }"
+          />
         </div>
 
         <!-- Gruppe: Finanzen -->
