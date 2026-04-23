@@ -65,26 +65,26 @@ const save = async (formData) => {
     const { exams = [], ...moduleData } = formData;
     if (moduleData.ModuleCodeId) {
       await updateModule(moduleData.ModuleCodeId, moduleData);
-      const existing = await getExams(moduleData.ModuleCode);
+      const existing = await getExams(moduleData.ModuleCodeId);
       const existingIds = new Set(existing.map((e) => e.ModuleExamId));
       const incomingIds = new Set(
         exams.filter((e) => e.ModuleExamId).map((e) => e.ModuleExamId)
       );
       for (const e of existing) {
         if (!incomingIds.has(e.ModuleExamId))
-          await deleteExam(moduleData.ModuleCode, e.ModuleExamId);
+          await deleteExam(moduleData.ModuleCodeId, e.ModuleExamId);
       }
       for (const e of exams) {
         if (e.ModuleExamId && existingIds.has(e.ModuleExamId)) {
-          await updateExam(moduleData.ModuleCode, e.ModuleExamId, e);
+          await updateExam(moduleData.ModuleCodeId, e.ModuleExamId, e);
         } else if (!e.ModuleExamId) {
-          await createExam(moduleData.ModuleCode, e);
+          await createExam(moduleData.ModuleCodeId, e);
         }
       }
     } else {
       const created = await createModule(moduleData);
       for (const e of exams) {
-        await createExam(created.ModuleCode, e);
+        await createExam(created.ModuleCodeId, e);
       }
     }
     showForm.value = false;
@@ -95,8 +95,8 @@ const save = async (formData) => {
   }
 };
 
-const remove = (moduleCode) => {
-  confirmPending.value = moduleCode;
+const remove = (moduleCodeId) => {
+  confirmPending.value = moduleCodeId;
 };
 
 const confirmRemove = async () => {
@@ -149,7 +149,7 @@ const cancelRemove = () => {
         v-if="showDetail"
         :Module="selected"
         @edit="edit(selected)"
-        @delete="remove(selected.ModuleCode)"
+        @delete="remove(selected.ModuleCodeId)"
         @close="close"
       />
     </div>

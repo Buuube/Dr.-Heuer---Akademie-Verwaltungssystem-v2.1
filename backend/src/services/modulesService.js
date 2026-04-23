@@ -124,16 +124,25 @@ async function getExamsFromDB(moduleCode) {
 
 async function createExamInDB(moduleCode, examData) {
   const pool = await connectDB();
+
+  const countResult = await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, moduleCode)
+    .query(
+      'SELECT COUNT(*) AS total FROM ModuleExam WHERE ModuleCodeId = @ModuleCodeId'
+    );
+  const sequence = countResult.recordset[0].total + 1;
+
   const result = await pool
     .request()
     .input('ModuleCodeId', sql.VarChar, moduleCode)
     .input('ExamName', sql.VarChar, examData.examName ?? examData.ExamName)
     .input('ExamType', sql.VarChar, examData.examType ?? examData.ExamType)
-    .query(`
-        INSERT INTO ModuleExam (ModuleCodeId, ExamName, ExamType)
-        OUTPUT INSERTED.*
-        VALUES (@ModuleCodeId, @ExamName, @ExamType)
-      `);
+    .input('SequenceNumber', sql.Int, sequence).query(`
+      INSERT INTO ModuleExam (ModuleCodeId, ExamName, ExamType, SequenceNumber)
+      OUTPUT INSERTED.*
+      VALUES (@ModuleCodeId, @ExamName, @ExamType, @SequenceNumber)
+    `);
   return result.recordset[0];
 }
 
