@@ -163,7 +163,7 @@ const kostenProTag = (course) => {
             class="btn-delete-modules"
             @click="showDeleteAllConfirm = true"
           >
-            Alle löschen
+            Alle deaktivieren
           </button>
         </div>
         <div v-if="modules.length === 0" class="detail-row">

@@ -7,10 +7,8 @@ export const validateParticipant = (f) => {
     valid = false;
   };
 
-  if (!f.AgencyCustomerNumber) {
-    setError('AgencyCustomerNumber', 'Kundennummer erforderlich');
-  } else if (!/^\d{3}[A-Za-z]\d{6}$/.test(f.AgencyCustomerNumber)) {
-    setError('AgencyCustomerNumber', 'Kundennummer Beispiel: 123A456789');
+  if (f.AgencyCustomerNumber && f.AgencyCustomerNumber.length > 20) {
+    setError('AgencyCustomerNumber', 'Maximal 20 Zeichen erlaubt');
   }
 
   if (f.ContactSource && f.ContactSource.length > 200) {
