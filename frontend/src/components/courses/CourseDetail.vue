@@ -57,6 +57,7 @@ const deleteAllModules = async () => {
   }
 };
 
+/*
 const kostenProTag = (course) => {
   if (
     !course.CostPerTeachingUnit ||
@@ -67,7 +68,7 @@ const kostenProTag = (course) => {
   const unitsPerDay =
     (course.DailyTeachingHours * 60) / course.TeachingUnitDuration;
   return formatCurrency(course.CostPerTeachingUnit * unitsPerDay);
-};
+};*/
 </script>
 
 <template>
@@ -129,16 +130,17 @@ const kostenProTag = (course) => {
         </div>
         <div class="detail-row">
           <span class="detail-label">UE-Dauer</span>
-          <span>{{ Course.TeachingUnitDuration }} Min.</span>
+          <span>{{ Course.TeachingUnitDuration }} </span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Std./Tag</span>
           <span>{{ Course.DailyTeachingHours }}</span>
         </div>
+        <!--
         <div class="detail-row">
           <span class="detail-label">Kosten/Tag</span>
           <span>{{ kostenProTag(Course) }}</span>
-        </div>
+        </div>-->
       </div>
 
       <div class="detail-group">
