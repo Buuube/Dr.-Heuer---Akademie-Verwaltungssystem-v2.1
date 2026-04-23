@@ -138,11 +138,18 @@ async function addBookingItemsInDB(bookingId, items) {
     .request()
     .input('BookingId', sql.Int, bookingId)
     .query(`SELECT BookingId FROM Booking WHERE BookingId = @BookingId`);
+
   if (check.recordset.length === 0) {
     const err = new Error('Booking not found');
     err.code = 'BOOKING_NOT_FOUND';
     throw err;
   }
+
+  // Bestehende Einträge löschen bevor neue angelegt werden
+  await pool
+    .request()
+    .input('BookingId', sql.Int, bookingId)
+    .query(`DELETE FROM BookingModule WHERE BookingId = @BookingId`);
 
   for (const item of items) {
     await pool
