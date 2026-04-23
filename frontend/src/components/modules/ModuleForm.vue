@@ -9,7 +9,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['save', 'cancel']);
-  
+
 const teachingFormats = ref([]);
 const courses = ref([]);
 const exams = ref([]);
@@ -37,12 +37,12 @@ watch(
   () => props.module,
   async (val) => {
     form.value = val ? { ...empty(), ...val } : empty();
-    exams.value = val?.ModuleCode ? await getExams(val.ModuleCode) : [];
+    exams.value = val?.ModuleCodeId ? await getExams(val.ModuleCodeId) : [];
   },
   { immediate: true }
 );
 
-const addExam = () => exams.value.push({ ExamName: '', ExamType: 'intern' });
+const addExam = () => exams.value.push({ ExamName: '', ExamType: 'Internal' });
 const removeExam = (i) => exams.value.splice(i, 1);
 
 const errors = ref({});
@@ -152,8 +152,8 @@ const submit = () => {
               maxlength="100"
             />
             <select v-model="exam.ExamType" class="exam-type">
-              <option value="intern">Intern</option>
-              <option value="extern">Extern</option>
+              <option value="Internal">Intern</option>
+              <option value="External">Extern</option>
             </select>
             <button
               type="button"
@@ -233,5 +233,14 @@ textarea:focus {
   gap: 6px;
   align-items: center;
   margin-bottom: 6px;
+}
+
+.exam-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.exam-type {
+  flex: 0 0 110px;
 }
 </style>

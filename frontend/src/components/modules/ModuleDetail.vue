@@ -17,9 +17,9 @@ const formatCurrency = (value) =>
 const exams = ref([]);
 
 const loadExams = async () => {
-  if (!props.Module?.ModuleCode) return;
+  if (!props.Module?.ModuleCodeId) return;
   try {
-    exams.value = await getExams(props.Module.ModuleCode);
+    exams.value = await getExams(props.Module.ModuleCodeId);
   } catch {
     exams.value = [];
   }
@@ -28,10 +28,10 @@ const loadExams = async () => {
 watch(() => props.Module, loadExams, { immediate: true });
 
 const internExams = computed(() =>
-  exams.value.filter((e) => e.ExamType === 'intern')
+  exams.value.filter((e) => e.ExamType === 'Internal')
 );
 const externExams = computed(() =>
-  exams.value.filter((e) => e.ExamType === 'extern')
+  exams.value.filter((e) => e.ExamType === 'External')
 );
 
 const newIntern = ref('');
@@ -41,10 +41,13 @@ const addingExtern = ref(false);
 
 const addExam = async (type) => {
   const name =
-    type === 'intern' ? newIntern.value.trim() : newExtern.value.trim();
+    type === 'Internal' ? newIntern.value.trim() : newExtern.value.trim();
   if (!name) return;
-  await createExam(props.Module.ModuleCode, { ExamName: name, ExamType: type });
-  if (type === 'intern') {
+  await createExam(props.Module.ModuleCodeId, {
+    ExamName: name,
+    ExamType: type,
+  });
+  if (type === 'Internal') {
     newIntern.value = '';
     addingIntern.value = false;
   } else {
@@ -55,7 +58,7 @@ const addExam = async (type) => {
 };
 
 const removeExam = async (examId) => {
-  await deleteExam(props.Module.ModuleCode, examId);
+  await deleteExam(props.Module.ModuleCodeId, examId);
   await loadExams();
 };
 </script>
@@ -131,9 +134,11 @@ const removeExam = async (examId) => {
             <input
               v-model="newIntern"
               placeholder="Prüfungsname"
-              @keydown.enter="addExam('intern')"
+              @keydown.enter="addExam('Internal')"
             />
-            <button class="btn-exam-save" @click="addExam('intern')">✓</button>
+            <button class="btn-exam-save" @click="addExam('Internal')">
+              ✓
+            </button>
             <button
               class="btn-exam-cancel"
               @click="
@@ -182,9 +187,11 @@ const removeExam = async (examId) => {
             <input
               v-model="newExtern"
               placeholder="Prüfungsname"
-              @keydown.enter="addExam('extern')"
+              @keydown.enter="addExam('External')"
             />
-            <button class="btn-exam-save" @click="addExam('extern')">✓</button>
+            <button class="btn-exam-save" @click="addExam('External')">
+              ✓
+            </button>
             <button
               class="btn-exam-cancel"
               @click="
