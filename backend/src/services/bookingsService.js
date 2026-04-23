@@ -5,7 +5,12 @@ async function getBookingsFromDB() {
   const result = await pool.request().query(`
     SELECT 
       b.*,
-      p.FirstName + ' ' + p.LastName AS ParticipantName
+      p.FirstName + ' ' + p.LastName AS ParticipantName,
+      (
+        SELECT STRING_AGG(bm.ModuleCodeId, ',')
+        FROM BookingModule bm
+        WHERE bm.BookingId = b.BookingId
+      ) AS ModuleCodes
     FROM Booking b
     LEFT JOIN Participant p ON b.ParticipantId = p.ParticipantId
     WHERE b.IsDeleted = 0 OR b.IsDeleted IS NULL
