@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { getBookings } from '../../services/bookingService';
 import { getParticipants } from '../../services/participantService';
+import { getModule } from '../../services/moduleService';
 
 const props = defineProps({
   onEdit: Function,
@@ -11,9 +12,12 @@ const props = defineProps({
 
 const Bookings = ref([]);
 const Participants = ref([]);
+const AllModules = ref([]);
+
 const Search = ref('');
 const FilterSigned = ref('all');
 const FilterExpired = ref('all');
+const FilterModuleCode = ref('');
 const sortKey = ref('');
 const sortDir = ref(1);
 const pageSize = ref(10);
@@ -50,13 +54,25 @@ const formatDate = (date) => {
 const Load = async () => {
   Bookings.value = await getBookings();
   Participants.value = await getParticipants();
+  AllModules.value = await getModule();
 };
 
 onMounted(Load);
 
-watch([Search, FilterSigned, FilterExpired, sortKey, sortDir, pageSize], () => {
-  currentPage.value = 1;
-});
+watch(
+  [
+    Search,
+    FilterSigned,
+    FilterExpired,
+    FilterModuleCode,
+    sortKey,
+    sortDir,
+    pageSize,
+  ],
+  () => {
+    currentPage.value = 1;
+  }
+);
 
 const FilteredBookings = computed(() => {
   let list = [...Bookings.value];
@@ -83,6 +99,13 @@ const FilteredBookings = computed(() => {
     list = list.filter(
       (b) => b.ActualEndDate && new Date(b.ActualEndDate) < today
     );
+  }
+
+  if (FilterModuleCode.value) {
+    list = list.filter((b) => {
+      if (!b.ModuleCodes) return false;
+      return b.ModuleCodes.split(',').includes(FilterModuleCode.value);
+    });
   }
 
   if (sortKey.value) {
@@ -129,6 +152,17 @@ const PagedBookings = computed(() => {
         <option value="active">Aktiv</option>
         <option value="expired">Abgelaufen</option>
       </select>
+
+      <select v-model="FilterModuleCode">
+        <option value="">Modul: -</option>
+        <option
+          v-for="M in AllModules"
+          :key="M.ModuleCodeId"
+          :value="M.ModuleCodeId"
+        >
+          {{ M.ModuleCodeId }} — {{ M.Name ?? M.ModuleCodeId }}
+        </option>
+      </select>
     </div>
 
     <div class="table-wrapper">
@@ -153,6 +187,7 @@ const PagedBookings = computed(() => {
               <span class="sort-icon">{{ sortIcon('MonthlyRate') }}</span>
             </th>
             <th>Bildungsziel</th>
+            <th>Module</th>
             <th></th>
           </tr>
         </thead>
@@ -165,6 +200,9 @@ const PagedBookings = computed(() => {
             <td>{{ B.Duration || '-' }}</td>
             <td>{{ B.MonthlyRate || '-' }}</td>
             <td>{{ B.EducationalGoal || '-' }}</td>
+            <td style="font-size: 11px; color: var(--muted)">
+              {{ B.ModuleCodes || '-' }}
+            </td>
             <td>
               <button class="btn-detail" @click="props.onSelect?.(B)">
                 Details
@@ -214,35 +252,39 @@ const PagedBookings = computed(() => {
 <style scoped>
 th:nth-child(1),
 td:nth-child(1) {
-  width: 60px;
+  width: 55px;
 }
 th:nth-child(2),
 td:nth-child(2) {
-  width: 160px;
+  width: 150px;
 }
 th:nth-child(3),
 td:nth-child(3) {
-  width: 130px;
+  width: 120px;
 }
 th:nth-child(4),
 td:nth-child(4) {
-  width: 130px;
+  width: 120px;
 }
 th:nth-child(5),
 td:nth-child(5) {
-  width: 90px;
+  width: 80px;
 }
 th:nth-child(6),
 td:nth-child(6) {
-  width: 100px;
+  width: 90px;
 }
 th:nth-child(7),
 td:nth-child(7) {
-  width: 160px;
+  width: 140px;
 }
 th:nth-child(8),
 td:nth-child(8) {
-  width: 240px;
+  width: 120px;
+}
+th:nth-child(9),
+td:nth-child(9) {
+  width: 220px;
   white-space: nowrap;
 }
 </style>
