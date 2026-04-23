@@ -54,6 +54,8 @@ export const deleteParticipant = async (id) => {
   const res = await fetch(`http://localhost:3000/api/participants/${id}`, {
     method: 'DELETE',
   });
-  const check = await res.json();
-  if (!res.ok) throw new Error(check.error);
+  if (!res.ok) {
+    const check = await res.json(); // nur bei Fehler JSON lesen
+    throw new Error(check.error);
+  }
 };

@@ -58,8 +58,8 @@ const addExam = async (type) => {
 };
 
 const removeExam = async (examId) => {
-  await deleteExam(props.Module.ModuleCodeId, examId);
-  await loadExams();
+  await Exam(props.Module.ModuleCodeId, examId);
+  delete (await loadExams());
 };
 </script>
 
