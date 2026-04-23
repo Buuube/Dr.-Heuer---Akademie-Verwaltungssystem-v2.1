@@ -46,7 +46,7 @@ const sortIcon = (key) => {
 const filteredModules = computed(() => {
   const filtered = modules.value.filter((mod) => {
     const text =
-      `${mod.ExternalModuleCode ?? ''} ${mod.Name ?? ''}`.toLowerCase();
+      `${mod.ExternalModuleCode ?? ''} ${mod.Name ?? ''} ${mod.ModuleCodeId ?? ''}`.toLowerCase();
     const matchesSearch = text.includes(search.value.toLowerCase());
     if (filterStatus.value === 'active')
       return matchesSearch && !isDeactivated(mod);
@@ -90,13 +90,13 @@ onMounted(async () => {
 
   for (const mod of modules.value) {
     try {
-      const exams = await getExams(mod.ModuleCode);
-      examCounts.value[mod.ModuleCode] = {
+      const exams = await getExams(mod.ModuleCodeId);
+      examCounts.value[mod.ModuleCodeId] = {
         intern: exams.filter((e) => e.ExamType === 'intern').length,
         extern: exams.filter((e) => e.ExamType === 'extern').length,
       };
     } catch {
-      examCounts.value[mod.ModuleCode] = { intern: 0, extern: 0 };
+      examCounts.value[mod.ModuleCodeId] = { intern: 0, extern: 0 };
     }
   }
 });
@@ -109,7 +109,7 @@ onMounted(async () => {
     <div class="toolbar">
       <input
         v-model="search"
-        placeholder="Suche nach Name oder externer Nummer..."
+        placeholder="Suche nach Name, Modul-Code oder externer Nummer..."
       />
       <select v-model="filterStatus">
         <option value="all">Alle Status</option>
@@ -127,6 +127,10 @@ onMounted(async () => {
               <span class="sort-icon">{{
                 sortIcon('ExternalModuleCode')
               }}</span>
+            </th>
+            <th @click="toggleSort('ModuleCodeId')" class="sortable">
+              Modul-Code
+              <span class="sort-icon">{{ sortIcon('ModuleCodeId') }}</span>
             </th>
             <th @click="toggleSort('Name')" class="sortable">
               Name <span class="sort-icon">{{ sortIcon('Name') }}</span>
@@ -154,14 +158,15 @@ onMounted(async () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="module in pagedModules" :key="module.ModuleCode">
+          <tr v-for="module in pagedModules" :key="module.ModuleCodeId">
             <td>{{ module.ExternalModuleCode }}</td>
+            <td>{{ module.ModuleCodeId }}</td>
             <td>{{ module.Name }}</td>
             <td>{{ module.Duration }}</td>
             <td>{{ formatCurrency(module.EstimatedCost) }}</td>
             <td>{{ module.DailyTeachingHours }}</td>
-            <td>{{ examCounts[module.ModuleCode]?.intern ?? '–' }}</td>
-            <td>{{ examCounts[module.ModuleCode]?.extern ?? '–' }}</td>
+            <td>{{ examCounts[module.ModuleCodeId]?.intern ?? '–' }}</td>
+            <td>{{ examCounts[module.ModuleCodeId]?.extern ?? '–' }}</td>
             <td>
               <span v-if="isDeactivated(module)" class="badge-deactivated"
                 >Deaktiviert</span
@@ -182,7 +187,7 @@ onMounted(async () => {
               <button
                 class="btn-delete"
                 :disabled="isDeactivated(module)"
-                @click="props.OnDelete(module.ModuleCode)"
+                @click="props.OnDelete(module.ModuleCodeId)"
               >
                 Deaktivieren
               </button>
@@ -229,24 +234,23 @@ td:nth-child(1) {
 }
 th:nth-child(2),
 td:nth-child(2) {
-  width: 160px;
+  width: 110px;
 }
 th:nth-child(3),
 td:nth-child(3) {
-  width: 90px;
+  width: 160px;
 }
 th:nth-child(4),
 td:nth-child(4) {
-  width: 110px;
+  width: 90px;
 }
 th:nth-child(5),
 td:nth-child(5) {
-  width: 80px;
+  width: 110px;
 }
 th:nth-child(6),
 td:nth-child(6) {
-  width: 120px;
-  white-space: nowrap;
+  width: 80px;
 }
 th:nth-child(7),
 td:nth-child(7) {
@@ -255,10 +259,15 @@ td:nth-child(7) {
 }
 th:nth-child(8),
 td:nth-child(8) {
-  width: 110px;
+  width: 120px;
+  white-space: nowrap;
 }
 th:nth-child(9),
 td:nth-child(9) {
+  width: 110px;
+}
+th:nth-child(10),
+td:nth-child(10) {
   width: 270px;
   white-space: nowrap;
 }
