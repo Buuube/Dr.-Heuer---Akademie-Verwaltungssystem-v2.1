@@ -93,23 +93,30 @@ async function updateModuleInDB(id, moduleData) {
 
 async function deleteModuleFromDB(id) {
   const pool = await connectDB();
-  const check = await pool
-    .request()
-    .input('ModuleCodeId', sql.VarChar, id)
-    .query(
-      `SELECT COUNT(*) AS cnt FROM BookingModule WHERE ModuleCodeId = @ModuleCodeId`
-    );
+
+  // Nur aktive (nicht gelöschte) Buchungen prüfen
+  const check = await pool.request().input('ModuleCodeId', sql.VarChar, id)
+    .query(`
+      SELECT COUNT(*) AS cnt
+      FROM BookingModule bm
+      JOIN Booking b ON bm.BookingId = b.BookingId
+      WHERE bm.ModuleCodeId = @ModuleCodeId
+        AND (b.IsDeleted = 0 OR b.IsDeleted IS NULL)
+    `);
+
   if (check.recordset[0].cnt > 0) {
     const err = new Error('Module has bookings');
     err.code = 'HAS_BOOKINGS';
     throw err;
   }
+
   await pool
     .request()
     .input('ModuleCodeId', sql.VarChar, id)
     .query(
       `UPDATE Module SET IsDeleted = 1 WHERE ModuleCodeId = @ModuleCodeId`
     );
+
   return true;
 }
 
