@@ -28,7 +28,6 @@ export async function updateModule(id, module) {
 
 export async function deleteModule(id) {
   const res = await fetch(`${API}/${id}`, {
-    // ← const res = fehlt
     method: 'DELETE',
   });
   if (!res.ok) {
