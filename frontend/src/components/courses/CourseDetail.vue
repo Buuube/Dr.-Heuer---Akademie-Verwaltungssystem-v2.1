@@ -11,7 +11,14 @@ const props = defineProps({
   editMode: Boolean,
 });
 
-const emit = defineEmits(['edit', 'save', 'cancel', 'delete', 'close']);
+const emit = defineEmits([
+  'edit',
+  'save',
+  'cancel',
+  'delete',
+  'close',
+  'modules',
+]);
 
 const modules = ref([]);
 
@@ -19,6 +26,7 @@ watch(
   () => props.Course,
   async (val) => {
     modules.value = val?.CourseId ? await getModule(val.CourseId) : [];
+    emit('modules', modules.value);
   },
   { immediate: true }
 );
@@ -397,76 +405,6 @@ const removeAllBookings = async () => {
   cursor: not-allowed;
 }
 
-/* ─── Modal ─────────────────────────────────────────────── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(4px);
-}
-
-.modal {
-  background: rgba(5, 8, 20, 0.97);
-  border: 1px solid rgba(120, 180, 255, 0.18);
-  border-radius: 18px;
-  padding: 24px 28px;
-  min-width: 300px;
-  max-width: 420px;
-  box-shadow: 0 0 40px rgba(74, 163, 255, 0.15);
-  color: #d7e6ff;
-}
-
-.modal p {
-  margin: 0 0 20px 0;
-  font-size: 14px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.btn-confirm {
-  padding: 8px 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 77, 109, 0.4);
-  background: rgba(255, 77, 109, 0.12);
-  color: #ff4d6d;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-confirm:hover {
-  box-shadow: 0 0 14px rgba(255, 77, 109, 0.35);
-  border-color: rgba(255, 77, 109, 0.65);
-}
-
-.btn-modal-cancel {
-  padding: 8px 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(124, 247, 255, 0.15);
-  background: rgba(74, 163, 255, 0.06);
-  color: rgba(215, 230, 255, 0.6);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-modal-cancel:hover {
-  border-color: rgba(124, 247, 255, 0.3);
-  color: #7cf7ff;
-}
-
 /* ─── Badges ────────────────────────────────────────────── */
 .badge-active {
   background: rgba(46, 204, 113, 0.15);
@@ -493,67 +431,5 @@ const removeAllBookings = async () => {
   padding: 2px 10px;
   border-radius: 12px;
   font-size: 0.85em;
-}
-
-/* ─── Modul-Tags ────────────────────────────────────────── */
-.module-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 6px 0 2px;
-}
-
-.module-tag {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(124, 247, 255, 0.15);
-  background: rgba(124, 247, 255, 0.05);
-  font-size: 12px;
-  color: var(--text);
-}
-
-.module-tag--inactive {
-  opacity: 0.4;
-  border-color: rgba(120, 180, 255, 0.1);
-  background: transparent;
-}
-
-.btn-add-module {
-  margin-left: 10px;
-  padding: 2px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(124, 247, 255, 0.3);
-  background: rgba(124, 247, 255, 0.08);
-  color: var(--cyan);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: box-shadow 0.2s;
-}
-
-.btn-add-module:hover {
-  box-shadow: 0 0 10px rgba(124, 247, 255, 0.25);
-}
-
-.btn-delete-modules {
-  margin-left: 8px;
-  padding: 2px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 77, 109, 0.3);
-  background: rgba(255, 77, 109, 0.08);
-  color: #ff4d6d;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: box-shadow 0.2s;
-}
-
-.btn-delete-modules:hover {
-  box-shadow: 0 0 10px rgba(255, 77, 109, 0.25);
 }
 </style>

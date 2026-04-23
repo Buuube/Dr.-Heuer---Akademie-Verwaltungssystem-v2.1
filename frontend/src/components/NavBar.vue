@@ -174,25 +174,6 @@ const links = [
   transform: scaleX(1);
 }
 
-.theme-toggle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  background: transparent;
-  cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.2s ease;
-  margin-right: 8px;
-}
-
-.theme-toggle:hover {
-  border-color: rgba(139, 92, 246, 0.6);
-}
-
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .navbar-inner {

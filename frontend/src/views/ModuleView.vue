@@ -24,6 +24,8 @@ const showDetail = ref(false);
 const reloadKey = ref(0);
 
 const confirmPending = ref(null);
+const successMessage = ref(null);
+const errorMessage = ref(null);
 
 onMounted(() => {
   if (route.query.openForm && route.query.courseId) {
@@ -91,7 +93,7 @@ const save = async (formData) => {
     if (!showDetail.value) selected.value = null;
     reloadKey.value++;
   } catch (e) {
-    alert('Fehler beim Speichern: ' + e.message);
+    errorMessage.value = 'Fehler beim Speichern: ' + e.message;
   }
 };
 
@@ -102,13 +104,14 @@ const remove = (moduleCodeId) => {
 const confirmRemove = async () => {
   try {
     await deleteModule(confirmPending.value);
+    confirmPending.value = null;
     selected.value = null;
     showDetail.value = false;
     reloadKey.value++;
+    successMessage.value = 'Das Modul wurde erfolgreich deaktiviert.';
   } catch (e) {
-    alert('Fehler beim Deaktivieren: ' + e.message);
-  } finally {
     confirmPending.value = null;
+    errorMessage.value = 'Fehler beim Deaktivieren: ' + e.message;
   }
 };
 
@@ -164,6 +167,28 @@ const cancelRemove = () => {
           </button>
           <button class="btn-confirm" @click="confirmRemove">
             Deaktivieren
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Erfolgs-Popup -->
+    <div v-if="successMessage" class="modal-overlay">
+      <div class="modal">
+        <p>{{ successMessage }}</p>
+        <div class="modal-actions">
+          <button class="btn-success" @click="successMessage = null">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fehler-Popup -->
+    <div v-if="errorMessage" class="modal-overlay">
+      <div class="modal">
+        <p>{{ errorMessage }}</p>
+        <div class="modal-actions">
+          <button class="btn-modal-cancel" @click="errorMessage = null">
+            OK
           </button>
         </div>
       </div>
