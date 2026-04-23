@@ -27,12 +27,13 @@ export async function updateModule(id, module) {
 }
 
 export async function deleteModule(id) {
-  await fetch(`${API}/${id}`, {
+  const res = await fetch(`${API}/${id}`, {
+    // ← const res = fehlt
     method: 'DELETE',
   });
   /*
   if (!res.ok) {
-    const check = await res.json(); // nur bei Fehler JSON lesen
+    const check = await res.json();
     throw new Error(check.error);
   }*/
 }
