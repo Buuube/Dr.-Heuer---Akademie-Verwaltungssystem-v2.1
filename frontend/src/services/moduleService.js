@@ -30,8 +30,9 @@ export async function deleteModule(id) {
   const res = await fetch(`${API}/${id}`, {
     method: 'DELETE',
   });
+  /*
   if (!res.ok) {
     const check = await res.json();
     throw new Error(check.error);
-  }
+  }*/
 }
