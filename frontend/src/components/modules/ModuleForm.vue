@@ -115,9 +115,6 @@ const submit = () => {
           <span v-if="errors.TeachingFormatId" class="error">{{
             errors.TeachingFormatId
           }}</span>
-          <span class="field-hint"
-            >1 – Präsenzunterricht<br />2 – Hybrid<br />3 – Homeoffice</span
-          >
 
           <label class="checkbox">
             <input type="checkbox" v-model="form.HasInternship" />
