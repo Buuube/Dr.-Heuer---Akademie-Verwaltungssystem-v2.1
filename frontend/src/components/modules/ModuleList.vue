@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const modules = ref([]);
-const examCounts = ref({});
+// const examCounts = ref({});
 const filterStatus = ref('all');
 const search = ref('');
 
@@ -87,25 +87,6 @@ const pagedModules = computed(() => {
 
 onMounted(async () => {
   modules.value = await getModule(props.CourseId);
-
-  const results = await Promise.all(
-    modules.value.map(async (mod) => {
-      try {
-        const exams = await getExams(mod.ModuleCodeId);
-        return {
-          id: mod.ModuleCodeId,
-          intern: exams.filter((e) => e.ExamType === 'intern').length,
-          extern: exams.filter((e) => e.ExamType === 'extern').length,
-        };
-      } catch {
-        return { id: mod.ModuleCodeId, intern: 0, extern: 0 };
-      }
-    })
-  );
-
-  for (const r of results) {
-    examCounts.value[r.id] = { intern: r.intern, extern: r.extern };
-  }
 });
 </script>
 
@@ -172,8 +153,8 @@ onMounted(async () => {
             <td>{{ module.Duration }}</td>
             <td>{{ formatCurrency(module.EstimatedCost) }}</td>
             <td>{{ module.DailyTeachingHours }}</td>
-            <td>{{ examCounts[module.ModuleCodeId]?.intern ?? '–' }}</td>
-            <td>{{ examCounts[module.ModuleCodeId]?.extern ?? '–' }}</td>
+            <td>{{ module.InternExamCount ?? '–' }}</td>
+            <td>{{ module.ExternExamCount ?? '–' }}</td>
             <td>
               <span v-if="isDeactivated(module)" class="badge-deactivated"
                 >Deaktiviert</span

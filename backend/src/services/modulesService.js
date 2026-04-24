@@ -4,15 +4,45 @@ async function getModulesFromDB(courseId) {
   const pool = await connectDB();
   const request = pool.request();
   let query = `
-      SELECT m.*, c.Name AS CourseName
-      FROM Module m
-      LEFT JOIN Course c ON m.CourseId = c.CourseId
-      WHERE 1=1
-    `;
+    SELECT
+      Module.ModuleCodeId,
+      Module.ExternalModuleCode,
+      Module.Name,
+      Module.CourseId,
+      Module.TeachingFormatId,
+      Module.Content,
+      Module.EstimatedCost,
+      Module.Duration,
+      Module.HasInternship,
+      Module.DailyTeachingHours,
+      Module.IsDeleted,
+      Course.Name AS CourseName,
+      SUM(CASE WHEN ModuleExam.ExamType = 'Internal' THEN 1 ELSE 0 END) AS InternExamCount,
+      SUM(CASE WHEN ModuleExam.ExamType = 'External' THEN 1 ELSE 0 END) AS ExternExamCount
+    FROM Module
+    LEFT JOIN Course ON Module.CourseId = Course.CourseId
+    LEFT JOIN ModuleExam ON ModuleExam.ModuleCodeId = Module.ModuleCodeId
+    WHERE 1=1
+  `;
   if (courseId) {
     request.input('CourseId', sql.Int, Number(courseId));
-    query += ` AND m.CourseId = @CourseId`;
+    query += ` AND Module.CourseId = @CourseId`;
   }
+  query += `
+    GROUP BY
+      Module.ModuleCodeId,
+      Module.ExternalModuleCode,
+      Module.Name,
+      Module.CourseId,
+      Module.TeachingFormatId,
+      Module.Content,
+      Module.EstimatedCost,
+      Module.Duration,
+      Module.HasInternship,
+      Module.DailyTeachingHours,
+      Module.IsDeleted,
+      Course.Name
+  `;
   const result = await request.query(query);
   return result.recordset;
 }
