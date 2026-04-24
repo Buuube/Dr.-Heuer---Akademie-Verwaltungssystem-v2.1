@@ -10,7 +10,6 @@
       <ul class="nav-links">
         <li v-for="link in links" :key="link.to">
           <router-link :to="link.to" class="nav-item">
-            <span class="nav-icon">{{ link.icon }}</span>
             <span class="nav-label">{{ link.label }}</span>
             <span class="nav-underline"></span>
           </router-link>
@@ -49,18 +48,15 @@ const links = [
 
 .navbar {
   position: sticky;
-  top: 0; /* etwas Abstand nach oben */
+  top: 0;
   z-index: 100;
-  width: calc(100% - 48px); /* Abstand links & rechts */
+  width: calc(100% - 48px);
   max-width: 1600px;
-  margin: 0 auto 0; /* zentriert horizontal */
-  left: 0;
-  right: 0;
+  margin: 0 auto;
   background: rgba(5, 8, 20, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(120, 180, 255, 0.18);
-  border: 1px solid rgba(120, 180, 255, 0.18); /* rundum Rahmen */
+  border: 1px solid rgba(120, 180, 255, 0.18);
   font-family: system-ui, sans-serif;
   border-radius: 0 0 10px 10px;
   box-sizing: border-box;
@@ -73,10 +69,9 @@ const links = [
   width: 100%;
   padding: 0 2rem;
   height: 64px;
-  box-sizing: border-box; /* ← wichtig, verhindert Overflow */
+  box-sizing: border-box;
 }
 
-/* ── Brand ── */
 .brand {
   display: flex;
   align-items: center;
@@ -85,7 +80,6 @@ const links = [
 }
 
 .logo-wrapper {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -93,14 +87,6 @@ const links = [
   flex-shrink: 0;
 }
 
-.logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  filter: brightness(0) invert(1);
-}
-
-/* ── Nav Links ── */
 .nav-links {
   display: flex;
   align-items: center;
@@ -112,9 +98,9 @@ const links = [
 
 .nav-item {
   position: relative;
-  display: flex;
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 7px;
   padding: 7px 14px;
   border-radius: 8px;
   text-decoration: none;
@@ -132,31 +118,26 @@ const links = [
   background: rgba(255, 255, 255, 0.06);
 }
 
-.nav-icon {
-  font-size: 13px;
-  line-height: 1;
-  opacity: 0.8;
-}
-
 .nav-label {
   position: relative;
   z-index: 1;
+  white-space: nowrap;
 }
 
 .nav-underline {
   position: absolute;
   bottom: 4px;
-  left: 14px;
-  right: 14px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: calc(100% - 28px);
   height: 2px;
   border-radius: 2px;
-  background: linear-gradient(90deg, #ba2b2b);
+  background: #ba2b2b;
   opacity: 0;
-  transform: scaleX(0);
   transition:
     opacity 0.2s ease,
     transform 0.25s ease;
-  transform-origin: left;
+  transform-origin: center;
 }
 
 .nav-item.router-link-active {
@@ -166,36 +147,25 @@ const links = [
 
 .nav-item.router-link-active .nav-underline {
   opacity: 1;
-  transform: scaleX(1);
+  transform: translateX(-50%) scaleX(1);
 }
 
 .nav-item:hover .nav-underline {
   opacity: 0.5;
-  transform: scaleX(1);
+  transform: translateX(-50%) scaleX(1);
 }
 
-/* ── Responsive ── */
 @media (max-width: 600px) {
   .navbar-inner {
     padding: 0 1rem;
   }
 
-  .brand-text {
-    display: none;
-  }
-
   .nav-item {
     padding: 7px 10px;
-    gap: 0;
   }
 
   .nav-label {
     display: none;
-  }
-
-  .nav-icon {
-    font-size: 16px;
-    opacity: 1;
   }
 }
 

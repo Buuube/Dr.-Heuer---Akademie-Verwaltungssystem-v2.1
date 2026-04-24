@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { getBookings } from '../../services/bookingService';
 import { getParticipants } from '../../services/participantService';
 import { getModule } from '../../services/moduleService';
+import { getCourses } from '../../services/courseService';
 
 const props = defineProps({
   onEdit: Function,
@@ -13,11 +14,13 @@ const props = defineProps({
 const Bookings = ref([]);
 const Participants = ref([]);
 const AllModules = ref([]);
+const Courses = ref([]);
 
 const Search = ref('');
 const FilterSigned = ref('all');
 const FilterExpired = ref('all');
 const FilterModuleCode = ref('');
+const FilterCourseId = ref('');
 const sortKey = ref('');
 const sortDir = ref(1);
 const pageSize = ref(10);
@@ -39,6 +42,7 @@ const sortIcon = (key) => {
   return sortDir.value === 1 ? '↑' : '↓';
 };
 
+// Schnelle Map statt find() bei jedem Keystroke
 const ParticipantMap = computed(() => {
   const map = {};
   for (const p of Participants.value) {
@@ -49,15 +53,29 @@ const ParticipantMap = computed(() => {
 
 const participantName = (id) => ParticipantMap.value[id] ?? id;
 
+// Module-Codes die zu einem Kurs gehören
+const ModuleCodesForCourse = computed(() => {
+  if (!FilterCourseId.value) return new Set();
+  return new Set(
+    AllModules.value
+      .filter((M) => String(M.CourseId) === String(FilterCourseId.value))
+      .map((M) => M.ModuleCodeId)
+  );
+});
+
 const formatDate = (date) => {
   if (!date) return '-';
   return new Date(date).toISOString().slice(0, 10);
 };
 
 const Load = async () => {
-  Bookings.value = await getBookings();
-  Participants.value = await getParticipants();
-  AllModules.value = await getModule();
+  [Bookings.value, Participants.value, AllModules.value, Courses.value] =
+    await Promise.all([
+      getBookings(),
+      getParticipants(),
+      getModule(),
+      getCourses(),
+    ]);
 };
 
 onMounted(Load);
@@ -68,6 +86,7 @@ watch(
     FilterSigned,
     FilterExpired,
     FilterModuleCode,
+    FilterCourseId,
     sortKey,
     sortDir,
     pageSize,
@@ -76,6 +95,14 @@ watch(
     currentPage.value = 1;
   }
 );
+
+// Kurs und Modul-Filter gegenseitig zurücksetzen
+watch(FilterCourseId, () => {
+  FilterModuleCode.value = '';
+});
+watch(FilterModuleCode, () => {
+  FilterCourseId.value = '';
+});
 
 const FilteredBookings = computed(() => {
   let list = [...Bookings.value];
@@ -108,6 +135,14 @@ const FilteredBookings = computed(() => {
     list = list.filter((b) => {
       if (!b.ModuleCodes) return false;
       return b.ModuleCodes.split(',').includes(FilterModuleCode.value);
+    });
+  }
+
+  if (FilterCourseId.value) {
+    const codes = ModuleCodesForCourse.value;
+    list = list.filter((b) => {
+      if (!b.ModuleCodes) return false;
+      return b.ModuleCodes.split(',').some((c) => codes.has(c));
     });
   }
 
@@ -154,6 +189,13 @@ const PagedBookings = computed(() => {
         <option value="all">Status: -</option>
         <option value="active">Aktiv</option>
         <option value="expired">Abgelaufen</option>
+      </select>
+
+      <select v-model="FilterCourseId">
+        <option value="">Kurs: -</option>
+        <option v-for="C in Courses" :key="C.CourseId" :value="C.CourseId">
+          {{ C.Name }}
+        </option>
       </select>
 
       <select v-model="FilterModuleCode">
