@@ -185,7 +185,7 @@ const kostenProTag = (course) => {
     <!-- Bestätigungs-Modal -->
     <div v-if="showDeleteAllConfirm" class="modal-overlay">
       <div class="modal">
-        <p>Sind Sie sicher, alle Module löschen zu wollen?</p>
+        <p>Sind Sie sicher, alle Module deaktivieren zu wollen?</p>
         <div class="modal-actions">
           <button
             class="btn-modal-cancel"
@@ -194,7 +194,7 @@ const kostenProTag = (course) => {
             Abbrechen
           </button>
           <button class="btn-confirm" @click="deleteAllModules">
-            Ja, alle löschen
+            Ja, alle deaktivieren
           </button>
         </div>
       </div>
