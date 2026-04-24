@@ -58,8 +58,8 @@ const addExam = async (type) => {
 };
 
 const removeExam = async (examId) => {
-  await Exam(props.Module.ModuleCodeId, examId);
-  delete (await loadExams());
+  await deleteExam(props.Module.ModuleCodeId, examId);
+  await loadExams();
 };
 </script>
 
@@ -80,12 +80,12 @@ const removeExam = async (examId) => {
           </span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Modulnummer</span>
-          <span>{{ Module.ModuleCode || '–' }}</span>
-        </div>
-        <div class="detail-row">
           <span class="detail-label">Externe Nummer</span>
           <span>{{ Module.ExternalModuleCode || '–' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Modulnummer</span>
+          <span>{{ Module.ModuleCode || '–' }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Name</span>

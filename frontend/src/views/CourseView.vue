@@ -20,6 +20,7 @@ const reloadKey = ref(0);
 const confirmPending = ref(null);
 const errorMessage = ref(null);
 const successMessage = ref(null);
+const selectedModules = ref([]);
 
 const select = (course) => {
   selected.value = { ...course };
@@ -51,6 +52,12 @@ const closeDetail = () => {
 };
 
 const remove = (courseId) => {
+  const activeModules = selectedModules.value.filter((m) => !m.IsDeleted);
+  if (activeModules.length > 0) {
+    errorMessage.value =
+      'Dieser Kurs kann nicht deaktiviert werden, da ihm noch aktive Module zugeordnet sind.';
+    return;
+  }
   confirmPending.value = courseId;
 };
 
@@ -123,6 +130,7 @@ const save = async (courseData) => {
         @edit="edit(selected)"
         @save="() => formRef?.submitForm()"
         @cancel="closeForm"
+        @modules="(m) => (selectedModules.value = m)"
         @delete="remove(selected.CourseId)"
         @close="closeDetail"
       />
@@ -158,7 +166,9 @@ const save = async (courseData) => {
       <div class="modal">
         <p>{{ errorMessage }}</p>
         <div class="modal-actions">
-          <button class="btn-confirm" @click="errorMessage = null">OK</button>
+          <button class="btn-modal-cancel" @click="errorMessage = null">
+            OK
+          </button>
         </div>
       </div>
     </div>

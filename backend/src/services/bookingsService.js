@@ -136,6 +136,23 @@ async function getBookingByIdFromDB(id) {
   return booking;
 }
 
+async function getBookingsByModuleFromDB(moduleCodeId) {
+  const pool = await connectDB();
+  const result = await pool
+    .request()
+    .input('ModuleCodeId', sql.VarChar, moduleCodeId).query(`
+      SELECT 
+        b.*,
+        p.FirstName + ' ' + p.LastName AS ParticipantName
+      FROM Booking b
+      JOIN BookingModule bm ON b.BookingId = bm.BookingId
+      JOIN Participant p ON b.ParticipantId = p.ParticipantId
+      WHERE bm.ModuleCodeId = @ModuleCodeId
+        AND (b.IsDeleted = 0 OR b.IsDeleted IS NULL)
+    `);
+  return result.recordset;
+}
+
 async function addBookingItemsInDB(bookingId, items) {
   const pool = await connectDB();
 
@@ -150,7 +167,6 @@ async function addBookingItemsInDB(bookingId, items) {
     throw err;
   }
 
-  // Bestehende Einträge löschen bevor neue angelegt werden
   await pool
     .request()
     .input('BookingId', sql.Int, bookingId)
@@ -196,7 +212,8 @@ async function deleteBookingFromDB(id, cancellationReasonId) {
 
 module.exports = {
   getBookingsFromDB,
-  getBookingByIdFromDB, // ← neu
+  getBookingByIdFromDB,
+  getBookingsByModuleFromDB,
   createBookingInDB,
   updateBookingInDB,
   addBookingItemsInDB,
