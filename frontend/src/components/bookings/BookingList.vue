@@ -39,12 +39,15 @@ const sortIcon = (key) => {
   return sortDir.value === 1 ? '↑' : '↓';
 };
 
-const participantName = (id) => {
-  const p = Participants.value.find(
-    (p) => p.ParticipantId === id || p.Id === id
-  );
-  return p ? `${p.FirstName} ${p.LastName}` : id;
-};
+const ParticipantMap = computed(() => {
+  const map = {};
+  for (const p of Participants.value) {
+    map[p.ParticipantId ?? p.Id] = `${p.FirstName} ${p.LastName}`;
+  }
+  return map;
+});
+
+const participantName = (id) => ParticipantMap.value[id] ?? id;
 
 const formatDate = (date) => {
   if (!date) return '-';
