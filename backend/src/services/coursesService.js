@@ -97,7 +97,9 @@ async function deleteCourseFromDB(id) {
   const check = await pool
     .request()
     .input('CourseId', sql.Int, id)
-    .query(`SELECT COUNT(*) AS cnt FROM Module WHERE CourseId = @CourseId`);
+    .query(
+      `SELECT COUNT(*) AS cnt FROM Module WHERE CourseId = @CourseId AND IsDeleted = 0`
+    );
 
   if (check.recordset[0].cnt > 0) {
     const err = new Error('Course has modules');
