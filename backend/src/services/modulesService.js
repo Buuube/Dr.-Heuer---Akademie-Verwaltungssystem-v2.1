@@ -21,8 +21,8 @@ async function getModulesFromDB(courseId) {
       SUM(CASE WHEN ModuleExam.ExamType = 'External' THEN 1 ELSE 0 END) AS ExternExamCount
     FROM Module
     LEFT JOIN Course ON Module.CourseId = Course.CourseId
-    LEFT JOIN ModuleExam ON ModuleExam.ModuleCodeId = Module.ModuleCodeId
-    WHERE 1=1
+    LEFT JOIN ModuleExam ON ModuleExam.ModuleCodeId = Module.ModuleCodeId AND ModuleExam.IsDeleted = 0
+    WHERE Module.IsDeleted = 0
   `;
   if (courseId) {
     request.input('CourseId', sql.Int, Number(courseId));
@@ -155,7 +155,11 @@ async function getExamsFromDB(moduleCode) {
   const result = await pool
     .request()
     .input('ModuleCodeId', sql.VarChar, moduleCode)
-    .query(`SELECT * FROM ModuleExam WHERE ModuleCodeId = @ModuleCodeId`);
+    .query(
+      `SELECT * FROM ModuleExam 
+       WHERE ModuleCodeId = @ModuleCodeId 
+         AND IsDeleted = 0`
+    );
   return result.recordset;
 }
 
@@ -187,13 +191,13 @@ async function createExamInDB(moduleCode, examData) {
   const result = await pool
     .request()
     .input('ModuleCodeId', sql.VarChar, moduleCode)
-    .input('ExamName', sql.VarChar, examData.examName ?? examData.ExamName)
-    .input('ExamType', sql.VarChar, examType)
-    .input('SequenceNumber', sql.Int, sequence)
-    .input('MinimumScore', sql.Int, minimumScore).query(`
-      INSERT INTO ModuleExam (ModuleCodeId, ExamName, ExamType, SequenceNumber, MinimumScore)
+    .input('ExamName', sql.VarChar, examData.ExamName)
+    .input('ExamType', sql.VarChar, examData.ExamType)
+    .input('MinimumScore', sql.Int, examData.MinimumScore ?? null)
+    .input('SequenceNumber', sql.Int, sequence).query(`
+      INSERT INTO ModuleExam (ModuleCodeId, ExamName, ExamType, MinimumScore, SequenceNumber)
       OUTPUT INSERTED.*
-      VALUES (@ModuleCodeId, @ExamName, @ExamType, @SequenceNumber, @MinimumScore)
+      VALUES (@ModuleCodeId, @ExamName, @ExamType, @MinimumScore, @SequenceNumber)
     `);
   return result.recordset[0];
 }
@@ -205,7 +209,7 @@ async function deleteExamFromDB(moduleCode, examId) {
     .input('ModuleCodeId', sql.VarChar, moduleCode)
     .input('ModuleExamId', sql.Int, examId)
     .query(
-      `DELETE FROM ModuleExam WHERE ModuleExamId = @ModuleExamId AND ModuleCodeId = @ModuleCodeId`
+      `UPDATE ModuleExam SET IsDeleted = 1 WHERE ModuleExamId = @ModuleExamId AND ModuleCodeId = @ModuleCodeId`
     );
   return true;
 }
@@ -217,9 +221,9 @@ async function updateExamInDB(moduleCode, examId, examData) {
     .request()
     .input('ModuleCodeId', sql.VarChar, moduleCode)
     .input('ModuleExamId', sql.Int, examId)
-    .input('ExamName', sql.VarChar, examData.examName ?? examData.ExamName)
-    .input('ExamType', sql.VarChar, examData.examType ?? examData.ExamType)
-    .input('MinimumScore', sql.Int, minimumScore).query(`
+    .input('ExamName', sql.VarChar, examData.ExamName)
+    .input('ExamType', sql.VarChar, examData.ExamType)
+    .input('MinimumScore', sql.Int, examData.MinimumScore ?? null).query(`
         UPDATE ModuleExam SET
           ExamName = @ExamName,
           ExamType = @ExamType,

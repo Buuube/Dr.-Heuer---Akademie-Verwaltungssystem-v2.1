@@ -98,6 +98,7 @@ async function deleteExam(req, res) {
     await deleteExamFromDB(moduleCode, examId);
     res.status(204).send();
   } catch (err) {
+    console.log('deleteExam error:', err);
     res.status(500).json({ error: 'Failed to delete exam' });
   }
 }
@@ -108,6 +109,7 @@ async function updateExam(req, res) {
     const result = await updateExamInDB(moduleCode, examId, req.body);
     res.json(result);
   } catch (err) {
+    console.log('updateExam error:', err);
     res.status(500).json({ error: 'Failed to update exam' });
   }
 }
