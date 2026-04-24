@@ -79,12 +79,14 @@ async function getExams(req, res) {
 }
 
 async function createExam(req, res) {
-  console.log('createExam body:', req.body);
   try {
     const { moduleCode } = req.params;
     const result = await createExamInDB(moduleCode, req.body);
     res.status(201).json(result);
   } catch (err) {
+    if (err.code === 'EXAM_LIMIT') {
+      return res.status(409).json({ error: err.message });
+    }
     console.log('createExam error:', err);
     res.status(500).json({ error: 'Failed to create exam' });
   }

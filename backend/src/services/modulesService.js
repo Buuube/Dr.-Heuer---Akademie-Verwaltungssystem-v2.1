@@ -161,24 +161,39 @@ async function getExamsFromDB(moduleCode) {
 
 async function createExamInDB(moduleCode, examData) {
   const pool = await connectDB();
+  const examType = examData.examType ?? examData.ExamType;
+  const minimumScore = examData.minimumScore ?? examData.MinimumScore ?? 50;
 
-  const countResult = await pool
+  const seqResult = await pool
     .request()
     .input('ModuleCodeId', sql.VarChar, moduleCode)
-    .query(
-      'SELECT COUNT(*) AS total FROM ModuleExam WHERE ModuleCodeId = @ModuleCodeId'
+    .input('ExamType', sql.VarChar, examType).query(`
+      SELECT MIN(n) AS NextSeq
+      FROM (VALUES (1),(2),(3),(4),(5)) AS nums(n)
+      WHERE n NOT IN (
+        SELECT SequenceNumber FROM ModuleExam
+        WHERE ModuleCodeId = @ModuleCodeId AND ExamType = @ExamType
+      )
+    `);
+  const sequence = seqResult.recordset[0].NextSeq;
+  if (sequence === null) {
+    const err = new Error(
+      `Maximal 5 ${examType === 'Internal' ? 'interne' : 'externe'} Prüfungen erlaubt.`
     );
-  const sequence = countResult.recordset[0].total + 1;
+    err.code = 'EXAM_LIMIT';
+    throw err;
+  }
 
   const result = await pool
     .request()
     .input('ModuleCodeId', sql.VarChar, moduleCode)
     .input('ExamName', sql.VarChar, examData.examName ?? examData.ExamName)
-    .input('ExamType', sql.VarChar, examData.examType ?? examData.ExamType)
-    .input('SequenceNumber', sql.Int, sequence).query(`
-      INSERT INTO ModuleExam (ModuleCodeId, ExamName, ExamType, SequenceNumber)
+    .input('ExamType', sql.VarChar, examType)
+    .input('SequenceNumber', sql.Int, sequence)
+    .input('MinimumScore', sql.Int, minimumScore).query(`
+      INSERT INTO ModuleExam (ModuleCodeId, ExamName, ExamType, SequenceNumber, MinimumScore)
       OUTPUT INSERTED.*
-      VALUES (@ModuleCodeId, @ExamName, @ExamType, @SequenceNumber)
+      VALUES (@ModuleCodeId, @ExamName, @ExamType, @SequenceNumber, @MinimumScore)
     `);
   return result.recordset[0];
 }
@@ -197,15 +212,18 @@ async function deleteExamFromDB(moduleCode, examId) {
 
 async function updateExamInDB(moduleCode, examId, examData) {
   const pool = await connectDB();
+  const minimumScore = examData.minimumScore ?? examData.MinimumScore ?? 50;
   const result = await pool
     .request()
     .input('ModuleCodeId', sql.VarChar, moduleCode)
     .input('ModuleExamId', sql.Int, examId)
-    .input('ExamName', sql.VarChar, examData.examName)
-    .input('ExamType', sql.VarChar, examData.examType).query(`
+    .input('ExamName', sql.VarChar, examData.examName ?? examData.ExamName)
+    .input('ExamType', sql.VarChar, examData.examType ?? examData.ExamType)
+    .input('MinimumScore', sql.Int, minimumScore).query(`
         UPDATE ModuleExam SET
           ExamName = @ExamName,
-          ExamType = @ExamType
+          ExamType = @ExamType,
+          MinimumScore = @MinimumScore
         OUTPUT INSERTED.*
         WHERE ModuleExamId = @ModuleExamId AND ModuleCodeId = @ModuleCodeId
       `);

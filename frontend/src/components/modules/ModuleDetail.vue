@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { getExams, createExam, deleteExam } from '@/services/moduleExamService';
+import { getExams, createExam } from '@/services/moduleExamService';
 
 const props = defineProps({
   Module: Object,
@@ -36,29 +36,38 @@ const externExams = computed(() =>
 
 const newIntern = ref('');
 const newExtern = ref('');
+const newMinScoreIntern = ref(50);
+const newMinScoreExtern = ref(50);
 const addingIntern = ref(false);
 const addingExtern = ref(false);
+const examError = ref('');
 
 const addExam = async (type) => {
   const name =
     type === 'Internal' ? newIntern.value.trim() : newExtern.value.trim();
   if (!name) return;
+  const count =
+    type === 'Internal' ? internExams.value.length : externExams.value.length;
+  if (count >= 5) {
+    examError.value = `Maximal 5 ${type === 'Internal' ? 'interne' : 'externe'} Prüfungen erlaubt.`;
+    return;
+  }
+  examError.value = '';
   await createExam(props.Module.ModuleCodeId, {
     ExamName: name,
     ExamType: type,
+    MinimumScore:
+      type === 'Internal' ? newMinScoreIntern.value : newMinScoreExtern.value,
   });
   if (type === 'Internal') {
     newIntern.value = '';
+    newMinScoreIntern.value = 50;
     addingIntern.value = false;
   } else {
     newExtern.value = '';
+    newMinScoreExtern.value = 50;
     addingExtern.value = false;
   }
-  await loadExams();
-};
-
-const removeExam = async (examId) => {
-  await deleteExam(props.Module.ModuleCodeId, examId);
   await loadExams();
 };
 </script>
@@ -118,13 +127,19 @@ const removeExam = async (examId) => {
       </div>
 
       <div class="detail-group exam-group">
+        <span v-if="examError" class="error exam-error">{{ examError }}</span>
+
         <div class="exam-section">
           <div class="detail-group-title">
-            Interne Prüfungen ({{ internExams.length }})
+            Interne Prüfungen ({{ internExams.length }}/5)
             <button
               v-if="!Module.IsDeleted"
               class="btn-add-exam"
-              @click="addingIntern = !addingIntern"
+              :disabled="internExams.length >= 5"
+              @click="
+                addingIntern = !addingIntern;
+                examError = '';
+              "
             >
               + Hinzufügen
             </button>
@@ -136,6 +151,14 @@ const removeExam = async (examId) => {
               placeholder="Prüfungsname"
               @keydown.enter="addExam('Internal')"
             />
+            <input
+              v-model.number="newMinScoreIntern"
+              type="number"
+              min="0"
+              class="exam-minscore-input"
+              placeholder="Min. Punkte"
+              title="Mindestpunktzahl"
+            />
             <button class="btn-exam-save" @click="addExam('Internal')">
               ✓
             </button>
@@ -144,6 +167,7 @@ const removeExam = async (examId) => {
               @click="
                 addingIntern = false;
                 newIntern = '';
+                newMinScoreIntern = 50;
               "
             >
               ✕
@@ -161,23 +185,27 @@ const removeExam = async (examId) => {
             :key="exam.ModuleExamId"
             class="exam-row"
           >
-            <span>{{ exam.ExamName }}</span>
-            <button
-              class="btn-exam-delete"
-              @click="removeExam(exam.ModuleExamId)"
+            <span class="exam-name-text">{{ exam.ExamName }}</span>
+            <span
+              class="exam-minscore-badge"
+              :title="'Mindestpunktzahl: ' + (exam.MinimumScore ?? '–')"
             >
-              ✕
-            </button>
+              Min: {{ exam.MinimumScore ?? '–' }}
+            </span>
           </div>
         </div>
 
         <div class="exam-section">
           <div class="detail-group-title">
-            Externe Prüfungen ({{ externExams.length }})
+            Externe Prüfungen ({{ externExams.length }}/5)
             <button
               v-if="!Module.IsDeleted"
               class="btn-add-exam"
-              @click="addingExtern = !addingExtern"
+              :disabled="externExams.length >= 5"
+              @click="
+                addingExtern = !addingExtern;
+                examError = '';
+              "
             >
               + Hinzufügen
             </button>
@@ -189,6 +217,14 @@ const removeExam = async (examId) => {
               placeholder="Prüfungsname"
               @keydown.enter="addExam('External')"
             />
+            <input
+              v-model.number="newMinScoreExtern"
+              type="number"
+              min="0"
+              class="exam-minscore-input"
+              placeholder="Min. Punkte"
+              title="Mindestpunktzahl"
+            />
             <button class="btn-exam-save" @click="addExam('External')">
               ✓
             </button>
@@ -197,6 +233,7 @@ const removeExam = async (examId) => {
               @click="
                 addingExtern = false;
                 newExtern = '';
+                newMinScoreExtern = 50;
               "
             >
               ✕
@@ -214,13 +251,13 @@ const removeExam = async (examId) => {
             :key="exam.ModuleExamId"
             class="exam-row"
           >
-            <span>{{ exam.ExamName }}</span>
-            <button
-              class="btn-exam-delete"
-              @click="removeExam(exam.ModuleExamId)"
+            <span class="exam-name-text">{{ exam.ExamName }}</span>
+            <span
+              class="exam-minscore-badge"
+              :title="'Mindestpunktzahl: ' + (exam.MinimumScore ?? '–')"
             >
-              ✕
-            </button>
+              Min: {{ exam.MinimumScore ?? '–' }}
+            </span>
           </div>
         </div>
       </div>
@@ -247,5 +284,26 @@ const removeExam = async (examId) => {
 
 .exam-row:hover .btn-exam-delete {
   opacity: 1;
+}
+
+.exam-name-text {
+  flex: 1;
+}
+
+.exam-minscore-badge {
+  font-size: 11px;
+  color: var(--muted);
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.exam-minscore-input {
+  width: 80px;
+  margin: 0 4px;
+}
+
+.exam-error {
+  display: block;
+  margin-bottom: 6px;
 }
 </style>

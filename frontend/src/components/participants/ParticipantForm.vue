@@ -114,7 +114,7 @@ const cancel = () => {
   <div class="form">
     <h3>{{ props.title }}</h3>
 
-    <div v-if="Object.keys(errors).length > 0" class="error-box form-row-full">
+    <div v-if="Object.keys(errors).length > 0" class="error-box">
       Bitte korrigiere die markierten Felder
     </div>
 
@@ -280,23 +280,18 @@ const cancel = () => {
         />
         <div v-if="errors.Employer" class="error">{{ errors.Employer }}</div>
 
-        <!-- NEUE ZEILE: Selbstzahler + Startdatum nebeneinander -->
-        <div class="inline-row">
-          <div class="inline-field">
-            <label>Startdatum</label>
-            <input
-              v-model="form.EmploymentStartDate"
-              type="date"
-              :disabled="!form.IsEmployed"
-              :class="{
-                disabled: !form.IsEmployed,
-                'input-error': errors.EmploymentStartDate,
-              }"
-            />
-            <div v-if="errors.EmploymentStartDate" class="error">
-              {{ errors.EmploymentStartDate }}
-            </div>
-          </div>
+        <label>Startdatum</label>
+        <input
+          v-model="form.EmploymentStartDate"
+          type="date"
+          :disabled="!form.IsEmployed"
+          :class="{
+            disabled: !form.IsEmployed,
+            'input-error': errors.EmploymentStartDate,
+          }"
+        />
+        <div v-if="errors.EmploymentStartDate" class="error">
+          {{ errors.EmploymentStartDate }}
         </div>
       </div>
     </div>

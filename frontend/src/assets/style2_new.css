@@ -478,23 +478,27 @@ body {
 }
 
 .form input.input-error,
-.form select.input-error {
+.form select.input-error,
+.form textarea.input-error {
     border: 1px solid var(--danger);
     box-shadow: 0 0 12px rgba(255, 77, 109, 0.25);
     background: rgba(255, 77, 109, 0.06);
 }
 
 .light .form input.input-error,
-.light .form select.input-error {
+.light .form select.input-error,
+.light .form textarea.input-error {
     box-shadow: none;
     background: #fef2f2;
 }
 
-.form input.input-error:focus {
+.form input.input-error:focus,
+.form textarea.input-error:focus {
     box-shadow: 0 0 18px rgba(255, 77, 109, 0.35);
 }
 
-.light .form input.input-error:focus {
+.light .form input.input-error:focus,
+.light .form textarea.input-error:focus {
     box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.15);
 }
 

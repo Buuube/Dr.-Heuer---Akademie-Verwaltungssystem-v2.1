@@ -404,32 +404,4 @@ const removeAllBookings = async () => {
   opacity: 0.35;
   cursor: not-allowed;
 }
-
-/* ─── Badges ────────────────────────────────────────────── */
-.badge-active {
-  background: rgba(46, 204, 113, 0.15);
-  color: #2ecc71;
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 0.85em;
-}
-
-.badge-expired {
-  background: rgba(231, 76, 60, 0.12);
-  color: #ff4d6d;
-  border: 1px solid rgba(255, 77, 109, 0.3);
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 0.85em;
-}
-
-.badge-deactivated {
-  background: rgba(120, 180, 255, 0.08);
-  color: rgba(215, 230, 255, 0.5);
-  border: 1px solid rgba(120, 180, 255, 0.15);
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 0.85em;
-}
 </style>
