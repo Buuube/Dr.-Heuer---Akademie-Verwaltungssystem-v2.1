@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { getCourses } from '@/services/courseService';
 import { getExams } from '@/services/moduleExamService';
 import { getTeachingFormats } from '@/services/teachingFormatService';
@@ -42,6 +42,13 @@ watch(
   { immediate: true }
 );
 
+const internCount = computed(
+  () => exams.value.filter((e) => e.ExamType === 'Internal').length
+);
+const externCount = computed(
+  () => exams.value.filter((e) => e.ExamType === 'External').length
+);
+
 const addExam = () => exams.value.push({ ExamName: '', ExamType: 'Internal' });
 const removeExam = (i) => exams.value.splice(i, 1);
 
@@ -52,6 +59,13 @@ const validate = () => {
   if (!form.value.CourseId) errors.value.CourseId = 'Pflichtfeld';
   if (!form.value.TeachingFormatId)
     errors.value.TeachingFormatId = 'Pflichtfeld';
+  if (!form.value.Content?.trim()) errors.value.Content = 'Pflichtfeld';
+  if (internCount.value > 5)
+    errors.value.exams = 'Maximal 5 interne Prüfungen erlaubt.';
+  if (externCount.value > 5)
+    errors.value.exams = 'Maximal 5 externe Prüfungen erlaubt.';
+  if (exams.value.some((e) => !e.ExamName.trim()))
+    errors.value.exams = 'Prüfungen benötigen einen Namen.';
   return Object.keys(errors.value).length === 0;
 };
 
@@ -59,7 +73,7 @@ const submit = () => {
   if (!validate()) return;
   emit('save', {
     ...form.value,
-    exams: exams.value.filter((e) => e.ExamName.trim()),
+    exams: exams.value,
   });
 };
 </script>
@@ -79,7 +93,7 @@ const submit = () => {
           <label>Name</label>
           <input v-model="form.Name" maxlength="150" />
 
-          <label>Kurs *</label>
+          <label>Kurs <span class="required">*</span></label>
           <select
             v-model="form.CourseId"
             :class="{ 'input-error': errors.CourseId }"
@@ -97,7 +111,7 @@ const submit = () => {
         <div class="form-group">
           <div class="form-group-title">Format & Inhalt</div>
 
-          <label>Unterrichtsformat *</label>
+          <label>Unterrichtsformat <span class="required">*</span></label>
           <select
             v-model="form.TeachingFormatId"
             :class="{ 'input-error': errors.TeachingFormatId }"
@@ -125,16 +139,40 @@ const submit = () => {
         <div class="form-group">
           <div class="form-group-title">Inhalt</div>
 
-          <label>Curriculum</label>
-          <textarea v-model="form.Content" rows="6"></textarea>
+          <label>Curriculum <span class="required">*</span></label>
+          <textarea
+            v-model="form.Content"
+            rows="6"
+            :class="{ 'input-error': errors.Content }"
+            @input="delete errors.Content"
+          ></textarea>
+          <span v-if="errors.Content" class="error">{{ errors.Content }}</span>
         </div>
 
-        <div class="form-group">
+        <div class="form-group form-group--exams">
           <div class="form-group-title">
             Prüfungen
-            <button type="button" class="btn-add-exam" @click="addExam">
+            <button
+              type="button"
+              class="btn-add-exam"
+              :disabled="internCount >= 5 && externCount >= 5"
+              @click="addExam"
+            >
               + Hinzufügen
             </button>
+          </div>
+
+          <div class="exam-limits">
+            Intern {{ internCount }}/5 &nbsp;|&nbsp; Extern {{ externCount }}/5
+          </div>
+          <span v-if="errors.exams" class="error">{{ errors.exams }}</span>
+
+          <div v-if="exams.length > 0" class="exam-header">
+            <span class="exam-header-name"
+              >Prüfungsname <span class="required">*</span></span
+            >
+            <span class="exam-header-type">Typ</span>
+            <span class="exam-header-score">Min. Punkteanzahl</span>
           </div>
 
           <div v-if="exams.length === 0" class="exam-empty">
@@ -146,12 +184,21 @@ const submit = () => {
               v-model="exam.ExamName"
               placeholder="Prüfungsname"
               class="exam-name"
-              maxlength="100"
+              :class="{ 'input-error': errors.exams && !exam.ExamName.trim() }"
+              maxlength="150"
             />
             <select v-model="exam.ExamType" class="exam-type">
               <option value="Internal">Intern</option>
               <option value="External">Extern</option>
             </select>
+            <input
+              v-model.number="exam.MinimumScore"
+              type="number"
+              min="0"
+              class="exam-minscore"
+              placeholder="50"
+              title="Min. Punktzahl"
+            />
             <button
               type="button"
               class="btn-remove-exam"
@@ -225,6 +272,37 @@ textarea:focus {
   box-shadow: 0 0 15px rgba(124, 247, 255, 0.25);
 }
 
+.form-group--exams {
+  grid-column: span 2;
+}
+
+.exam-header {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 2px;
+  padding: 0 2px;
+}
+
+.exam-header-name {
+  flex: 1;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.exam-header-type {
+  flex: 0 0 65px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.exam-header-score {
+  flex: 0 0 55px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .exam-row {
   display: flex;
   gap: 6px;
@@ -238,6 +316,16 @@ textarea:focus {
 }
 
 .exam-type {
-  flex: 0 0 110px;
+  flex: 0 0 80px;
+}
+
+.exam-minscore {
+  flex: 0 0 56px;
+}
+
+.exam-limits {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
 }
 </style>
