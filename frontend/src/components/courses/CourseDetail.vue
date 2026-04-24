@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { getModule, deleteModule } from '@/services/moduleService';
+import { getBookingsByModule, deleteBooking } from '@/services/bookingService';
 
 const router = useRouter();
 
@@ -10,7 +11,14 @@ const props = defineProps({
   editMode: Boolean,
 });
 
-const emit = defineEmits(['edit', 'save', 'cancel', 'delete', 'close']);
+const emit = defineEmits([
+  'edit',
+  'save',
+  'cancel',
+  'delete',
+  'close',
+  'modules',
+]);
 
 const modules = ref([]);
 
@@ -18,6 +26,7 @@ watch(
   () => props.Course,
   async (val) => {
     modules.value = val?.CourseId ? await getModule(val.CourseId) : [];
+    emit('modules', modules.value);
   },
   { immediate: true }
 );
@@ -38,41 +47,91 @@ const formatCurrency = (value) =>
 const isActive = (endDate) => new Date(endDate) >= new Date();
 
 const showDeleteAllConfirm = ref(false);
+const showBookingConflicts = ref(false);
+const conflictData = ref([]);
+const deletingBookingId = ref(null);
+const deletingAll = ref(false);
 
 const deleteAllModules = async () => {
   showDeleteAllConfirm.value = false;
   const failed = [];
+
   for (const mod of modules.value) {
     try {
-      await deleteModule(mod.ModuleCode);
+      await deleteModule(mod.ModuleCodeId);
     } catch {
-      failed.push(mod.ExternalModuleCode || mod.ModuleCode);
+      const bookings = await getBookingsByModule(mod.ModuleCodeId);
+      failed.push({ module: mod, bookings });
     }
   }
+
   modules.value = await getModule(props.Course.CourseId);
+
   if (failed.length > 0) {
-    alert(
-      `Folgende Module konnten nicht gelöscht werden (aktive Buchungen):\n${failed.join(', ')}`
-    );
+    conflictData.value = failed;
+    showBookingConflicts.value = true;
   }
 };
 
-/*
-const kostenProTag = (course) => {
-  if (
-    !course.CostPerTeachingUnit ||
-    !course.DailyTeachingHours ||
-    !course.TeachingUnitDuration
-  )
-    return '–';
-  const unitsPerDay =
-    (course.DailyTeachingHours * 60) / course.TeachingUnitDuration;
-  return formatCurrency(course.CostPerTeachingUnit * unitsPerDay);
-};*/
+const allConflictBookings = () =>
+  conflictData.value.flatMap((e) =>
+    e.bookings.map((b) => ({ ...b, moduleCodeId: e.module.ModuleCodeId }))
+  );
+
+const removeBooking = async (bookingId, moduleCodeId) => {
+  deletingBookingId.value = bookingId;
+  try {
+    await deleteBooking(bookingId);
+    const entry = conflictData.value.find(
+      (e) => e.module.ModuleCodeId === moduleCodeId
+    );
+    if (entry) {
+      entry.bookings = entry.bookings.filter((b) => b.BookingId !== bookingId);
+    }
+    conflictData.value = conflictData.value.filter(
+      (e) => e.bookings.length > 0
+    );
+    if (conflictData.value.length === 0) {
+      showBookingConflicts.value = false;
+      for (const mod of modules.value) {
+        try {
+          await deleteModule(mod.ModuleCodeId);
+        } catch {
+          /* ignorieren */
+        }
+      }
+      modules.value = await getModule(props.Course.CourseId);
+    }
+  } finally {
+    deletingBookingId.value = null;
+  }
+};
+
+const removeAllBookings = async () => {
+  deletingAll.value = true;
+  try {
+    for (const { BookingId, moduleCodeId } of allConflictBookings()) {
+      await deleteBooking(BookingId);
+    }
+    conflictData.value = [];
+    showBookingConflicts.value = false;
+    for (const mod of modules.value) {
+      try {
+        await deleteModule(mod.ModuleCodeId);
+      } catch {
+        /* ignorieren */
+      }
+    }
+    modules.value = await getModule(props.Course.CourseId);
+  } finally {
+    deletingAll.value = false;
+  }
+};
 </script>
 
 <template>
-  <div v-if="Course" class="detail-panel">
+  <!-- ═══ NORMALE DETAILANSICHT ═══ -->
+  <div v-if="Course && !showBookingConflicts" class="detail-panel">
     <h3>Kurs Details</h3>
 
     <div class="detail-grid">
@@ -130,17 +189,12 @@ const kostenProTag = (course) => {
         </div>
         <div class="detail-row">
           <span class="detail-label">UE-Dauer</span>
-          <span>{{ Course.TeachingUnitDuration }} </span>
+          <span>{{ Course.TeachingUnitDuration }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Std./Tag</span>
           <span>{{ Course.DailyTeachingHours }}</span>
         </div>
-        <!--
-        <div class="detail-row">
-          <span class="detail-label">Kosten/Tag</span>
-          <span>{{ kostenProTag(Course) }}</span>
-        </div>-->
       </div>
 
       <div class="detail-group">
@@ -172,17 +226,17 @@ const kostenProTag = (course) => {
         <div v-else class="module-tags">
           <span
             v-for="mod in modules"
-            :key="mod.ModuleCode"
+            :key="mod.ModuleCodeId"
             class="module-tag"
             :class="{ 'module-tag--inactive': mod.IsDeleted }"
-            >{{ mod.ExternalModuleCode || mod.ModuleCode }} –
-            {{ mod.Name }}</span
           >
+            {{ mod.ExternalModuleCode || mod.ModuleCodeId }} – {{ mod.Name }}
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- Bestätigungs-Modal -->
+    <!-- Modal: Bestätigung alle deaktivieren -->
     <div v-if="showDeleteAllConfirm" class="modal-overlay">
       <div class="modal">
         <p>Sind Sie sicher, alle Module deaktivieren zu wollen?</p>
@@ -220,10 +274,162 @@ const kostenProTag = (course) => {
       </template>
     </div>
   </div>
+
+  <!-- ═══ BUCHUNGSKONFLIKTE ANSICHT ═══ -->
+  <div v-if="showBookingConflicts" class="list-panel">
+    <h3>Aktive Buchungen — Module können nicht deaktiviert werden</h3>
+
+    <div class="conflict-info">
+      <span
+        >{{ allConflictBookings().length }} Buchung(en) blockieren die
+        Deaktivierung. Bitte zuerst löschen.</span
+      >
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Buchungs-ID</th>
+            <th>Teilnehmer</th>
+            <th>Modul</th>
+            <th>Start (geplant)</th>
+            <th>Ende (geplant)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template
+            v-for="entry in conflictData"
+            :key="entry.module.ModuleCodeId"
+          >
+            <tr v-for="b in entry.bookings" :key="b.BookingId">
+              <td>{{ b.BookingId }}</td>
+              <td>{{ b.ParticipantName }}</td>
+              <td>
+                <span class="module-code-badge">{{
+                  entry.module.ModuleCodeId
+                }}</span>
+                {{ entry.module.Name }}
+              </td>
+              <td>{{ b.PlannedStartDate?.slice(0, 10) ?? '-' }}</td>
+              <td>{{ b.PlannedEndDate?.slice(0, 10) ?? '-' }}</td>
+              <td>
+                <button
+                  class="btn-delete"
+                  :disabled="deletingBookingId === b.BookingId || deletingAll"
+                  @click="removeBooking(b.BookingId, entry.module.ModuleCodeId)"
+                >
+                  {{ deletingBookingId === b.BookingId ? '...' : 'Löschen' }}
+                </button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="conflict-actions">
+      <button class="btn-modal-cancel" @click="showBookingConflicts = false">
+        ← Zurück
+      </button>
+      <button
+        class="btn-delete-all"
+        :disabled="deletingAll"
+        @click="removeAllBookings"
+      >
+        {{ deletingAll ? 'Wird gelöscht...' : 'Alle Buchungen löschen' }}
+      </button>
+    </div>
+  </div>
 </template>
 
 <style scoped>
 .detail-group:last-child {
   grid-column: 1 / -1;
+}
+
+/* ─── Konflikt-Info ─────────────────────────────────────── */
+.conflict-info {
+  padding: 10px 20px;
+  font-size: 13px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--td-border);
+  flex-shrink: 0;
+}
+
+/* ─── Konflikt-Aktionen ─────────────────────────────────── */
+.conflict-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px 14px;
+  border-top: 1px solid var(--td-border);
+  flex-shrink: 0;
+}
+
+/* ─── Modul-Code Badge in Tabelle ───────────────────────── */
+.module-code-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(124, 247, 255, 0.2);
+  background: rgba(124, 247, 255, 0.06);
+  color: var(--cyan);
+  font-size: 11px;
+  margin-right: 6px;
+}
+
+/* ─── Alle löschen Button ───────────────────────────────── */
+.btn-delete-all {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 77, 109, 0.4);
+  background: rgba(255, 77, 109, 0.12);
+  color: #ff4d6d;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete-all:hover:not(:disabled) {
+  box-shadow: 0 0 14px rgba(255, 77, 109, 0.35);
+  border-color: rgba(255, 77, 109, 0.65);
+}
+
+.btn-delete-all:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ─── Badges ────────────────────────────────────────────── */
+.badge-active {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+.badge-expired {
+  background: rgba(231, 76, 60, 0.12);
+  color: #ff4d6d;
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+.badge-deactivated {
+  background: rgba(120, 180, 255, 0.08);
+  color: rgba(215, 230, 255, 0.5);
+  border: 1px solid rgba(120, 180, 255, 0.15);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
 }
 </style>

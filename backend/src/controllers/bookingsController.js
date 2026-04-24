@@ -1,6 +1,7 @@
 const {
   getBookingsFromDB,
   getBookingByIdFromDB,
+  getBookingsByModuleFromDB,
   createBookingInDB,
   updateBookingInDB,
   addBookingItemsInDB,
@@ -28,6 +29,17 @@ async function getBookingById(req, res) {
   } catch (err) {
     console.error('getBookingById error:', err);
     res.status(500).json({ error: 'Failed to fetch booking' });
+  }
+}
+
+async function getBookingsByModule(req, res) {
+  try {
+    const { moduleCodeId } = req.params;
+    const bookings = await getBookingsByModuleFromDB(moduleCodeId);
+    res.json(bookings);
+  } catch (err) {
+    console.error('getBookingsByModule error:', err);
+    res.status(500).json({ error: 'Failed to fetch bookings for module' });
   }
 }
 
@@ -88,6 +100,7 @@ async function deleteBooking(req, res) {
 module.exports = {
   getBookings,
   getBookingById,
+  getBookingsByModule,
   createBooking,
   updateBooking,
   addBookingItems,
