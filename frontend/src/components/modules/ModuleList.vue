@@ -88,16 +88,23 @@ const pagedModules = computed(() => {
 onMounted(async () => {
   modules.value = await getModule(props.CourseId);
 
-  for (const mod of modules.value) {
-    try {
-      const exams = await getExams(mod.ModuleCodeId);
-      examCounts.value[mod.ModuleCodeId] = {
-        intern: exams.filter((e) => e.ExamType === 'intern').length,
-        extern: exams.filter((e) => e.ExamType === 'extern').length,
-      };
-    } catch {
-      examCounts.value[mod.ModuleCodeId] = { intern: 0, extern: 0 };
-    }
+  const results = await Promise.all(
+    modules.value.map(async (mod) => {
+      try {
+        const exams = await getExams(mod.ModuleCodeId);
+        return {
+          id: mod.ModuleCodeId,
+          intern: exams.filter((e) => e.ExamType === 'intern').length,
+          extern: exams.filter((e) => e.ExamType === 'extern').length,
+        };
+      } catch {
+        return { id: mod.ModuleCodeId, intern: 0, extern: 0 };
+      }
+    })
+  );
+
+  for (const r of results) {
+    examCounts.value[r.id] = { intern: r.intern, extern: r.extern };
   }
 });
 </script>
