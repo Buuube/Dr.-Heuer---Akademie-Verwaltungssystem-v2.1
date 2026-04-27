@@ -189,6 +189,7 @@ async function addBookingItemsInDB(bookingId, items) {
 
 async function deleteBookingFromDB(id, cancellationReasonId) {
   const pool = await connectDB();
+
   if (cancellationReasonId) {
     await pool
       .request()
@@ -198,10 +199,12 @@ async function deleteBookingFromDB(id, cancellationReasonId) {
         WHERE BookingId = @BookingId
       `);
   }
+
   const result = await pool
     .request()
     .input('BookingId', sql.Int, id)
     .query(`UPDATE Booking SET IsDeleted = 1 WHERE BookingId = @BookingId`);
+
   if (result.rowsAffected[0] === 0) {
     const err = new Error('Booking not found');
     err.code = 'BOOKING_NOT_FOUND';

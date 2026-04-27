@@ -4,6 +4,7 @@ import BookingList from '../components/bookings/BookingList.vue';
 import BookingForm from '../components/bookings/BookingForm.vue';
 import BookingDetail from '../components/bookings/BookingDetail.vue';
 import { deleteBooking } from '../services/bookingService';
+import { createCancellationReason } from '../services/cancellationReasonService';
 
 const selected = ref(null);
 const formMode = ref(null);
@@ -55,10 +56,16 @@ const remove = (b) => {
 };
 
 const confirmRemove = async () => {
-  const reason = confirmReasonInput.value
-    ? Number(confirmReasonInput.value)
-    : null;
-  await deleteBooking(confirmPending.value.BookingId, reason);
+  let cancellationReasonId = null;
+
+  if (confirmReasonInput.value.trim()) {
+    const reason = await createCancellationReason(
+      confirmReasonInput.value.trim()
+    );
+    cancellationReasonId = reason.CancellationReasonId;
+  }
+
+  await deleteBooking(confirmPending.value.BookingId, cancellationReasonId);
   confirmPending.value = null;
   selected.value = null;
   showDetail.value = false;
@@ -68,7 +75,6 @@ const confirmRemove = async () => {
 
 <template>
   <div class="course-layout">
-    <!-- OBEN: Button oder Form -->
     <div class="top-panel">
       <div v-if="formMode === null" class="top-panel-cta">
         <button class="btn-new_part" @click="createNew">
@@ -85,7 +91,6 @@ const confirmRemove = async () => {
       />
     </div>
 
-    <!-- UNTEN: Liste oder Detail -->
     <div class="bottom-panel">
       <BookingList
         v-if="!showDetail"
@@ -108,11 +113,11 @@ const confirmRemove = async () => {
       <div class="modal">
         <p>Buchung #{{ confirmPending.BookingId }} wirklich löschen?</p>
         <div class="modal-input">
-          <label>Stornierungsgrund-ID (optional)</label>
+          <label>Stornierungsgrund (optional)</label>
           <input
             v-model="confirmReasonInput"
-            placeholder="z.B. 1"
-            type="number"
+            placeholder="z.B. Teilnehmer abgebrochen"
+            type="text"
           />
         </div>
         <div class="modal-actions">

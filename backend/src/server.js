@@ -20,7 +20,9 @@ const moduleSessionRouter = require('./routes/moduleSession');
 const roomRouter = require('./routes/room');
 const locationRouter = require('./routes/location');
 const teachingFormatRouter = require('./routes/teachingFormat');
+const cancellationReasonRouter = require('./routes/cancellationReason');
 
+app.use('/api/cancellationreasons', cancellationReasonRouter);
 app.use(cors());
 app.use(express.json());
 app.use('/api/rooms', roomRouter);
